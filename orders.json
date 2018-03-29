@@ -1,0 +1,46 @@
+{
+  "orders": [
+    {
+      "symbol": "QLCBTC",
+      "asset": "QLC",
+      "side": "sell",
+      "status": "new",
+      "vol": 0.2,
+
+      "entry": {
+        "price": "0.00002419",
+        "vol": 900
+      },
+
+      "targets": [
+        {
+          "price": 0.00002599,
+          "vol": "50",
+          "sl": 0.00002500
+        },
+        {
+          "price": 0.00002996,
+          "vol": "200"
+        },
+        {
+          "price": 0.00002734,
+          "vol": "200"
+        },
+        {
+          "price": 0.00003321,
+          "vol": "100%"
+        }
+      ],
+      "sl_settings": {
+        "type": "trailing",
+        "val": "5%",
+        "threshold": 0.3,
+
+        "initial_target":{
+          "price": 0.00002370,
+          "vol": "100%"
+        }
+      }
+    }
+  ]
+}
