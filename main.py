@@ -1,33 +1,35 @@
-import time
-from json import JSONEncoder
-
-from binance.client import Client
-from binance.websockets import BinanceSocketManager
-from decimal import getcontext
+import logging
 
 from Bot.FXConnector import FXConnector
-from Bot.Order import Order
 from Bot.OrderHandler import OrderHandler
 from Bot.OrderStatus import OrderStatus
 from Bot.OrderValidator import OrderValidator
 from Bot.ConfigLoader import ConfigLoader
 
+ORDER_PATH = 'trades.json'
+ORDER_PATH_UPD = 'trades.json'
+
+logging.basicConfig(level=logging.INFO)
+
 def main():
-    getcontext().prec = 8
-    test_change_order()
+    # test_change_order()
+    test_start_app()
 
 def test_change_order():
     cl = ConfigLoader()
-    orders = cl.load_new_orders(cl.load_json('orders.json'))
+    orders = cl.load_order_list(cl.json_loader('trades.json'))
     orders[0].get_available_targets()[0].set_completed()
     orders[0].status = OrderStatus.COMPLETED
     cl.save_orders('orders2.json', orders)
 
-    orders = cl.load_new_orders(cl.load_json('orders2.json'))
+    orders = cl.load_order_list(cl.json_loader('orders2.json'))
 
 def test_start_app():
     cl = ConfigLoader()
-    orders = cl.load_new_orders(cl.load_json('orders.json'))
+
+    o_loader = cl.json_loader(ORDER_PATH)
+    o_saver = cl.json_saver(ORDER_PATH)
+    orders = cl.load_order_list(o_loader)
     ov = OrderValidator()
 
     for o in orders[:]:
@@ -36,8 +38,13 @@ def test_start_app():
             print(ov.warnings)
             orders.remove(o)
 
-    api = cl.load_json('api.json')()
-    handler = OrderHandler(orders, FXConnector(api['key'], api['secret']))
+    api = cl.json_loader('api.json')()
+    handler = OrderHandler(
+        orders,
+        FXConnector(api['key'], api['secret']),
+        lambda order: cl.persist_updated_order(order, o_loader, o_saver)
+    )
+
     handler.start_listening()
 
 if __name__ == '__main__':

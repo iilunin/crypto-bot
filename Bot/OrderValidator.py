@@ -1,4 +1,4 @@
-from Bot.Order import Order
+from Bot.Trade import Trade
 from Bot.OrderStatus import OrderStatus
 
 
@@ -11,7 +11,7 @@ class OrderValidator:
     def validate(self, order):
         """
 
-        :type order: Order
+        :type order: Trade
         """
 
         self.errors = {}
@@ -34,7 +34,7 @@ class OrderValidator:
     def validate_sl(self, order):
         """
 
-        :type order: Order
+        :type order: Trade
         """
 
         if not order.get_initial_stop():
@@ -52,8 +52,8 @@ class OrderValidator:
             if t.status == OrderStatus.COMPLETED:
                 continue
 
-            if (order.side == Order.Side.SELL and order.get_initial_stop().price >= t.price) or \
-                    (order.side == Order.Side.BUY and order.get_initial_stop().price <= t.price):
+            if (order.side == Trade.Side.SELL and order.get_initial_stop().price >= t.price) or \
+                    (order.side == Trade.Side.BUY and order.get_initial_stop().price <= t.price):
                 self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
                 return False
 

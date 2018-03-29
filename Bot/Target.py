@@ -15,6 +15,9 @@ class Target:
     def is_completed(self):
         return self.status == OrderStatus.COMPLETED
 
+    def has_id(self):
+        return self.id is not None
+
     def set_completed(self):
         self.status = OrderStatus.COMPLETED
 
