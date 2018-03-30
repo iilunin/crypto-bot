@@ -97,14 +97,23 @@ class FXConnector:
     def get_order_status(self, id):
         return self.client.get_order(orderId=id)
 
-    def create_stop_order(self, sym, side, price, volume):
+    def create_limit_order(self, sym, side, price, volume):
+        return self.client.create_order(
+            symbol=sym,
+            side=side,
+            type=FXConnector.ORDER_TYPE_LIMIT,
+            timeInForce=FXConnector.TIME_IN_FORCE_GTC,
+            quantity=FXConnector.format_number(volume),
+            price=FXConnector.format_number(price))
+
+    def create_stop_order(self, sym, side, stop_price, price, volume):
         return self.client.create_order(
             symbol=sym,
             side=side,
             type=FXConnector.ORDER_TYPE_STOP_LOSS_LIMIT,
             timeInForce=FXConnector.TIME_IN_FORCE_GTC,
             quantity=FXConnector.format_number(volume),
-            stopPrice=FXConnector.format_number(price),
+            stopPrice=FXConnector.format_number(stop_price),
             price=FXConnector.format_number(price))
 
     def create_test_stop_order(self, sym, side, price, volume):

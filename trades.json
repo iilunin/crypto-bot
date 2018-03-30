@@ -8,15 +8,14 @@
                 }
             ],
             "vol": 1,
-            "status": "NEW",
+            "status": "ACTIVE",
             "side": "SELL",
             "symbol": "QLCBTC",
             "sl_settings": {
                 "type": "FIXED",
                 "val": "5.0%",
-                "threshold": 0.6,
+                "threshold": 0.001,
                 "initial_target": {
-                    "id": 1217013,
                     "price": "0.00001800",
                     "vol": "100%"
                 }
@@ -29,7 +28,6 @@
                     "vol": "50"
                 },
                 {
-                    "status": "COMPLETED",
                     "price": "0.00002734",
                     "vol": "200"
                 },
@@ -39,7 +37,11 @@
                 },
                 {
                     "price": "0.00003321",
-                    "vol": "250"
+                    "vol": "100%"
+                },
+                {
+                    "price": "0.000041",
+                    "vol": "100%"
                 }
             ]
         }

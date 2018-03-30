@@ -1,70 +1,24 @@
-import logging
-
 from binance.exceptions import BinanceAPIException
 
-from Bot import StopLossSettings
-from Bot.FXConnector import FXConnector
-from Bot.Trade import Trade
-from Bot.OrderStatus import OrderStatus
 from Bot.StopLossSettings import StopLossSettings
+from Bot.FXConnector import FXConnector
+from Bot.Strategy.TradingStrategy import TradingStrategy
+from Bot.Trade import Trade
 from Bot.Value import Value
 
-class OrderStrategy:
-    def __init__(self, trade: Trade, fx: FXConnector, order_updated=None):
-        self.trade = trade
-        self.fx = fx
-        self.available = 0.
-        self.locked = 0.
-        self.exchange_info = None
-        self.simulate = False
-        self.trade_updated = order_updated
-        self.logger = logging.getLogger('{}({})'.format(self.__class__.__name__, self.symbol()))
-        self.init()
 
-    def init(self):
-        self.exchange_info = self.fx.get_exchange_info(self.symbol())
-        self.validate_target_orders()
-
-    def logInfo(self, msg):
-        self.logger.log(logging.INFO, msg)
-
-    def logError(self, msg):
-        self.logger.log(logging.ERROR, msg)
-
-    def symbol(self):
-        return self.trade.symbol
-
-    def validate_target_orders(self):
-        orderIdList = self.fx.get_open_orders(self.symbol())
-        tgts = self.trade.get_all_active_placed_targets()
-
-        update_required = False
-        for t in tgts:
-            if t.id not in orderIdList:
-                t.id = None
-                update_required = True
-
-        if update_required:
-            self.trade_updated(self.trade)
-
-    def execute(self, new_price):
-        pass
-
-    def validate_asset_balance(self):
-        self.available, self.locked = self.fx.get_balance(self.trade.asset)
-
-
-class TargetsAndStopLossStrategy(OrderStrategy):
-
-    def __init__(self, trade: Trade, fx: FXConnector, order_updated=None):
-        super().__init__(trade, fx, order_updated)
+class StopLossStrategy(TradingStrategy):
+    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None):
+        super().__init__(trade, fx, trade_updated, nested, exchange_info)
         self.current_stop_loss = 0
         self.adjust_stoploss_price()
+
+    def is_stoploss_order_active(self):
+        return self.trade.get_initial_stop().has_id()
 
     def execute(self, new_price):
         self.adjust_stoploss_price(new_price)
         self.adjust_stoploss_order(new_price)
-
         self.logInfo('SL:{:.08f}'.format(self.current_stop_loss))
 
     def adjust_stoploss_price(self, current_price=None):
@@ -131,6 +85,7 @@ class TargetsAndStopLossStrategy(OrderStrategy):
                 self.symbol(),
                 self.trade.side.name,
                 self.exchange_info.adjust_price(self.current_stop_loss),
+                self.exchange_info.adjust_price(self.current_stop_loss),
                 self.exchange_info.adjust_quanity(self.available)
             )
 
@@ -167,7 +122,3 @@ class TargetsAndStopLossStrategy(OrderStrategy):
         self.trade.sl_settings.initial_target.id = None
         self.trigger_order_updated()
         self.logInfo('canceling stoploss orders')
-
-    def trigger_order_updated(self):
-        if self.trade_updated:
-            self.trade_updated(self.trade)

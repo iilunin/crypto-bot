@@ -1,6 +1,7 @@
 import json
 
 from Bot.OrderStatus import OrderStatus
+from Bot.Value import Value
 
 
 class Target:
@@ -8,7 +9,7 @@ class Target:
         self.date = date
         self.id = id
         self.status = OrderStatus(status.lower())
-        self.vol = vol
+        self.vol = Value(vol)
         self.price = float(price)
         self.sl = float(sl)
 

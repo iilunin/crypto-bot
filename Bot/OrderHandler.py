@@ -4,7 +4,7 @@ from datetime import datetime as dt
 
 from Bot.FXConnector import FXConnector
 from Bot.Trade import Trade
-from Bot.OrderStrategy import TargetsAndStopLossStrategy
+from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 
 
 class OrderHandler:
