@@ -17,11 +17,14 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.logInfo('Trade Complete')
             return
 
-        if self.trade.status == OrderStatus.NEW and self.trade.entry is not None:
-            # implementy market entry
-            self.trade.status = OrderStatus.ACTIVE
-            self.trade_updated(self.trade)
-            pass
+        if self.trade.status == OrderStatus.NEW:
+            if self.trade.entry is not None:
+                # implementy market entry
+                self.trade.status = OrderStatus.ACTIVE
+                self.trade_updated(self.trade)
+            else: # if no entry is needed
+                self.trade.status = OrderStatus.ACTIVE
+                self.trade_updated(self.trade)
 
         if self.trade.status == OrderStatus.ACTIVE:
             self.strategy_sl.execute(new_price)

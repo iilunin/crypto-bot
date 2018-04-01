@@ -69,6 +69,7 @@ class StopLossStrategy(TradingStrategy):
         # if we have order in place
         if self.trade.sl_settings.initial_target.id:
             self.logInfo('validating stoploss order')
+            # TODO: implement orders validation
             if True: # validate it
                 return
             else:
@@ -119,7 +120,6 @@ class StopLossStrategy(TradingStrategy):
                 tgt.id = None
             except StopIteration:
                 pass
-
 
     def cancel_stoploss_orders(self):
         if not self.trade.sl_settings.initial_target.id:

@@ -84,6 +84,94 @@
                     "vol": "100.0%"
                 }
             ],
+            "status": "COMPLETED"
+        },
+        {
+            "entry": [
+                {
+                    "price": "0.00030837",
+                    "vol": 900
+                }
+            ],
+            "side": "SELL",
+            "symbol": "PIVXBTC",
+            "sl_settings": {
+                "type": "FIXED",
+                "val": "5.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.001,
+                "initial_target": {
+                    "price": "0.00040010",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "PIVX",
+            "targets": [
+                {
+                    "id": 3594782,
+                    "price": "0.00055860",
+                    "vol": "10.0"
+                },
+                {
+                    "id": 3594783,
+                    "price": "0.00058030",
+                    "vol": "10.0"
+                },
+                {
+                    "id": 3594785,
+                    "price": "0.00060080",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 3594786,
+                    "price": "0.00063740",
+                    "vol": "100.0%"
+                }
+            ],
+            "status": "ACTIVE"
+        },
+        {
+            "entry": [
+                {
+                    "price": "0.00030837",
+                    "vol": 900
+                }
+            ],
+            "side": "SELL",
+            "symbol": "XVGBTC",
+            "sl_settings": {
+                "type": "TRAILING",
+                "val": "5.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.001,
+                "initial_target": {
+                    "price": "0.00000615",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "XVG",
+            "targets": [
+                {
+                    "id": 21871782,
+                    "price": "0.00000730",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 21871783,
+                    "price": "0.00000860",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 21871784,
+                    "price": "0.00001000",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 21871785,
+                    "price": "0.00001180",
+                    "vol": "100.0%"
+                }
+            ],
             "status": "ACTIVE"
         }
     ]

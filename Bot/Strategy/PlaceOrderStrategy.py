@@ -19,11 +19,13 @@ class PlaceOrderStrategy(TradingStrategy):
 
         if self.validate_all_orders(targets):
             self.logInfo('All Orders are Placed')
-            self.logInfo('Need to validate if they are filled or canced')
+            self.logInfo('Need to validate if they are filled or cancel')
             return
         #vali
         alloc = self.prepare_volume_allocation(targets)
-        self.place_orders(alloc)
+
+        if alloc:
+            self.place_orders(alloc)
 
     def side(self):
         return self.trade.side
@@ -32,7 +34,7 @@ class PlaceOrderStrategy(TradingStrategy):
         return self.trade.get_available_targets()
 
     def validate_all_orders(self, targets):
-        return all(t.status == OrderStatus.ACTIVE for t in targets)
+        return all(t.status == OrderStatus.ACTIVE or t.has_id() for t in targets)
 
     def validate_all_compoleted(self, targets):
         return all(t.status == OrderStatus.COMPLETED for t in targets)
