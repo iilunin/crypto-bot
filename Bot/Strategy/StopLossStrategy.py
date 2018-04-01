@@ -75,24 +75,35 @@ class StopLossStrategy(TradingStrategy):
                 pass
 
         if self.simulate:
-            order = self.fx.create_test_stop_order(self.symbol(), self.trade.side.name, self.current_stop_loss, 50)
+            order = self.fx.create_test_stop_order(self.symbol(), self.trade_side(), self.current_stop_loss, 50)
             order['orderId'] = 2333123
         else:
             self.cancel_all_orders()
             self.validate_asset_balance()
 
+            # stop_trigger
+
             order = self.fx.create_stop_order(
-                self.symbol(),
-                self.trade.side.name,
-                self.exchange_info.adjust_price(self.current_stop_loss),
-                self.exchange_info.adjust_price(self.current_stop_loss),
-                self.exchange_info.adjust_quanity(self.available)
+                sym=self.symbol(),
+                side=self.trade_side(),
+                stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
+                price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
+                volume=self.exchange_info.adjust_quanity(self.available)
             )
 
         self.trade.sl_settings.initial_target.id = order['orderId']
         self.trigger_order_updated()
 
         self.logInfo('setting stop loss order')
+
+    def get_sl_limit_price(self):
+        threshold = self.trade.sl_settings.limit_price_threshold
+
+        if threshold.Type == Value.Type.ABS:
+            return self.current_stop_loss + (-1 if self.is_sell_order() else 1) * self.trade.sl_settings.limit_price_threshold.v
+        else:
+            return self.current_stop_loss * (1 + (-1 if self.trade.is_sell_order() else 1) * threshold.v / 100)
+
 
     def cancel_all_orders(self):
         self.logInfo('canceling all orders...')

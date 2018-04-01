@@ -6,15 +6,12 @@ from Bot.Target import *
 
 
 class Trade:
-
     class Side(Enum):
         BUY = 'buy'
         SELL = 'sell'
 
-    def __init__(self, symbol, side, asset, status, vol, entry, targets, sl_settings):
+    def __init__(self, symbol, side, asset, targets, sl_settings, status=None, vol=None, entry=None):
         self.entry = entry
-        self.vol = vol
-        self.status = OrderStatus(status.lower())
         self.side = Trade.Side(side.lower())
         self.symbol = symbol
         self.sl_settings = StopLossSettings(**sl_settings)
@@ -23,6 +20,12 @@ class Trade:
         self.targets: List[Target] = []
 
         self.set_targets(targets)
+
+        if status:
+            self.status = OrderStatus(status.lower())
+        else:
+            self.status = OrderStatus.ACTIVE if not entry else OrderStatus.NEW
+
 
     def set_targets(self, targets):
         self.targets.extend([RegularTarget(t) for t in targets])
@@ -51,7 +54,7 @@ class Trade:
         return self.status == OrderStatus.COMPLETED
 
     def __str__(self):
-        return '{}: {}. {}'.format(self.symbol, self.side, self.vol)
+        return '{}: {}'.format(self.symbol, self.side)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,

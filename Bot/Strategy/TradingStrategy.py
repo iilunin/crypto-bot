@@ -28,14 +28,8 @@ class TradingStrategy:
     def is_completed(self):
         return self.trade.is_completed()
 
-    def logInfo(self, msg):
-        self.logger.log(logging.INFO, msg)
-
-    def logWarning(self, msg):
-        self.logger.log(logging.WARNING, msg)
-
-    def logError(self, msg):
-        self.logger.log(logging.ERROR, msg)
+    def trade_side(self):
+        return self.trade.side.name
 
     def symbol(self):
         return self.trade.symbol
@@ -63,3 +57,13 @@ class TradingStrategy:
     def trigger_order_updated(self):
         if self.trade_updated:
             self.trade_updated(self.trade)
+
+    #TODO: move logging to another class
+    def logInfo(self, msg):
+        self.logger.log(logging.INFO, msg)
+
+    def logWarning(self, msg):
+        self.logger.log(logging.WARNING, msg)
+
+    def logError(self, msg):
+        self.logger.log(logging.ERROR, msg)

@@ -19,9 +19,11 @@ class PlaceOrderStrategy(TradingStrategy):
 
         if self.validate_all_orders(targets):
             self.logInfo('All Orders are Placed')
+            self.logInfo('Need to validate if they are filled or canced')
             return
-
-        self.prepare_volume_allocation(targets)
+        #vali
+        alloc = self.prepare_volume_allocation(targets)
+        self.place_orders(alloc)
 
     def side(self):
         return self.trade.side
@@ -58,11 +60,24 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
                 return
 
-            orders.append({'price': '{:8f}'.format(price), 'vol': vol})
+            orders.append({
+                'price': self.exchange_info.adjust_price(price),
+                'volume': self.exchange_info.adjust_quanity(vol),
+                'side': self.side().name,
+                'target': t})
 
             bal -= vol
 
         self.logInfo('Orders to be posted: {}'.format(orders))
+        return orders
+
+
+    def place_orders(self, allocations):
+        for a in allocations:
+            target = a.pop('target', None)
+            order = self.fx.create_limit_order(sym=self.symbol(), **a)
+            target.id = order['orderId']
+        self.trigger_order_updated()
 
 
 
