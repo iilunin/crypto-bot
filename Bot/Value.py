@@ -7,12 +7,20 @@ class Value:
         REL = 1
 
     def __init__(self, obj: str):
+        if not isinstance(obj, str):
+            obj = str(obj)
         if obj.endswith('%'):
             self.type = Value.Type.REL
         else:
             self.type = Value.Type.ABS
 
         self.v = float(obj.replace('%', ''))
+
+    def is_abs(self):
+        return self.type == Value.Type.ABS
+
+    def is_rel(self):
+        return self.type == Value.Type.REL
 
     def __str__(self):
         return '{}{}'.format(self.v, '%' if self.type == Value.Type.REL else '')

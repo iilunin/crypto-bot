@@ -38,12 +38,6 @@
             "status": "ACTIVE"
         },
         {
-            "entry": [
-                {
-                    "price": "0.00030837",
-                    "vol": 900
-                }
-            ],
             "side": "SELL",
             "symbol": "LSKBTC",
             "sl_settings": {
@@ -123,12 +117,6 @@
             "status": "ACTIVE"
         },
         {
-            "entry": [
-                {
-                    "price": "0.00030837",
-                    "vol": 900
-                }
-            ],
             "side": "SELL",
             "symbol": "PIVXBTC",
             "sl_settings": {
@@ -172,12 +160,6 @@
             "status": "ACTIVE"
         },
         {
-            "entry": [
-                {
-                    "price": "0.00002419",
-                    "vol": 900
-                }
-            ],
             "side": "SELL",
             "symbol": "QLCBTC",
             "sl_settings": {
@@ -226,12 +208,6 @@
             "status": "ACTIVE"
         },
         {
-            "entry": [
-                {
-                    "price": "0.00030837",
-                    "vol": 900
-                }
-            ],
             "side": "SELL",
             "symbol": "XVGBTC",
             "sl_settings": {
@@ -274,12 +250,6 @@
             "status": "ACTIVE"
         },
         {
-            "entry": [
-                {
-                    "price": "0.00030837",
-                    "vol": 900
-                }
-            ],
             "side": "SELL",
             "symbol": "ZRXBTC",
             "sl_settings": {
@@ -320,6 +290,34 @@
                 }
             ],
             "status": "ACTIVE"
+        },
+        {
+            "entry": {
+                "target":
+                {
+                    "price": "0.00029604",
+                    "vol": 500
+                }
+            },
+            "side": "SELL",
+            "symbol": "ONTBTC",
+            "sl_settings": {
+                "type": "FIXED",
+                "val": "5.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.0002,
+                "initial_target": {
+                    "price": "0.00021000",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "ONT",
+            "targets": [
+                {
+                    "price": "0.00035000",
+                    "vol": "100%"
+                }
+            ]
         }
     ]
 }

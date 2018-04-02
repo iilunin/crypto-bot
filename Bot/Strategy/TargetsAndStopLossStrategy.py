@@ -1,5 +1,6 @@
 from Bot.FXConnector import FXConnector
 from Bot.OrderStatus import OrderStatus
+from Bot.Strategy.EntryStrategy import EntryStrategy
 from Bot.Strategy.PlaceOrderStrategy import PlaceOrderStrategy
 from Bot.Strategy.StopLossStrategy import StopLossStrategy
 from Bot.Strategy.TradingStrategy import TradingStrategy
@@ -9,8 +10,13 @@ from Bot.Trade import Trade
 class TargetsAndStopLossStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None):
         super().__init__(trade, fx, trade_updated)
+        self.validate_asset_balance()
         self.strategy_sl = StopLossStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance)
         self.strategy_po = PlaceOrderStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance)
+
+        if trade.has_entry():
+            self.strategy_en = EntryStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance)
+
         self.last_price = 0
 
     def execute(self, new_price):
@@ -23,12 +29,12 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             return
 
         # self.log_price(new_price)
-
         if self.trade.status == OrderStatus.NEW:
-            if self.trade.entry is not None:
-                # implementy market entry
-                self.trade.status = OrderStatus.ACTIVE
-                self.trade_updated(self.trade)
+            if self.trade.has_entry():
+                self.strategy_en.execute(new_price)
+                # # implementy market entry
+                # self.trade.status = OrderStatus.ACTIVE
+                # self.trade_updated(self.trade)
             else: # if no entry is needed
                 self.trade.status = OrderStatus.ACTIVE
                 self.trade_updated(self.trade)

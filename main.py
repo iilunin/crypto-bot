@@ -6,11 +6,7 @@ from Bot.OrderStatus import OrderStatus
 from Bot.OrderValidator import OrderValidator
 from Bot.ConfigLoader import ConfigLoader
 
-
-from binance.client import Client
-from datetime import datetime, date
-
-from hist_data import get_historical_klines
+from Bot.Strategy.SmartOrder import SmartOrder
 
 ORDER_PATH = 'trades.json'
 ORDER_PATH_UPD = 'trades.json'
@@ -21,6 +17,7 @@ def main():
     # test_change_order()
     # res = get_historical_klines('LTCBTC', '1d', 'December 21, 2017', 'December 21, 2017')
     # print(res)
+    # test_smart_order()
     test_start_app()
 
 
@@ -32,6 +29,25 @@ def test_change_order():
     cl.save_orders('orders2.json', orders)
 
     orders = cl.load_order_list(cl.json_loader('orders2.json'))
+
+def test_smart_order():
+    price_change = []
+    price_change.extend(range(490, 465, -1))
+    price_change.extend(range(471, 479, 1))
+    price_change.extend(range(478, 463, -1))
+    price_change.extend(range(463, 473, 1))
+    so = SmartOrder('TRXBTC', True, 475, 10)
+    so.settings()
+    for p in price_change:
+        so.price_update(p)
+
+    price_change = []
+    price_change.extend(range(480, 474, -1))
+    price_change.extend(range(476, 480, 1))
+    so = SmartOrder('TRXBTC', True, 475, 10)
+    so.settings()
+    for p in price_change:
+        so.price_update(p)
 
 def test_start_app():
     cl = ConfigLoader()

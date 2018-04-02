@@ -1,6 +1,7 @@
 from typing import List
 from enum import Enum
 
+from Bot.EntrySettings import EntrySettings
 from Bot.StopLossSettings import StopLossSettings
 from Bot.Target import *
 
@@ -10,8 +11,9 @@ class Trade:
         BUY = 'buy'
         SELL = 'sell'
 
-    def __init__(self, symbol, side, asset, targets, sl_settings, status=None, vol=None, entry=None):
-        self.entry = entry
+    def __init__(self, symbol, side, asset, targets, sl_settings, status=None, entry=None):
+        self.entry = EntrySettings(**entry) if entry else None
+
         self.side = Trade.Side(side.lower())
         self.symbol = symbol
         self.sl_settings = StopLossSettings(**sl_settings)
@@ -34,6 +36,9 @@ class Trade:
     def is_sell_order(self):
         return self.side == Trade.Side.SELL
 
+    def has_entry(self):
+        return self.entry is not None
+
     def get_available_targets(self) -> List[Target]:
         return [t for t in self.targets if not t.is_completed()]
 
@@ -47,6 +52,8 @@ class Trade:
     def get_all_active_placed_targets(self) -> List[Target]:
         tgt = [self.sl_settings.initial_target]
         tgt.extend(self.targets)
+        if self.has_entry():
+            tgt.append(self.entry.target)
 
         return [t for t in tgt if not t.is_completed() and t.has_id()]
 

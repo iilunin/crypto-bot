@@ -64,8 +64,6 @@ class TradingStrategy:
         self.balance.avail = float(data['f'])
         self.balance.locked = float(data['l'])
 
-        self.logInfo('Account Info: {}'.format(data))
-
     # TODO: schedule validation once in some time
     def validate_target_orders(self):
         orders_dict = self.fx.get_all_orders(self.symbol())

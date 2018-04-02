@@ -45,10 +45,13 @@ class Target:
         return self.sl
 
     def is_stoploss_target(self):
-        return None
+        return False
 
     def is_regular_target(self):
-        return None
+        return False
+
+    def is_entry_target(self):
+        return False
 
     def __str__(self):
         return '{}:{:.08f}@{}'.format('StopLoss' if self.is_stoploss_target() else 'Regular', self.price, self.vol)
@@ -79,9 +82,6 @@ class RegularTarget(Target):
     def __init__(self, params):
         super().__init__(**params)
 
-    def is_stoploss_target(self):
-        return False
-
     def is_regular_target(self):
         return True
 
@@ -92,5 +92,10 @@ class StopLossTarget(Target):
     def is_stoploss_target(self):
         return True
 
-    def is_regular_target(self):
-        return False
+
+class EntryTarget(Target):
+    def __init__(self, params):
+        super().__init__(**params)
+
+    def is_entry_target(self):
+        return True
