@@ -19,14 +19,26 @@ class OrderHandler:
         self.trade_info_buf = {}
         self.process_delay = 500
         self.last_ts = 0
+        self.first_processing = True
+
+    def process_initial_prices(self):
+        if not self.first_processing:
+            return
+
+        self.first_processing = False
+
+        tickers = self.fx.get_all_tickers()
+        prices = {t['symbol']: float(t['price']) for t in tickers}
+        self.execute_strategy(prices)
 
     def start_listening(self):
+        self.process_initial_prices()
+
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.asset_dict = {s.trade.asset: s for s in self.strategies}
 
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
 
-        self.trade_info_buf.clear()
         self.trade_info_buf = {s.symbol(): [] for s in self.strategies}
 
         self.fx.start_listening()

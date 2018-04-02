@@ -54,6 +54,7 @@ class TradingStrategy:
             if t.id == orderId:
                 if self._update_trade_target_status_change(t, data['status']):
                     self.trigger_target_updated()
+                    self.order_status_changed(t, data)
                 break
 
     def order_status_changed(self, t: Target, data):
@@ -82,7 +83,8 @@ class TradingStrategy:
                     if self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
                                                                        float(orders_dict[t.id]['stop_price'])):
                         self.logInfo('Target price changed: {}'.format(t))
-                        # TODO: target price changed locally. need to cancel the order and recreate one
+                        self.fx.cancel_order(self.symbol(), t.id)
+                        t.set_canceled()
 
                 update_required = self._update_trade_target_status_change(t, s)
 

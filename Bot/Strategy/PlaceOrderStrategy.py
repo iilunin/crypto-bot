@@ -60,6 +60,7 @@ class PlaceOrderStrategy(TradingStrategy):
 
             if vol == 0:
                 self.logWarning('No volume left to process order @ price {:.0f}'.format(price))
+                continue
 
             if bal - vol < 0:
                 self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
@@ -77,15 +78,21 @@ class PlaceOrderStrategy(TradingStrategy):
         self.logInfo('Orders to be posted: {}'.format(orders))
         return orders
 
-
     def place_orders(self, allocations):
         for a in allocations:
             target = a.pop('target', None)
             order = self.fx.create_limit_order(sym=self.symbol(), **a)
-            target.id = order['orderId']
-            target.status = OrderStatus.ACTIVE
-
+            target.set_active(order['orderId'])
         self.trigger_target_updated()
+
+    def order_status_changed(self, t, data):
+        if not t.is_regular_target():
+            return
+
+        if t.is_completed():
+            self.logInfo('Target {} completed'.format(t))
+        else:
+            self.logInfo('Order status updated: {}'.format(t.status))
 
 
 

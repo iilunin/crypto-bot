@@ -1,49 +1,41 @@
 {
     "trades": [
         {
-            "entry": [
-                {
-                    "price": "0.00002419",
-                    "vol": 900
-                }
-            ],
+            "entry": null,
             "side": "SELL",
-            "symbol": "QLCBTC",
+            "symbol": "AEBTC",
             "sl_settings": {
-                "type": "FIXED",
-                "val": "5.0%",
-                "limit_price_threshold": "0.05%",
-                "threshold": 0.001,
+                "type": "TRAILING",
+                "val": "10.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.0005,
                 "initial_target": {
-                    "price": "0.00001800",
+                    "price": "0.00019500",
                     "vol": "100.0%"
                 }
             },
-            "asset": "QLC",
+            "asset": "AE",
             "targets": [
                 {
-                    "status": "COMPLETED",
-                    "price": "0.00002599",
+                    "id": 2763494,
+                    "status": "ACTIVE",
+                    "price": "0.00022940",
                     "vol": "50.0"
                 },
                 {
-                    "price": "0.00002734",
-                    "vol": "200.0"
+                    "id": 2763085,
+                    "status": "ACTIVE",
+                    "price": "0.00023450",
+                    "vol": "50.0"
                 },
                 {
-                    "price": "0.00002996",
-                    "vol": "250.0"
-                },
-                {
-                    "price": "0.00003321",
-                    "vol": "100.0%"
-                },
-                {
-                    "price": "0.00004100",
+                    "id": 2763086,
+                    "status": "ACTIVE",
+                    "price": "0.00024230",
                     "vol": "100.0%"
                 }
             ],
-            "status": "COMPLETED"
+            "status": "ACTIVE"
         },
         {
             "entry": [
@@ -53,38 +45,82 @@
                 }
             ],
             "side": "SELL",
-            "symbol": "ONTBTC",
+            "symbol": "LSKBTC",
             "sl_settings": {
-                "type": "FIXED",
-                "val": "5.0%",
+                "type": "TRAILING",
+                "val": "8.0%",
                 "limit_price_threshold": "0.1%",
-                "threshold": 0.5001,
+                "threshold": 0.0002,
                 "initial_target": {
-                    "id": 5873420,
-                    "price": "0.00029910",
+                    "price": "0.00100990",
                     "vol": "100.0%"
                 }
             },
-            "asset": "ONT",
+            "asset": "LSK",
             "targets": [
                 {
-                    "price": "0.00031300",
-                    "vol": "10.0"
+                    "id": 12891877,
+                    "status": "ACTIVE",
+                    "price": "0.00128000",
+                    "vol": "8.0"
                 },
                 {
-                    "price": "0.00032200",
-                    "vol": "20.0"
+                    "id": 12891878,
+                    "status": "ACTIVE",
+                    "price": "0.00134400",
+                    "vol": "50.0%"
                 },
                 {
-                    "price": "0.00033500",
-                    "vol": "20.0"
-                },
-                {
-                    "price": "0.00035500",
+                    "id": 12891879,
+                    "status": "ACTIVE",
+                    "price": "0.00152700",
                     "vol": "100.0%"
                 }
             ],
-            "status": "COMPLETED"
+            "status": "ACTIVE"
+        },
+        {
+            "entry": null,
+            "side": "SELL",
+            "symbol": "NEOBTC",
+            "sl_settings": {
+                "type": "TRAILING",
+                "val": "10.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.0002,
+                "initial_target": {
+                    "price": "0.00650000",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "NEO",
+            "targets": [
+                {
+                    "id": 41437003,
+                    "status": "ACTIVE",
+                    "price": "0.00780000",
+                    "vol": "1.0"
+                },
+                {
+                    "id": 41435926,
+                    "status": "ACTIVE",
+                    "price": "0.00790000",
+                    "vol": "1.0"
+                },
+                {
+                    "id": 41435927,
+                    "status": "ACTIVE",
+                    "price": "0.00830000",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 41437005,
+                    "status": "ACTIVE",
+                    "price": "0.00840000",
+                    "vol": "100.0%"
+                }
+            ],
+            "status": "ACTIVE"
         },
         {
             "entry": [
@@ -99,32 +135,90 @@
                 "type": "FIXED",
                 "val": "5.0%",
                 "limit_price_threshold": "0.1%",
-                "threshold": 0.001,
+                "threshold": 0.0002,
                 "initial_target": {
-                    "price": "0.00040010",
+                    "price": "0.00048000",
                     "vol": "100.0%"
                 }
             },
             "asset": "PIVX",
             "targets": [
                 {
-                    "id": 3594782,
-                    "price": "0.00055860",
+                    "id": 3615283,
+                    "status": "ACTIVE",
+                    "price": "0.00055790",
                     "vol": "10.0"
                 },
                 {
-                    "id": 3594783,
+                    "id": 3615284,
+                    "status": "ACTIVE",
                     "price": "0.00058030",
                     "vol": "10.0"
                 },
                 {
-                    "id": 3594785,
+                    "id": 3615285,
+                    "status": "ACTIVE",
                     "price": "0.00060080",
                     "vol": "50.0%"
                 },
                 {
-                    "id": 3594786,
+                    "id": 3615286,
+                    "status": "ACTIVE",
                     "price": "0.00063740",
+                    "vol": "100.0%"
+                }
+            ],
+            "status": "ACTIVE"
+        },
+        {
+            "entry": [
+                {
+                    "price": "0.00002419",
+                    "vol": 900
+                }
+            ],
+            "side": "SELL",
+            "symbol": "QLCBTC",
+            "sl_settings": {
+                "type": "TRAILING",
+                "val": "10.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.0005,
+                "initial_target": {
+                    "price": "0.00001800",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "QLC",
+            "targets": [
+                {
+                    "id": 1899527,
+                    "status": "ACTIVE",
+                    "price": "0.00002599",
+                    "vol": "50.0"
+                },
+                {
+                    "id": 1905308,
+                    "status": "ACTIVE",
+                    "price": "0.00002734",
+                    "vol": "200.0"
+                },
+                {
+                    "id": 1899531,
+                    "status": "ACTIVE",
+                    "price": "0.00002996",
+                    "vol": "250.0"
+                },
+                {
+                    "id": 1899534,
+                    "status": "ACTIVE",
+                    "price": "0.00003321",
+                    "vol": "50.0%"
+                },
+                {
+                    "id": 1899535,
+                    "status": "ACTIVE",
+                    "price": "0.00004100",
                     "vol": "100.0%"
                 }
             ],
@@ -141,7 +235,7 @@
             "symbol": "XVGBTC",
             "sl_settings": {
                 "type": "TRAILING",
-                "val": "5.0%",
+                "val": "10.0%",
                 "limit_price_threshold": "0.1%",
                 "threshold": 0.0002,
                 "initial_target": {
@@ -173,6 +267,54 @@
                     "id": 21938975,
                     "status": "ACTIVE",
                     "price": "0.00001180",
+                    "vol": "100.0%"
+                }
+            ],
+            "status": "ACTIVE"
+        },
+        {
+            "entry": [
+                {
+                    "price": "0.00030837",
+                    "vol": 900
+                }
+            ],
+            "side": "SELL",
+            "symbol": "ZRXBTC",
+            "sl_settings": {
+                "type": "FIXED",
+                "val": "5.0%",
+                "limit_price_threshold": "0.1%",
+                "threshold": 0.0002,
+                "initial_target": {
+                    "price": "0.00007100",
+                    "vol": "100.0%"
+                }
+            },
+            "asset": "ZRX",
+            "targets": [
+                {
+                    "id": 13692887,
+                    "status": "ACTIVE",
+                    "price": "0.00008821",
+                    "vol": "75.0"
+                },
+                {
+                    "id": 13692888,
+                    "status": "ACTIVE",
+                    "price": "0.00008931",
+                    "vol": "75.0"
+                },
+                {
+                    "id": 13690943,
+                    "status": "ACTIVE",
+                    "price": "0.00009642",
+                    "vol": "150.0"
+                },
+                {
+                    "id": 13690944,
+                    "status": "ACTIVE",
+                    "price": "0.00010537",
                     "vol": "100.0%"
                 }
             ],

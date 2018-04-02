@@ -35,6 +35,8 @@ class ConfigLoader:
         old_order = next(o for o in old_orders if o.symbol == order.symbol)
         old_orders.remove(old_order)
         old_orders.append(order)
+
+        old_orders.sort(key=lambda trade: trade.symbol)
         self.save_orders(saver, old_orders)
 
 

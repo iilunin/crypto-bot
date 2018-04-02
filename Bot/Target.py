@@ -1,4 +1,4 @@
-import json
+from datetime import datetime
 
 from Bot.OrderStatus import OrderStatus
 from Bot.Value import Value
@@ -25,8 +25,9 @@ class Target:
     def has_id(self):
         return self.id is not None
 
-    def set_completed(self):
+    def set_completed(self, date=datetime.now()):
         self.status = OrderStatus.COMPLETED
+        self.date = date
 
     def set_canceled(self):
         self.status = OrderStatus.NEW
@@ -43,6 +44,9 @@ class Target:
         return self.sl
 
     def is_stoploss_target(self):
+        return None
+
+    def is_regular_target(self):
         return None
 
     def __str__(self):
@@ -77,6 +81,8 @@ class RegularTarget(Target):
     def is_stoploss_target(self):
         return False
 
+    def is_regular_target(self):
+        return True
 
 class StopLossTarget(Target):
     def __init__(self, params):
@@ -84,3 +90,6 @@ class StopLossTarget(Target):
 
     def is_stoploss_target(self):
         return True
+
+    def is_regular_target(self):
+        return False

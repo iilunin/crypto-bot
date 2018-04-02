@@ -22,9 +22,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.set_trade_completed()
             return
 
-        if self.last_price != new_price:
-            self.logInfo('Price: {:.08f}'.format(new_price))
-            self.last_price = new_price
+        # self.log_price(new_price)
 
         if self.trade.status == OrderStatus.NEW:
             if self.trade.entry is not None:
@@ -40,6 +38,11 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
             if not self.strategy_sl.is_stoploss_order_active():
                 self.strategy_po.execute(new_price)
+
+    def log_price(self, new_price):
+        if self.last_price != new_price:
+            self.logInfo('Price: {:.08f}'.format(new_price))
+            self.last_price = new_price
 
     def order_status_changed(self, t, data):
         self.strategy_sl.order_status_changed(t, data)

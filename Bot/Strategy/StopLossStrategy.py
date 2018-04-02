@@ -102,7 +102,7 @@ class StopLossStrategy(TradingStrategy):
         if not t.is_stoploss_target():
             return
 
-        if t.status == OrderStatus.COMPLETED:
+        if t.is_completed():
             self.set_trade_completed()
         else:
             self.logInfo('Order status updated: {}'.format(t.status))
