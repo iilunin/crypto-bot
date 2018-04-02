@@ -31,7 +31,6 @@ class Trade:
         self.targets.extend([RegularTarget(t) for t in targets])
         self.targets.sort(key=lambda t: t.price, reverse=self.side == Trade.Side.BUY)
 
-
     def is_sell_order(self):
         return self.side == Trade.Side.SELL
 
@@ -44,6 +43,7 @@ class Trade:
     def get_initial_stop(self) -> Target:
         return self.sl_settings.initial_target
 
+    # TODO: add entry targets
     def get_all_active_placed_targets(self) -> List[Target]:
         tgt = [self.sl_settings.initial_target]
         tgt.extend(self.targets)

@@ -23,22 +23,6 @@ class FXConnector:
 
         def adjust_price(self, q, round_down=True):
             return float(Decimal(q).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
-        #     self.get_roundings()
-        #
-        # def get_roundings(self):
-        #     self.minNotionalRound = self.calc_dec(self.minNotional)
-        #     self.stepSizeRound = self.calc_dec(self.stepSize)
-        #     self.minQtyRound = self.calc_dec(self.minQty)
-        #     self.tickSizeRound = self.calc_dec(self.tickSize)
-        #     self.minPriceRound = self.calc_dec(self.minPrice)
-        #
-        # def calc_dec(self, s: str):
-        #     del_index = s.index('.')
-        #     if s[0] == '1':
-        #         return del_index - 1
-        #
-        #     return s.index('1') - del_index
-
 
 
     ORDER_STATUS_NEW = 'NEW'
@@ -93,6 +77,14 @@ class FXConnector:
 
     def get_open_orders(self, sym):
         return [o['orderId'] for o in self.client.get_open_orders(symbol=sym)]
+
+    def get_all_orders(self, sym, limit=500):
+        return {o['orderId']: {'status': o['status'],
+                               'price': o['price'],
+                               'stop_price': o['stopPrice'],
+                               'vol': o['origQty'],
+                               'vol_exec': o['executedQty']}
+                for o in self.client.get_all_orders(symbol=sym, limit=limit)}
 
     def get_order_status(self, id):
         return self.client.get_order(orderId=id)

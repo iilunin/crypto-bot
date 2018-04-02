@@ -143,31 +143,35 @@
                 "type": "TRAILING",
                 "val": "5.0%",
                 "limit_price_threshold": "0.1%",
-                "threshold": 0.001,
+                "threshold": 0.0002,
                 "initial_target": {
-                    "price": "0.00000615",
+                    "price": "0.00000618",
                     "vol": "100.0%"
                 }
             },
             "asset": "XVG",
             "targets": [
                 {
-                    "id": 21871782,
+                    "id": 21938967,
+                    "status": "ACTIVE",
                     "price": "0.00000730",
                     "vol": "50.0%"
                 },
                 {
-                    "id": 21871783,
+                    "id": 21938970,
+                    "status": "ACTIVE",
                     "price": "0.00000860",
                     "vol": "50.0%"
                 },
                 {
-                    "id": 21871784,
+                    "id": 21938971,
+                    "status": "ACTIVE",
                     "price": "0.00001000",
                     "vol": "50.0%"
                 },
                 {
-                    "id": 21871785,
+                    "id": 21938975,
+                    "status": "ACTIVE",
                     "price": "0.00001180",
                     "vol": "100.0%"
                 }

@@ -8,25 +8,26 @@ from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 
 
 class OrderHandler:
-    def __init__(self, orders: List[Trade], fx: FXConnector, order_updated_handler=None):
+    def __init__(self, trades: List[Trade], fx: FXConnector, order_updated_handler=None):
         # self.orders = {o.symbol: o for o in orders}
         self.fx = fx
 
-        self.strategies = [TargetsAndStopLossStrategy(o, fx, order_updated_handler) for o in orders]
+        self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler) for t in trades]
+        self.strategies_dict = {}
+        self.asset_dict = {}
 
         self.trade_info_buf = {}
-        self.trend = {}
         self.process_delay = 500
         self.last_ts = 0
 
     def start_listening(self):
+        self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        self.asset_dict = {s.trade.asset: s for s in self.strategies}
+
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
 
         self.trade_info_buf.clear()
         self.trade_info_buf = {s.symbol(): [] for s in self.strategies}
-        self.trend = {s.symbol(): [] for s in self.strategies}
-
-        self.validate_assets()
 
         self.fx.start_listening()
         self.last_ts = dt.now()
@@ -131,10 +132,28 @@ class OrderHandler:
         #        {'a': 'QLC', 'f': '999.90700000', 'l': '0.00000000'}]}
 
         if msg['e'] == 'outboundAccountInfo':
-            pass
+            assets = list(self.asset_dict.keys())
+            for asset in msg['B']:
+                if asset['a'] in assets:
+                    asset_name = asset['a']
+                    strategy = self.asset_dict[asset_name]
+
+                    strategy.account_info(asset)
+                    assets.remove(asset_name)
+
+                    if len(asset) == 0:
+                        break
         elif msg['e'] == 'executionReport':
-            pass
-        print(msg)
+            sym = msg['s']
+
+            if sym in self.strategies_dict:
+                self.strategies_dict[sym].execution_rpt(
+                    {'orderId': msg['i'],
+                     'status': msg['X'],
+                     'symbol': sym,
+                     'side': msg['S'],
+                     'vol': msg['q'],
+                     'price': msg['p']})
 
     def listen_handler(self, msg):
         # {
@@ -161,14 +180,12 @@ class OrderHandler:
                 mean_prices = self.aggreagate_fx_prices()
                 self.execute_strategy(mean_prices)
 
-
     def aggreagate_fx_prices(self):
         mp = {}
         for sym, prices in self.trade_info_buf.items():
             if not prices:
                 continue
             mean_price = np.mean(np.array(prices).astype(np.float))
-            print('{}:{:.8f}; {}'.format(sym, mean_price, len(prices)))
             self.trade_info_buf[sym] = []
 
             mp[sym] = mean_price
@@ -180,5 +197,9 @@ class OrderHandler:
             if s.symbol() in prices:
                 s.execute(prices[s.symbol()])
 
-    def validate_assets(self):
-        [s.validate_asset_balance() for s in self.strategies]
+    def check_strategy_is_complete(self):
+        for s in self.strategies[:]:
+            if s.is_completed():
+                self.strategies.remove(s)
+                self.stop_listening()
+                self.start_listening()

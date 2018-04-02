@@ -1,25 +1,53 @@
+import logging
+
 from binance.exceptions import BinanceAPIException
 
+from Bot.OrderStatus import OrderStatus
 from Bot.StopLossSettings import StopLossSettings
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
+from Bot.Target import Target
 from Bot.Trade import Trade
 from Bot.Value import Value
 
 
 class StopLossStrategy(TradingStrategy):
-    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None):
-        super().__init__(trade, fx, trade_updated, nested, exchange_info)
+    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
+        super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.current_stop_loss = 0
         self.adjust_stoploss_price()
 
+        if self.logger.isEnabledFor(logging.INFO):
+            self.last_sl = 0
+            self.last_th = 0
+
     def is_stoploss_order_active(self):
-        return self.trade.get_initial_stop().has_id()
+        return self.trade.get_initial_stop().is_active()
+
+    def is_sl_completed(self):
+        return self.trade.get_initial_stop().status == OrderStatus.COMPLETED
 
     def execute(self, new_price):
+
+        if self.is_completed():
+            return
+
+        if self.is_sl_completed():
+            return
+
         self.adjust_stoploss_price(new_price)
         self.adjust_stoploss_order(new_price)
-        self.logInfo('SL:{:.08f}'.format(self.current_stop_loss))
+
+        self.log_stoploss()
+
+    def log_stoploss(self):
+        if self.logger.isEnabledFor(logging.INFO):
+            treshold = self.get_sl_treshold()
+            if self.last_sl != self.current_stop_loss or self.last_th != treshold:
+                self.logInfo('SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(self.current_stop_loss,
+                                                                                            treshold))
+                self.last_th = treshold
+                self.last_sl = self.current_stop_loss
 
     def adjust_stoploss_price(self, current_price=None):
         closed_targets = [o for o in self.trade.get_closed_targets()]
@@ -64,16 +92,29 @@ class StopLossStrategy(TradingStrategy):
             self.set_stoploss_order()
         else:
             self.cancel_stoploss_orders()
+            self.validate_asset_balance()
+
+    def get_sl_treshold(self):
+        threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
+        return (self.current_stop_loss + threshold) if self.trade.is_sell_order() else  (self.current_stop_loss - threshold)
+
+    def order_status_changed(self, t: Target, data):
+        if not t.is_stoploss_target():
+            return
+
+        if t.status == OrderStatus.COMPLETED:
+            self.set_trade_completed()
+        else:
+            self.logInfo('Order status updated: {}'.format(t.status))
 
     def set_stoploss_order(self):
-        # if we have order in place
-        if self.trade.sl_settings.initial_target.id:
-            self.logInfo('validating stoploss order')
-            # TODO: implement orders validation
-            if True: # validate it
-                return
-            else:
-                pass
+        if self.trade.sl_settings.initial_target.is_active():
+            return
+            # self.logInfo('validating stoploss order')
+            # if True: # validate it
+            #     return
+            # else:
+            #     pass
 
         if self.simulate:
             order = self.fx.create_test_stop_order(self.symbol(), self.trade_side(), self.current_stop_loss, 50)
@@ -89,11 +130,11 @@ class StopLossStrategy(TradingStrategy):
                 side=self.trade_side(),
                 stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
                 price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
-                volume=self.exchange_info.adjust_quanity(self.available)
+                volume=self.exchange_info.adjust_quanity(self.balance.avail)
             )
 
-        self.trade.sl_settings.initial_target.id = order['orderId']
-        self.trigger_order_updated()
+        self.trade.sl_settings.initial_target.set_active(order['orderId'])
+        self.trigger_target_updated()
 
         self.logInfo('setting stop loss order')
 
@@ -117,7 +158,7 @@ class StopLossStrategy(TradingStrategy):
             self.logInfo('Order {} canceled'.format(id))
             try:
                 tgt = next(t for t in active_targets if t.id == id)
-                tgt.id = None
+                tgt.set_canceled()
             except StopIteration:
                 pass
 
@@ -130,6 +171,6 @@ class StopLossStrategy(TradingStrategy):
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
-        self.trade.sl_settings.initial_target.id = None
-        self.trigger_order_updated()
+        self.trade.sl_settings.initial_target.set_canceled()
+        self.trigger_target_updated()
         self.logInfo('canceling stoploss orders')

@@ -9,13 +9,22 @@ from Bot.Trade import Trade
 class TargetsAndStopLossStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None):
         super().__init__(trade, fx, trade_updated)
-        self.strategy_sl = StopLossStrategy(trade, fx, trade_updated, True, self.exchange_info)
-        self.strategy_po = PlaceOrderStrategy(trade, fx, trade_updated, True, self.exchange_info)
+        self.strategy_sl = StopLossStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance)
+        self.strategy_po = PlaceOrderStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance)
+        self.last_price = 0
 
     def execute(self, new_price):
-        if self.trade.status == OrderStatus.COMPLETED:
+        if self.is_completed():
             self.logInfo('Trade Complete')
             return
+
+        if self.strategy_sl.is_completed() or self.strategy_po.is_completed():
+            self.set_trade_completed()
+            return
+
+        if self.last_price != new_price:
+            self.logInfo('Price: {:.08f}'.format(new_price))
+            self.last_price = new_price
 
         if self.trade.status == OrderStatus.NEW:
             if self.trade.entry is not None:
@@ -29,9 +38,10 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         if self.trade.status == OrderStatus.ACTIVE:
             self.strategy_sl.execute(new_price)
 
-            if self.strategy_sl.is_stoploss_order_active():
-                self.logInfo('SL is Active')
-            else:
+            if not self.strategy_sl.is_stoploss_order_active():
                 self.strategy_po.execute(new_price)
-                pass
+
+    def order_status_changed(self, t, data):
+        self.strategy_sl.order_status_changed(t, data)
+        self.strategy_po.order_status_changed(t, data)
 

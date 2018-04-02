@@ -1,15 +1,22 @@
 import logging
 
 from Bot.FXConnector import FXConnector
+from Bot.OrderStatus import OrderStatus
+from Bot.Target import Target
 from Bot.Trade import Trade
 
 
+class Balance:
+    def __init__(self, available=0., locked=0.):
+        self.avail = available
+        self.locked = locked
+
+
 class TradingStrategy:
-    def __init__(self, trade: Trade, fx: FXConnector, order_updated=None, nested=False, exchange_info=None):
+    def __init__(self, trade: Trade, fx: FXConnector, order_updated=None, nested=False, exchange_info=None, balance=None):
         self.trade = trade
         self.fx = fx
-        self.available = 0.
-        self.locked = 0.
+        self.balance = Balance()
         self.exchange_info = None
         self.simulate = False
         self.trade_updated = order_updated
@@ -18,6 +25,9 @@ class TradingStrategy:
 
         if nested:
             self.exchange_info = exchange_info
+
+            if balance:
+                self.balance = balance
         else:
             self.init()
 
@@ -34,27 +44,74 @@ class TradingStrategy:
     def symbol(self):
         return self.trade.symbol
 
+    def execution_rpt(self, data):
+        self.logInfo('Execution Rpt: {}'.format(data))
+        orderId = data['orderId']
+
+        tgts = self.trade.get_all_active_placed_targets()
+
+        for t in tgts:
+            if t.id == orderId:
+                if self._update_trade_target_status_change(t, data['status']):
+                    self.trigger_target_updated()
+                break
+
+    def order_status_changed(self, t: Target, data):
+        pass
+
+    def account_info(self, data):
+        self.balance.avail = float(data['f'])
+        self.balance.locked = float(data['l'])
+
+        self.logInfo('Account Info: {}'.format(data))
+
     # TODO: schedule validation once in some time
     def validate_target_orders(self):
-        orderIdList = self.fx.get_open_orders(self.symbol())
+        orders_dict = self.fx.get_all_orders(self.symbol())
+
         tgts = self.trade.get_all_active_placed_targets()
 
         update_required = False
         for t in tgts:
-            if t.id not in orderIdList:
-                t.id = None
+            if t.id not in orders_dict:
+                t.set_canceled()
                 update_required = True
+            else:
+                s = orders_dict[t.id]['status']
+                if s == 'NEW':
+                    if self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
+                                                                       float(orders_dict[t.id]['stop_price'])):
+                        self.logInfo('Target price changed: {}'.format(t))
+                        # TODO: target price changed locally. need to cancel the order and recreate one
+
+                update_required = self._update_trade_target_status_change(t, s)
 
         if update_required:
-            self.trigger_order_updated()
+            self.trigger_target_updated()
+
+    def _update_trade_target_status_change(self, t: Target, status: str) -> bool:
+        if status == 'FILLED':
+            t.set_completed()
+            return True
+
+        if status in ['CANCELED', 'REJECTED', 'EXPIRED']:
+            t.set_canceled()
+            return True
+
+        return False
+
 
     def execute(self, new_price):
         pass
 
     def validate_asset_balance(self):
-        self.available, self.locked = self.fx.get_balance(self.trade.asset)
+        self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)
 
-    def trigger_order_updated(self):
+    def set_trade_completed(self):
+        self.trade = OrderStatus.COMPLETED
+        self.trigger_target_updated()
+
+    def trigger_target_updated(self):
         if self.trade_updated:
             self.trade_updated(self.trade)
 

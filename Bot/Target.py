@@ -16,11 +16,25 @@ class Target:
     def is_completed(self):
         return self.status == OrderStatus.COMPLETED
 
+    def is_new(self):
+        return self.status == OrderStatus.NEW
+
+    def is_active(self):
+        return self.status == OrderStatus.ACTIVE
+
     def has_id(self):
         return self.id is not None
 
     def set_completed(self):
         self.status = OrderStatus.COMPLETED
+
+    def set_canceled(self):
+        self.status = OrderStatus.NEW
+        self.id = None
+
+    def set_active(self, id):
+        self.status = OrderStatus.ACTIVE
+        self.id = id
 
     def has_custom_stop(self):
         return self.sl != 0
@@ -32,7 +46,7 @@ class Target:
         return None
 
     def __str__(self):
-        return '{}:{}@{}'.format('SL' if self.is_stoploss_target() else 'REG', self.price, self.vol)
+        return '{}:{:.08f}@{}'.format('StopLoss' if self.is_stoploss_target() else 'Regular', self.price, self.vol)
 
     def to_json_dict(self):
         fmt = '{:.8f}'
