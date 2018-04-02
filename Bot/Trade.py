@@ -60,10 +60,9 @@ class Trade:
     def is_completed(self):
         return self.status == OrderStatus.COMPLETED
 
+    def set_active(self):
+        self.status = OrderStatus.ACTIVE
+
     def __str__(self):
         return '{}: {}'.format(self.symbol, self.side)
-
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
 

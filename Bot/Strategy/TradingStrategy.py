@@ -108,7 +108,7 @@ class TradingStrategy:
         self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)
 
     def set_trade_completed(self):
-        self.trade = OrderStatus.COMPLETED
+        self.trade.status = OrderStatus.COMPLETED
         self.trigger_target_updated()
 
     def trigger_target_updated(self):

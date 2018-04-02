@@ -10,9 +10,12 @@ from Bot.Value import Value
 
 
 class EntryStrategy(TradingStrategy):
-    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
+    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None, smart=True):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
-        self.smart_order = SmartOrder(self.symbol(), self.side() == Trade.Side.BUY, self.trade_target().price, True)
+        self.is_smart = smart
+
+        self.smart_order = SmartOrder(self.symbol(), self.trade_side() == Trade.Side.BUY, self.trade_target().price, True, self.on_smart_buy) \
+            if self.is_smart else None
 
     def execute(self, new_price):
         try:
@@ -23,24 +26,47 @@ class EntryStrategy(TradingStrategy):
 
             if self.validate_all_completed([target]):
                 self.logInfo('All Orders are Completed')
-                self.set_trade_completed()
                 return
 
-            if self.validate_all_orders([target]):
+            if not self.is_smart and self.validate_all_orders([target]):
                 return
 
-            if self.smart_order.price_update(new_price):
+            if self.is_smart:
+                self.smart_order.price_update(new_price)
+            else:
                 self.place_orders(
-                    [{'price': self.exchange_info.adjust_price(new_price),
-                    'volume': self.exchange_info.adjust_quanity(target.vol.v),
-                    'side': self.side().name,
-                    'target': target}])
+                        [{'price': self.exchange_info.adjust_price(new_price if self.is_smart else target.price),
+                          'volume': self.exchange_info.adjust_quanity(target.vol.v),
+                          'side': self.side().name,
+                          'target': target}])
 
-                self.logInfo('Entry Order is Placed')
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
-    def side(self):
+    def on_smart_buy(self, sl_price):
+        t = self.trade_target()
+        if t.is_active():
+            self.fx.cancel_order(self.symbol(), t.id)
+            t.set_canceled()
+            self.trigger_target_updated()
+
+        if self.trade_side() == Trade.Side.BUY:
+            limit = max(sl_price, t.price)
+        else:
+            limit = min(sl_price, t.price)
+
+        order = self.fx.create_stop_order(
+            sym=self.symbol(),
+            side=self.trade_side().name,
+            stop_price=self.exchange_info.adjust_price(limit),
+            price=self.exchange_info.adjust_price(sl_price),
+            volume=self.exchange_info.adjust_quanity(t.vol.v)
+        )
+
+        t.set_active(order['orderId'])
+        self.trigger_target_updated()
+
+    def trade_side(self):
         return Trade.Side.BUY if self.trade.side == Trade.Side.SELL else Trade.Side.SELL
 
     def trade_target(self):
@@ -91,7 +117,13 @@ class EntryStrategy(TradingStrategy):
     def place_orders(self, allocations):
         for a in allocations:
             target = a.pop('target', None)
-            order = self.fx.create_limit_order(sym=self.symbol(), **a)
+
+            if self.is_smart:
+                a.pop('price', None)
+                order = self.fx.create_makret_order(sym=self.symbol(), **a)
+            else:
+                order = self.fx.create_limit_order(sym=self.symbol(), **a)
+
             target.set_active(order['orderId'])
         self.trigger_target_updated()
 

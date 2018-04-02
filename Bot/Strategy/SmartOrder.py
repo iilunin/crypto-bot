@@ -2,11 +2,12 @@ from Bot.Value import Value
 
 
 class SmartOrder:
-    def __init__(self, sym, is_buy, price, buy_ignore_threshold=False, sl_threshold=Value("0.04%"), pull_back=Value("1.6%")):
+    def __init__(self, sym, is_buy, price, buy_ignore_threshold=False,
+                 on_update=None, sl_threshold=Value("0.08%"), pull_back=Value("0.6%")):
         self.sym = sym
         self.is_buy = is_buy
         self.target_price = price
-        self.last_best_price = 0
+        self.best_pb_limit = 0
         self.allow_buy_after_threshold = buy_ignore_threshold
 
         self.sl_threshold = sl_threshold
@@ -14,6 +15,7 @@ class SmartOrder:
 
         self.target_zone_touched = False
         self.bought = False
+        self.on_update = on_update
 
         self.init_settings()
 
@@ -30,7 +32,7 @@ class SmartOrder:
 
         self.sl_threshold_zone_limit = round(self.target_price + self.sl_threshold_val * (1 if self.is_buy else -1), 8)
 
-        print('{} Pulback: {:.8f}; Limit: {:.8f}'.format(self.sym, self.pull_back_threshold_val, self.sl_threshold_zone_limit))
+        print('{}. Target Price: {:.8f}; Max Pulback: {:.8f}; Limit: {:.8f}'.format(self.sym, self.target_price,  self.pull_back_threshold_val, self.sl_threshold_zone_limit))
 
     def price_update(self, new_price):
         if self.bought:
@@ -53,34 +55,37 @@ class SmartOrder:
             self.target_zone_touched = sl_treshhold_zone
 
         if self.target_zone_touched:
-            if self.last_best_price == 0:
-                self.last_best_price = new_price
-
             # work with pull-back and stoploss
 
-            pb_limit = self.last_best_price + self.pull_back_threshold_val * (1 if self.is_buy else -1)
+            limit_for_this_price = new_price + self.pull_back_threshold_val * (1 if self.is_buy else -1)
+
             fn = min if self.is_buy else max
-            pb_limit = fn(pb_limit, self.sl_threshold_zone_limit)
+            limit_for_this_price = fn(limit_for_this_price, self.sl_threshold_zone_limit)
+
+            if self.best_pb_limit != 0:
+                limit_for_this_price = fn(limit_for_this_price, self.best_pb_limit)
 
             print('{} will be triggered when price will reach {}; Current price: {}'.format(
-                'Buy' if self.is_buy else 'Sell', pb_limit, new_price))
+                'Buy' if self.is_buy else 'Sell', limit_for_this_price, new_price))
 
-            if ((self.is_buy and new_price >= pb_limit) or
-                    (not self.is_buy and new_price <= pb_limit)):
-                self.trigger_buy(new_price)
+            if ((self.is_buy and new_price >= limit_for_this_price) or
+                    (not self.is_buy and new_price <= limit_for_this_price)):
+                self.trigger_buy(new_price, limit_for_this_price)
                 return True
 
-            if ((self.is_buy and self.last_best_price > new_price) or
-                    (not self.is_buy and self.last_best_price < new_price)):
-                self.last_best_price = new_price
+            if ((self.is_buy and self.best_pb_limit > limit_for_this_price) or
+                    (not self.is_buy and self.best_pb_limit < new_price) or
+                    self.best_pb_limit == 0):
+                self.best_pb_limit = limit_for_this_price
+                self.trigger_buy(new_price, limit_for_this_price)
         else:
             self.target_zone_touched = target_zone
 
         return False
 
-    def trigger_buy(self, price):
-        self.bought = True
-        print('{} {}, {:.08f}'.format('Buy' if self.is_buy else 'Sell', self.sym, price))
-
+    def trigger_buy(self, current_price, pb_limit):
+        print('{} {}, {:.08f}'.format('Buy' if self.is_buy else 'Sell', self.sym, current_price))
+        if self.on_update:
+            self.on_update(pb_limit)
 
 

@@ -92,6 +92,14 @@ class FXConnector:
     def get_order_status(self, id):
         return self.client.get_order(orderId=id)
 
+    def create_makret_order(self, sym, side, price, volume):
+        return self.client.create_order(
+            symbol=sym,
+            side=side,
+            type=FXConnector.ORDER_TYPE_MARKET,
+            quantity=FXConnector.format_number(volume),
+            price=FXConnector.format_number(price))
+
     def create_limit_order(self, sym, side, price, volume):
         return self.client.create_order(
             symbol=sym,
