@@ -144,8 +144,9 @@
             "asset": "PIVX",
             "targets": [
                 {
+                    "date": "2018-04-02 07:53:26",
                     "id": 3615283,
-                    "status": "ACTIVE",
+                    "status": "COMPLETED",
                     "price": "0.00055790",
                     "vol": "10.0"
                 },

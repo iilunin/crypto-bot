@@ -25,6 +25,7 @@ class Target:
     def has_id(self):
         return self.id is not None
 
+    # def set_completed(self, date_str=datetime.now().replace(microsecond=0).isoformat(' ')):
     def set_completed(self, date=datetime.now()):
         self.status = OrderStatus.COMPLETED
         self.date = date

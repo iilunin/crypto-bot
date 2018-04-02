@@ -6,6 +6,12 @@ from Bot.OrderStatus import OrderStatus
 from Bot.OrderValidator import OrderValidator
 from Bot.ConfigLoader import ConfigLoader
 
+
+from binance.client import Client
+from datetime import datetime, date
+
+from hist_data import get_historical_klines
+
 ORDER_PATH = 'trades.json'
 ORDER_PATH_UPD = 'trades.json'
 
@@ -13,7 +19,10 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # test_change_order()
+    # res = get_historical_klines('LTCBTC', '1d', 'December 21, 2017', 'December 21, 2017')
+    # print(res)
     test_start_app()
+
 
 def test_change_order():
     cl = ConfigLoader()

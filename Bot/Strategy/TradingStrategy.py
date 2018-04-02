@@ -86,7 +86,7 @@ class TradingStrategy:
                         self.fx.cancel_order(self.symbol(), t.id)
                         t.set_canceled()
 
-                update_required = self._update_trade_target_status_change(t, s)
+                update_required |= self._update_trade_target_status_change(t, s)
 
         if update_required:
             self.trigger_target_updated()
