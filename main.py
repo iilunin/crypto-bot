@@ -2,13 +2,14 @@ import logging
 
 from Bot.FXConnector import FXConnector
 from Bot.OrderHandler import OrderHandler
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.OrderValidator import OrderValidator
 from Bot.ConfigLoader import ConfigLoader
 
 from Bot.Strategy.SmartOrder import SmartOrder
 
 ORDER_PATH = 'trades.json'
+ORDER_PATH_PORTFOLIO = 'trades_portfolio.json'
 ORDER_PATH_UPD = 'trades.json'
 
 logging.basicConfig(level=logging.INFO)
@@ -18,17 +19,20 @@ def main():
     # res = get_historical_klines('LTCBTC', '1d', 'December 21, 2017', 'December 21, 2017')
     # print(res)
     # test_smart_order()
-    test_start_app()
+    test_start_app(ORDER_PATH_PORTFOLIO)
+    # test_change_order()
 
 
 def test_change_order():
     cl = ConfigLoader()
-    orders = cl.load_order_list(cl.json_loader('trades_portfolio.json'))
-    orders[0].get_available_targets()[0].set_completed()
-    orders[0].status = OrderStatus.COMPLETED
-    cl.save_orders('orders2.json', orders)
+    orders = cl.load_order_list(cl.json_loader('trades.json'))
 
-    orders = cl.load_order_list(cl.json_loader('orders2.json'))
+
+    # orders[0].get_available_targets()[0].set_completed()
+    # orders[0].status = OrderStatus.COMPLETED
+    cl.save_orders(cl.json_saver('trades2.json'), orders)
+
+    orders = cl.load_order_list(cl.json_loader('trades2.json'))
 
 def test_smart_order():
     price_change = []
@@ -50,11 +54,11 @@ def test_smart_order():
     for p in price_change:
         so.price_update(p)
 
-def test_start_app():
+def test_start_app(path=ORDER_PATH):
     cl = ConfigLoader()
 
-    o_loader = cl.json_loader(ORDER_PATH)
-    o_saver = cl.json_saver(ORDER_PATH)
+    o_loader = cl.json_loader(path)
+    o_saver = cl.json_saver(path)
     orders = cl.load_order_list(o_loader)
     ov = OrderValidator()
 

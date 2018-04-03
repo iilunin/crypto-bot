@@ -1,6 +1,6 @@
 from binance.exceptions import BinanceAPIException
 
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
 from Bot.Trade import Trade

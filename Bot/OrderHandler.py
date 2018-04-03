@@ -165,7 +165,8 @@ class OrderHandler:
                      'symbol': sym,
                      'side': msg['S'],
                      'vol': msg['q'],
-                     'price': msg['p']})
+                     'price': msg['p'],
+                     'stop_price': msg['P']})
 
     def listen_handler(self, msg):
         # {
@@ -200,7 +201,7 @@ class OrderHandler:
             mean_price = np.mean(np.array(prices).astype(np.float))
             self.trade_info_buf[sym] = []
 
-            mp[sym] = mean_price
+            mp[sym] = round(mean_price, 8)
 
         return mp
 

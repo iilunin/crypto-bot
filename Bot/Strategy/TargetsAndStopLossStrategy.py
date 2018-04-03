@@ -1,5 +1,5 @@
 from Bot.FXConnector import FXConnector
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.Strategy.EntryStrategy import EntryStrategy
 from Bot.Strategy.PlaceOrderStrategy import PlaceOrderStrategy
 from Bot.Strategy.StopLossStrategy import StopLossStrategy
@@ -23,6 +23,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             if trade.has_entry() and not trade.entry.target.is_completed() else None
 
         self.last_price = 0
+        self.last_execution_price = 0
 
     def execute(self, new_price):
         if self.is_completed():
@@ -34,6 +35,11 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             return
 
         # self.log_price(new_price)
+
+        if new_price == self.last_execution_price:
+            return
+
+        self.last_execution_price = new_price
 
         if self.trade.status == OrderStatus.NEW:
             if self.trade.has_entry():

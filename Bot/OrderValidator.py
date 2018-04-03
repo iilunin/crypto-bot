@@ -1,5 +1,5 @@
 from Bot.Trade import Trade
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus, Side
 
 
 class OrderValidator:
@@ -53,8 +53,8 @@ class OrderValidator:
             if t.status == OrderStatus.COMPLETED:
                 continue
 
-            if (order.side == Trade.Side.SELL and order.get_initial_stop().price >= t.price) or \
-                    (order.side == Trade.Side.BUY and order.get_initial_stop().price <= t.price):
+            if (order.side == Side.SELL and order.get_initial_stop().price >= t.price) or \
+                    (order.side == Side.BUY and order.get_initial_stop().price <= t.price):
                 self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
                 return False
 

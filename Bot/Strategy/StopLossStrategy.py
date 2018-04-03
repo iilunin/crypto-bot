@@ -2,7 +2,7 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.StopLossSettings import StopLossSettings
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
@@ -81,7 +81,8 @@ class StopLossStrategy(TradingStrategy):
             elif not self.trade.is_sell_order() and expected_stop_loss < self.current_stop_loss:
                 self.current_stop_loss = expected_stop_loss
 
-            self.logInfo('SL:{:.08f}, EXP:{:.08f}, P:{:.08f}'.format(self.current_stop_loss, expected_stop_loss, current_price))
+            if self.last_sl != self.current_stop_loss:
+                self.logInfo('SL:{:.08f}, EXP:{:.08f}, P:{:.08f}'.format(self.current_stop_loss, expected_stop_loss, current_price))
 
 
     def adjust_stoploss_order(self, current_price):
@@ -96,7 +97,7 @@ class StopLossStrategy(TradingStrategy):
 
     def get_sl_treshold(self):
         threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
-        return (self.current_stop_loss + threshold) if self.trade.is_sell_order() else  (self.current_stop_loss - threshold)
+        return (self.current_stop_loss + threshold) if self.trade.is_sell_order() else (self.current_stop_loss - threshold)
 
     def order_status_changed(self, t: Target, data):
         if not t.is_stoploss_target():

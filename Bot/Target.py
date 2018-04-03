@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.Value import Value
 
 

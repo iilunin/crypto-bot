@@ -3,19 +3,17 @@
         {
             "entry": {
                 "target": {
-                    "date": "2018-04-03 00:15:29",
-                    "id": 22195398,
-                    "status": "COMPLETED",
-                    "price": "0.00000735",
-                    "vol": "1149.000000"
+                    "price": "0.00006982",
+                    "vol": "300"
                 },
-                "sl_threshold": "0.000007",
-                "pullback_threshold": "0.000000"
+                "sl_threshold": "0.00000020",
+                "pullback_threshold": "0.00000030",
+                "side": "SELL"
             },
             "side": "BUY",
-            "symbol": "XVGBTC",
+            "symbol": "XRPBTC",
             "sl_settings": null,
-            "asset": "XVG",
+            "asset": "XRP",
             "targets": [],
             "status": "ACTIVE"
         }

@@ -1,7 +1,7 @@
 import logging
 
 from Bot.FXConnector import FXConnector
-from Bot.OrderStatus import OrderStatus
+from Bot.OrderEnums import OrderStatus
 from Bot.Target import Target
 from Bot.Trade import Trade
 
