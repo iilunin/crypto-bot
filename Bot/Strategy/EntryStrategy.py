@@ -14,7 +14,11 @@ class EntryStrategy(TradingStrategy):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.is_smart = smart
 
-        self.smart_order = SmartOrder(self.symbol(), self.trade_side() == Trade.Side.BUY, self.trade_target().price, True, self.on_smart_buy) \
+        self.smart_order = SmartOrder(self.trade_side() == Trade.Side.BUY,
+                                      self.trade_target().price,
+                                      self.on_smart_buy,
+                                      self.trade.entry.sl_threshold,
+                                      self.trade.entry.pullback_threshold) \
             if self.is_smart else None
 
     def execute(self, new_price):
@@ -58,8 +62,8 @@ class EntryStrategy(TradingStrategy):
         order = self.fx.create_stop_order(
             sym=self.symbol(),
             side=self.trade_side().name,
-            stop_price=self.exchange_info.adjust_price(limit),
-            price=self.exchange_info.adjust_price(sl_price),
+            stop_price=self.exchange_info.adjust_price(sl_price),
+            price=self.exchange_info.adjust_price(limit),
             volume=self.exchange_info.adjust_quanity(t.vol.v)
         )
 

@@ -23,7 +23,7 @@ def main():
 
 def test_change_order():
     cl = ConfigLoader()
-    orders = cl.load_order_list(cl.json_loader('trades.json'))
+    orders = cl.load_order_list(cl.json_loader('trades_portfolio.json'))
     orders[0].get_available_targets()[0].set_completed()
     orders[0].status = OrderStatus.COMPLETED
     cl.save_orders('orders2.json', orders)
@@ -36,16 +36,17 @@ def test_smart_order():
     price_change.extend(range(471, 479, 1))
     price_change.extend(range(478, 463, -1))
     price_change.extend(range(463, 473, 1))
-    so = SmartOrder('TRXBTC', True, 475, 10)
-    so.settings()
+    so = SmartOrder(True, 475)
     for p in price_change:
         so.price_update(p)
+
+    print('-' * 20)
+    print('-' * 20)
 
     price_change = []
     price_change.extend(range(480, 474, -1))
     price_change.extend(range(476, 480, 1))
-    so = SmartOrder('TRXBTC', True, 475, 10)
-    so.settings()
+    so = SmartOrder('TRXBTC', 475)
     for p in price_change:
         so.price_update(p)
 

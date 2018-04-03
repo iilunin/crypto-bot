@@ -61,9 +61,13 @@ class TargetsAndStopLossStrategy(TradingStrategy):
     def order_status_changed(self, t: Target, data):
         if t.is_entry_target() and t.is_completed():
             self.trade.set_active()
+            self.trigger_target_updated()
 
-        self.strategy_sl.order_status_changed(t, data)
-        self.strategy_po.order_status_changed(t, data)
+        if self.strategy_sl:
+            self.strategy_sl.order_status_changed(t, data)
+
+        if self.strategy_po:
+            self.strategy_po.order_status_changed(t, data)
 
         if self.strategy_en:
             self.strategy_en.order_status_changed(t, data)

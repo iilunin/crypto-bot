@@ -37,15 +37,16 @@ class OrderValidator:
         :type order: Trade
         """
 
-        if not order.get_initial_stop():
-            self.errors["NO_SL"] = 'no stop loss set'
+        if not order.has_stoploss():
+            if not order.has_entry(): #in case it is entry only order
+                self.errors["NO_SL"] = 'no stop loss set'
             return False
 
         if order.get_initial_stop().is_completed():
             self.errors["NO_SL"] = 'no active stop loss set'
             return False
 
-        if not order.targets:
+        if not order.has_targets():
             self.warnings["NO_TARG"] = 'no targets set'
 
         for t in order.targets:
