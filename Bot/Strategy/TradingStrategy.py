@@ -39,7 +39,7 @@ class TradingStrategy:
         return self.trade.is_completed()
 
     def trade_side(self):
-        return self.trade.side.name
+        return self.trade.side
 
     def symbol(self):
         return self.trade.symbol

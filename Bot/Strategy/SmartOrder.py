@@ -13,7 +13,7 @@ class SmartOrder:
 
         self.target_zone_touched = False
         self.on_update = on_update
-        print('Target Price: {:.8f}; Max Pullback: {:.8f}; Limit: {:.8f}'.format(self.target_price,  self.pull_back_threshold_val, self.sl_threshold_zone_limit))
+        print('Target Price: {:.8f}; Max Pullback Trigger: {:.8f}; Allowed Limit: {:.8f}'.format(self.target_price,  self.pull_back_threshold_val, self.sl_threshold_zone_limit))
 
 
     def price_update(self, price):

@@ -17,3 +17,8 @@ class StopLossSettings:
         self.threshold = threshold
         self.initial_target = StopLossTarget(initial_target)
 
+    def is_trailing(self):
+        return self.type == StopLossSettings.Type.TRAILING
+
+    def is_fixed(self):
+        return self.type == StopLossSettings.Type.FIXED

@@ -66,6 +66,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def order_status_changed(self, t: Target, data):
         if t.is_entry_target() and t.is_completed():
+            self.validate_asset_balance()
             self.trade.set_active()
             self.trigger_target_updated()
 

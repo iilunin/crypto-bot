@@ -75,6 +75,9 @@ class EntryStrategy(TradingStrategy):
 
         return Side.BUY if self.trade.side == Side.SELL else Side.SELL
 
+    def is_completed(self):
+        return self.trade.entry.target.is_completed()
+
     def trade_target(self):
         return self.trade.entry.target
 

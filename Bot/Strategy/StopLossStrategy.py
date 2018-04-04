@@ -15,20 +15,14 @@ class StopLossStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.current_stop_loss = 0
+        self.exit_threshold = 0
         self.adjust_stoploss_price()
 
         if self.logger.isEnabledFor(logging.INFO):
             self.last_sl = 0
             self.last_th = 0
 
-    def is_stoploss_order_active(self):
-        return self.trade.get_initial_stop().is_active()
-
-    def is_sl_completed(self):
-        return self.trade.get_initial_stop().status == OrderStatus.COMPLETED
-
     def execute(self, new_price):
-
         if self.is_completed():
             return
 
@@ -40,9 +34,20 @@ class StopLossStrategy(TradingStrategy):
 
         self.log_stoploss()
 
+    def is_stoploss_order_active(self):
+        return self.trade.get_initial_stop().is_active()
+
+    def is_sl_completed(self):
+        return self.trade.get_initial_stop().is_completed()
+
+    def is_completed(self):
+        return self.is_sl_completed()
+
     def log_stoploss(self):
         if self.logger.isEnabledFor(logging.INFO):
+
             treshold = self.get_sl_treshold()
+
             if self.last_sl != self.current_stop_loss or self.last_th != treshold:
                 self.logInfo('SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(self.current_stop_loss,
                                                                                             treshold))
@@ -66,14 +71,14 @@ class StopLossStrategy(TradingStrategy):
             return
 
         expected_stop_loss = 0
-        if self.trade.sl_settings.type == StopLossSettings.Type.TRAILING:
+        if self.trade.sl_settings.is_trailing():
+            trialing_val = self.trade.sl_settings.val.get_val(current_price)
+            expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val
 
-            trialing_val = self.trade.sl_settings.val
-
-            if trialing_val.type == Value.Type.ABS:
-                expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v
-            else:
-                expected_stop_loss = current_price * (1 + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v / 100)
+            # if trialing_val.type == Value.Type.ABS:
+            #     expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v
+            # else:
+            #     expected_stop_loss = current_price * (1 + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v / 100)
 
             expected_stop_loss = round(expected_stop_loss, 8)
             if self.trade.is_sell_order() and expected_stop_loss > self.current_stop_loss:
@@ -81,17 +86,21 @@ class StopLossStrategy(TradingStrategy):
             elif not self.trade.is_sell_order() and expected_stop_loss < self.current_stop_loss:
                 self.current_stop_loss = expected_stop_loss
 
-            if self.last_sl != self.current_stop_loss:
-                self.logInfo('SL:{:.08f}, EXP:{:.08f}, P:{:.08f}'.format(self.current_stop_loss, expected_stop_loss, current_price))
+            # if self.last_sl != self.current_stop_loss:
+            #     self.logInfo('SL:{:.08f}, EXP:{:.08f}, P:{:.08f}'.format(self.current_stop_loss, expected_stop_loss, current_price))
 
 
     def adjust_stoploss_order(self, current_price):
         threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
 
-        if (self.trade.is_sell_order() and (self.current_stop_loss + threshold) >= current_price) or \
-            (not self.trade.is_sell_order() and (self.current_stop_loss - threshold) <= current_price):
+        if (self.trade.is_sell_order() and (self.current_stop_loss + threshold + self.exit_threshold) >= current_price) or \
+            (not self.trade.is_sell_order() and (self.current_stop_loss - threshold - self.exit_threshold) <= current_price):
             self.set_stoploss_order()
+
+            if self.exit_threshold == 0:
+                self.exit_threshold = threshold / 2
         else:
+            self.exit_threshold = 0
             self.cancel_stoploss_orders()
             self.validate_asset_balance()
 
@@ -117,35 +126,46 @@ class StopLossStrategy(TradingStrategy):
             # else:
             #     pass
 
-        if self.simulate:
-            order = self.fx.create_test_stop_order(self.symbol(), self.trade_side(), self.current_stop_loss, 50)
-            order['orderId'] = 2333123
-        else:
-            self.cancel_all_orders()
-            self.validate_asset_balance()
+        try:
+            if self.simulate:
+                order = self.fx.create_test_stop_order(self.symbol(), self.trade_side().name, self.current_stop_loss, 50)
+                order['orderId'] = 2333123
+            else:
+                self.cancel_all_orders()
+                self.validate_asset_balance()
 
-            # stop_trigger
+                # stop_trigger
 
-            order = self.fx.create_stop_order(
-                sym=self.symbol(),
-                side=self.trade_side(),
-                stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
-                price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
-                volume=self.exchange_info.adjust_quanity(self.balance.avail)
-            )
+                try:
+                    order = self.fx.create_stop_order(
+                        sym=self.symbol(),
+                        side=self.trade_side().name,
+                        stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
+                        price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
+                        volume=self.exchange_info.adjust_quanity(self.balance.avail)
+                    )
+                except BinanceAPIException as sl_exception:
+                    if sl_exception.message.lower().find('order would trigger immediately') > -1:
+                        order = self.fx.create_makret_order(self.symbol(),
+                                                            self.trade_side().name,
+                                                            self.exchange_info.adjust_quanity(self.balance.avail))
+                    else:
+                        raise
 
-        self.trade.sl_settings.initial_target.set_active(order['orderId'])
-        self.trigger_target_updated()
 
-        self.logInfo('setting stop loss order')
+            self.trade.sl_settings.initial_target.set_active(order['orderId'])
+            self.trigger_target_updated()
+            self.logInfo('Setting stop loss order: {}:{}'.format(
+                self.exchange_info.adjust_price(self.current_stop_loss),
+                self.exchange_info.adjust_price(self.get_sl_limit_price())))
+        except BinanceAPIException as bae:
+            self.logError(str(bae))
+
 
     def get_sl_limit_price(self):
-        threshold = self.trade.sl_settings.limit_price_threshold
-
-        if threshold.Type == Value.Type.ABS:
-            return self.current_stop_loss + (-1 if self.is_sell_order() else 1) * self.trade.sl_settings.limit_price_threshold.v
-        else:
-            return self.current_stop_loss * (1 + (-1 if self.trade.is_sell_order() else 1) * threshold.v / 100)
+        return self.current_stop_loss + (
+            -1 if self.trade.is_sell_order() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
+            self.current_stop_loss)
 
 
     def cancel_all_orders(self):

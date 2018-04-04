@@ -34,9 +34,6 @@ class PlaceOrderStrategy(TradingStrategy):
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
-    def side(self):
-        return self.trade.side
-
     def trade_targets(self):
         return self.trade.get_available_targets()
 
@@ -74,7 +71,7 @@ class PlaceOrderStrategy(TradingStrategy):
                 orders.append({
                     'price': self.exchange_info.adjust_price(price),
                     'volume': self.exchange_info.adjust_quanity(vol),
-                    'side': self.side().name,
+                    'side': self.trade_side().name,
                     'target': t})
 
             bal -= vol

@@ -1,5 +1,7 @@
 import json
-from json import JSONEncoder, encoder
+
+from os import listdir
+from os.path import isfile, join
 
 from Bot.JsonEncoder import CustomJsonEncoder
 from Bot.Trade import Trade
@@ -15,29 +17,46 @@ class ConfigLoader:
 
         return load
 
+    def advanced_loader(self, path):
+        def load():
+            target_path_list = [f for f in listdir(path) if isfile(join(path, f)) and f.lower().endswith('json')]
+            targets = []
+            d = {ConfigLoader.PARENT_ELEMENT: targets}
+            for t_path in target_path_list:
+                with open(join(path, t_path), 'r') as f:
+                    targets.extend(json.load(f)[ConfigLoader.PARENT_ELEMENT])
+            return d
+
+        return load
+
     def json_saver(self, path):
         def save(obj):
-            with open(path, 'w') as f:
+            with open(path() if callable(path) else path, 'w') as f:
                 json.dump(obj, fp=f, cls=CustomJsonEncoder, indent=4)
 
         return save
 
-    def load_order_list(self, loader):
+    # def advanced_saver(self, path):
+    #     def save(obj):
+    #         with open(path, 'w') as f:
+    #             json.dump(obj, fp=f, cls=CustomJsonEncoder, indent=4)
+
+    def load_trade_list(self, loader):
         raw_orders = loader()
         return [Trade(**ro) for ro in raw_orders[ConfigLoader.PARENT_ELEMENT]]
 
-    def save_orders(self, saver, orders):
-        d = {ConfigLoader.PARENT_ELEMENT: orders}
+    def save_trades(self, saver, trades):
+        d = {ConfigLoader.PARENT_ELEMENT: trades}
         saver(d)
 
-    def persist_updated_order(self, order: Trade, loader, saver):
-        old_orders = self.load_order_list(loader)
-        old_order = next(o for o in old_orders if o.symbol == order.symbol)
-        old_orders.remove(old_order)
-        old_orders.append(order)
+    def persist_updated_trade(self, trade: Trade, loader, saver):
+        old_trades = self.load_trade_list(loader)
+        old_order = next(o for o in old_trades if o.symbol == trade.symbol)
+        old_trades.remove(old_order)
+        old_trades.append(trade)
 
-        old_orders.sort(key=lambda trade: trade.symbol)
-        self.save_orders(saver, old_orders)
+        old_trades.sort(key=lambda trade: trade.symbol)
+        self.save_trades(saver, old_trades)
 
 
 

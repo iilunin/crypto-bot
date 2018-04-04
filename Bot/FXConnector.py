@@ -55,11 +55,12 @@ class FXConnector:
     def __init__(self, key=None, secret=None):
         self.client = Client(key, secret)
         # client.create_test_order()
-        self.bs = BinanceSocketManager(self.client)
+        self.bs = None
         self.connection = None
         self.user_data_connection = None
 
     def listen_symbols(self, symbols, socket_handler, user_data_handler):
+        self.bs = BinanceSocketManager(self.client)
         self.stop_listening()
         self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols], socket_handler)
         self.user_data_connection = self.bs.start_user_socket(user_data_handler)
@@ -71,6 +72,14 @@ class FXConnector:
         if self.connection:
             self.bs.stop_socket(self.connection)
             self.bs.stop_socket(self.user_data_connection)
+
+    # def set_new_symbols(self, symbols, socket_handler):
+    #     if self.connection:
+    #         self.bs.stop_socket(self.connection)
+    #
+    #     self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
+    #                                                      socket_handler)
+
 
     def cancel_order(self, sym, id):
         return self.client.cancel_order(symbol=sym, orderId=id)
@@ -92,13 +101,12 @@ class FXConnector:
     def get_order_status(self, id):
         return self.client.get_order(orderId=id)
 
-    def create_makret_order(self, sym, side, price, volume):
+    def create_makret_order(self, sym, side, volume):
         return self.client.create_order(
             symbol=sym,
             side=side,
             type=FXConnector.ORDER_TYPE_MARKET,
-            quantity=FXConnector.format_number(volume),
-            price=FXConnector.format_number(price))
+            quantity=FXConnector.format_number(volume))
 
     def create_limit_order(self, sym, side, price, volume):
         return self.client.create_order(

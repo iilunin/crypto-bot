@@ -8,31 +8,35 @@ from Bot.ConfigLoader import ConfigLoader
 
 from Bot.Strategy.SmartOrder import SmartOrder
 
+NEW_ORDER_PATH_PORTFOLIO = 'Trades/Portfolio/'
 ORDER_PATH = 'trades.json'
 ORDER_PATH_PORTFOLIO = 'trades_portfolio.json'
 ORDER_PATH_UPD = 'trades.json'
 
-logging.basicConfig(level=logging.INFO)
+LOG_FORMAT = '%(asctime)s[%(levelname)s][%(name)s]: %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+cl = ConfigLoader()
 
 def main():
     # test_change_order()
     # res = get_historical_klines('LTCBTC', '1d', 'December 21, 2017', 'December 21, 2017')
     # print(res)
     # test_smart_order()
-    test_start_app(ORDER_PATH_PORTFOLIO)
+    test_start_app(NEW_ORDER_PATH_PORTFOLIO)
+    # save_new_order_file_structure()
     # test_change_order()
 
 
 def test_change_order():
     cl = ConfigLoader()
-    orders = cl.load_order_list(cl.json_loader('trades.json'))
+    orders = cl.load_trade_list(cl.json_loader('trades.json'))
 
 
     # orders[0].get_available_targets()[0].set_completed()
     # orders[0].status = OrderStatus.COMPLETED
-    cl.save_orders(cl.json_saver('trades2.json'), orders)
+    cl.save_trades(cl.json_saver('trades2.json'), orders)
 
-    orders = cl.load_order_list(cl.json_loader('trades2.json'))
+    orders = cl.load_trade_list(cl.json_loader('trades2.json'))
 
 def test_smart_order():
     price_change = []
@@ -54,25 +58,42 @@ def test_smart_order():
     for p in price_change:
         so.price_update(p)
 
-def test_start_app(path=ORDER_PATH):
+def save_new_order_file_structure(path=ORDER_PATH_PORTFOLIO, new_path=NEW_ORDER_PATH_PORTFOLIO):
     cl = ConfigLoader()
-
     o_loader = cl.json_loader(path)
-    o_saver = cl.json_saver(path)
-    orders = cl.load_order_list(o_loader)
+    trades = cl.load_trade_list(o_loader)
+
+    for t in trades:
+        if t.is_completed():
+            continue
+
+        new_trade_path = new_path + t.symbol + '.json'
+        cl.save_trades(cl.json_saver(new_trade_path), [t])
+
+
+def test_start_app(path=ORDER_PATH):
+    path_pattern = path + '{}.json'
+
+    o_loader = cl.advanced_loader(path)
+    # o_saver = cl.json_saver(path)
+    orders = cl.load_trade_list(o_loader)
     ov = OrderValidator()
 
     for o in orders[:]:
         if not ov.validate(o):
+            print(o.symbol)
             print(ov.errors)
-            print(ov.warnings)
+            if len(ov.warnings) > 0:
+                print(ov.warnings)
             orders.remove(o)
 
     api = cl.json_loader('api.json')()
     handler = OrderHandler(
         orders,
         FXConnector(api['key'], api['secret']),
-        lambda order: cl.persist_updated_order(order, o_loader, o_saver)
+        lambda trade: cl.persist_updated_trade(trade,
+                                               cl.json_loader(path_pattern.format(trade.symbol)),
+                                               cl.json_saver(path_pattern.format(trade.symbol)))
     )
 
     handler.start_listening()
