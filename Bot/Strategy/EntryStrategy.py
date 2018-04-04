@@ -17,7 +17,8 @@ class EntryStrategy(TradingStrategy):
                                       self.trade_target().price,
                                       self.on_smart_buy,
                                       self.trade.entry.sl_threshold,
-                                      self.trade.entry.pullback_threshold) \
+                                      self.trade.entry.pullback_threshold,
+                                      self.logger) \
             if self.is_smart else None
 
     def execute(self, new_price):
@@ -48,6 +49,7 @@ class EntryStrategy(TradingStrategy):
 
     def on_smart_buy(self, sl_price):
         t = self.trade_target()
+
         if t.is_active():
             self.fx.cancel_order(self.symbol(), t.id)
             t.set_canceled()
@@ -58,13 +60,21 @@ class EntryStrategy(TradingStrategy):
         else:
             limit = min(sl_price, t.price - self.smart_order.sl_threshold_val)
 
-        order = self.fx.create_stop_order(
-            sym=self.symbol(),
-            side=self.trade_side().name,
-            stop_price=self.exchange_info.adjust_price(sl_price),
-            price=self.exchange_info.adjust_price(limit),
-            volume=self.exchange_info.adjust_quanity(t.vol.v)
-        )
+        try:
+            order = self.fx.create_stop_order(
+                sym=self.symbol(),
+                side=self.trade_side().name,
+                stop_price=self.exchange_info.adjust_price(sl_price),
+                price=self.exchange_info.adjust_price(limit),
+                volume=self.exchange_info.adjust_quanity(t.vol.v)
+            )
+        except BinanceAPIException as sl_exception:
+            if sl_exception.message.lower().find('order would trigger immediately') > -1:
+                order = self.fx.create_makret_order(self.symbol(),
+                                                    self.trade_side().name,
+                                                    self.exchange_info.adjust_quanity(self.exchange_info.adjust_quanity(t.vol.v)))
+            else:
+                raise
 
         t.set_active(order['orderId'])
         self.trigger_target_updated()

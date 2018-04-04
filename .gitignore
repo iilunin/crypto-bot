@@ -1,3 +1,5 @@
 .idea
 api.json
 /venv
+/Trades/Portfolio
+/Trades/Portfolio/*
