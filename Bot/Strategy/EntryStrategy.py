@@ -4,7 +4,7 @@ from Bot.OrderEnums import OrderStatus, Side
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.SmartOrder import SmartOrder
 from Bot.Strategy.TradingStrategy import TradingStrategy
-from Bot.Target import Target
+from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
 
 class EntryStrategy(TradingStrategy):
@@ -36,6 +36,15 @@ class EntryStrategy(TradingStrategy):
                 return
 
             if self.is_smart:
+                if not self.smart_order.is_init():
+                    ph = PriceHelper.create_price_helper(self.trade_target().price)
+                    actual_price = ph.get_value(new_price)
+                    self.smart_order.init_price(actual_price)
+
+                    self.trade_target().price = actual_price
+                    self.trigger_target_updated()
+
+
                 self.smart_order.price_update(new_price)
             else:
                 self.place_orders(

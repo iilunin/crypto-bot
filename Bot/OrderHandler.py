@@ -1,3 +1,4 @@
+import traceback
 from typing import List
 import numpy as np
 from datetime import datetime as dt
@@ -15,6 +16,7 @@ class OrderHandler:
         self.fx = fx
 
         self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler) for t in trades]
+
         self.strategies_dict = {}
         self.asset_dict = {}
 
@@ -36,20 +38,26 @@ class OrderHandler:
             prices = {t['symbol']: float(t['price']) for t in tickers}
             self.execute_strategy(prices)
         except Exception as e:
-            self.logger.error(str(e))
+            self.logger.error(traceback.format_exc())
 
 
     def start_listening(self):
-        self.process_initial_prices()
 
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.asset_dict = {s.trade.asset: s for s in self.strategies}
-
-        self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
-
         self.trade_info_buf = {s.symbol(): [] for s in self.strategies}
 
+        balances = dict.fromkeys(self.asset_dict.keys())
+        self.fx.get_all_balances(balances)
+
+        [s.update_asset_balance(balances[s.trade.asset]['f'], balances[s.trade.asset]['l']) for s in self.strategies]
+
+
+        self.process_initial_prices()
+
+        self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
         self.fx.start_listening()
+
         self.last_ts = dt.now()
 
 
@@ -83,7 +91,8 @@ class OrderHandler:
                          'price': msg['p'],
                          'stop_price': msg['P']})
         except Exception as e:
-            self.logger.error(str(e))
+            self.logger.error(traceback.format_exc())
+            # self.logger.error(str(e))
 
     def listen_handler(self, msg):
         try:
@@ -100,6 +109,7 @@ class OrderHandler:
                     self.execute_strategy(mean_prices)
         except Exception as e:
             self.logger.error(str(e))
+            traceback.print_exc()
 
     def aggreagate_fx_prices(self):
         mp = {}

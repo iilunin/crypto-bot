@@ -101,8 +101,9 @@ class StopLossStrategy(TradingStrategy):
                 self.exit_threshold = threshold / 2
         else:
             self.exit_threshold = 0
-            self.cancel_stoploss_orders()
-            self.validate_asset_balance()
+
+            if self.cancel_stoploss_orders():
+                self.validate_asset_balance()
 
     def get_sl_treshold(self):
         threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
@@ -185,7 +186,7 @@ class StopLossStrategy(TradingStrategy):
 
     def cancel_stoploss_orders(self):
         if not self.trade.sl_settings.initial_target.id:
-            return
+            return False
 
         try:
             self.fx.cancel_order(self.symbol(), self.trade.sl_settings.initial_target.id)
@@ -195,3 +196,4 @@ class StopLossStrategy(TradingStrategy):
         self.trade.sl_settings.initial_target.set_canceled()
         self.trigger_target_updated()
         self.logInfo('canceling stoploss orders')
+        return True

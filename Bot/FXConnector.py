@@ -141,6 +141,14 @@ class FXConnector:
         bal = self.client.get_asset_balance(asset=asset)
         return float(bal['free']), float(bal['locked'])
 
+    def get_all_balances(self, assets: dict):
+        res = self.client.get_account()
+
+        if 'balances' in res:
+            for bal in res['balances']:
+                if bal['asset'] in assets:
+                    assets[bal['asset']] = {'f': float(bal['free']), 'l':float(bal['locked'])}
+
     def get_exchange_info(self, sym):
         info = self.client.get_exchange_info()
 

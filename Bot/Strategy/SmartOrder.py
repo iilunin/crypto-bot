@@ -7,17 +7,44 @@ from Bot.Value import Value
 class SmartOrder:
     def __init__(self, is_buy, price, on_update=None, sl_threshold=Value("0.08%"), pull_back=Value("0.6%"), logger: Logger = None):
         self.is_buy = is_buy
-        self.target_price = price
+        self.target_price = None
         self.best_pullback_limit_price = 0
+        self.initialized = False
 
-        self.sl_threshold_val = sl_threshold.get_val(self.target_price)
-        self.pull_back_threshold_val = pull_back.get_val(self.target_price)
-        self.sl_threshold_zone_limit = round(self.target_price + self.sl_threshold_val * (1 if self.is_buy else -1), 8)
+        self.logger = logger
+
+        self.temp_sl_threshold = sl_threshold
+        self.temp_pull_back = pull_back
 
         self.target_zone_touched = False
         self.on_update = on_update
-        self.logger = logger
-        self.log_event('Target Price: {:.8f}; Max Pullback Trigger: {:.8f}; Allowed Limit: {:.8f}'.format(self.target_price,  self.pull_back_threshold_val, self.sl_threshold_zone_limit))
+
+        self.init_price(price)
+
+    def init_price(self, price):
+        if not price or isinstance(price, str):
+            return
+
+        if not self.is_init():
+            self.target_price = price
+
+        self.sl_threshold_val = self.temp_sl_threshold.get_val(self.target_price)
+        self.pull_back_threshold_val = self.temp_pull_back.get_val(self.target_price)
+
+        self.sl_threshold_zone_limit = round(self.target_price + self.sl_threshold_val * (1 if self.is_buy else -1), 8)
+        self.initialized = True
+
+        del self.temp_sl_threshold
+        del self.temp_pull_back
+
+        self.log_event(
+            'Target Price: {:.8f}; Max Pullback Trigger: {:.8f}; Allowed Limit: {:.8f}'.format(self.target_price,
+                                                                                               self.pull_back_threshold_val,
+                                                                                               self.sl_threshold_zone_limit))
+
+    def is_init(self):
+        return self.initialized
+
 
     def log_event(self, msg):
         if self.logger:
@@ -26,6 +53,9 @@ class SmartOrder:
             print(msg)
 
     def price_update(self, price):
+        if not self.initialized:
+            return
+
         if self.within_target_zone(price):
             self.target_zone_touched = True
 

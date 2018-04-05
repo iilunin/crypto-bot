@@ -2,7 +2,7 @@ import logging
 
 from Bot.FXConnector import FXConnector
 from Bot.OrderEnums import OrderStatus
-from Bot.Target import Target
+from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
 
 
@@ -78,8 +78,9 @@ class TradingStrategy:
             else:
                 s = orders_dict[t.id]['status']
                 if s == 'NEW':
-                    if self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
-                                                                       float(orders_dict[t.id]['stop_price'])):
+                    if not PriceHelper.is_float_price(t.price) or (
+                            self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
+                                                                       float(orders_dict[t.id]['stop_price']))):
                         self.logInfo('Target price changed: {}'.format(t))
                         self.fx.cancel_order(self.symbol(), t.id)
                         t.set_canceled()
@@ -103,6 +104,10 @@ class TradingStrategy:
 
     def execute(self, new_price):
         pass
+
+    def update_asset_balance(self, avail, locked):
+        self.balance.avail = avail
+        self.balance.locked = locked
 
     def validate_asset_balance(self):
         self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)

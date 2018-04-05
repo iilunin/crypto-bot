@@ -11,7 +11,7 @@ from Bot.Trade import Trade
 class TargetsAndStopLossStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None):
         super().__init__(trade, fx, trade_updated)
-        self.validate_asset_balance()
+        # self.validate_asset_balance()
 
         self.strategy_sl = StopLossStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance) \
             if trade.get_initial_stop() is not None else None
@@ -21,6 +21,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
         self.strategy_en = EntryStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance) \
             if trade.has_entry() and not trade.entry.target.is_completed() else None
+            # if trade.has_entry() and not trade.entry.target.is_completed() else None
 
         self.last_price = 0
         self.last_execution_price = 0
@@ -42,7 +43,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         self.last_execution_price = new_price
 
         if self.trade.status == OrderStatus.NEW:
-            if self.trade.has_entry():
+            if self.strategy_en:
                 self.strategy_en.execute(new_price)
                 # # implementy market entry
                 # self.trade.status = OrderStatus.ACTIVE
