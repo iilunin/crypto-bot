@@ -43,7 +43,7 @@
                 "type": "FIXED",
                 "val": "5.00%",
                 "limit_price_threshold": "0.10%",
-                "threshold": 0.003,
+                "threshold": "0.3%",
                 "initial_target": {
                     "price": "0.00000469",
                     "vol": "100.00%"

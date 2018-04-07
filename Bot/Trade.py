@@ -34,8 +34,8 @@ class Trade(CustomSerializable):
             else:
                 self.exit = EntryExitSettings(is_entry=is_entry, **data)
 
-    def is_sell_order(self):
-        return self.side == Side.SELL
+    def is_sell(self):
+        return self.side.is_sell()
 
     def has_entry(self):
         return self.entry is not None

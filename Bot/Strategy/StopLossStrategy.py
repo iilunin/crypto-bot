@@ -70,12 +70,12 @@ class StopLossStrategy(TradingStrategy):
         expected_stop_loss = 0
         if self.trade.sl_settings.is_trailing():
             trialing_val = self.trade.sl_settings.val.get_val(current_price)
-            expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val
+            expected_stop_loss = current_price + (-1 if self.trade.is_sell() else 1) * trialing_val
 
             expected_stop_loss = round(expected_stop_loss, 8)
-            if self.trade.is_sell_order() and expected_stop_loss > self.current_stop_loss:
+            if self.trade.is_sell() and expected_stop_loss > self.current_stop_loss:
                 self.current_stop_loss = expected_stop_loss
-            elif not self.trade.is_sell_order() and expected_stop_loss < self.current_stop_loss:
+            elif not self.trade.is_sell() and expected_stop_loss < self.current_stop_loss:
                 self.current_stop_loss = expected_stop_loss
 
             # if self.last_sl != self.current_stop_loss:
@@ -83,10 +83,10 @@ class StopLossStrategy(TradingStrategy):
 
 
     def adjust_stoploss_order(self, current_price):
-        threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
+        threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
 
-        if (self.trade.is_sell_order() and (self.current_stop_loss + threshold + self.exit_threshold) >= current_price) or \
-            (not self.trade.is_sell_order() and (self.current_stop_loss - threshold - self.exit_threshold) <= current_price):
+        if (self.trade.is_sell() and (self.current_stop_loss + threshold + self.exit_threshold) >= current_price) or \
+            (not self.trade.is_sell() and (self.current_stop_loss - threshold - self.exit_threshold) <= current_price):
             self.set_stoploss_order()
 
             if self.exit_threshold == 0:
@@ -99,7 +99,7 @@ class StopLossStrategy(TradingStrategy):
 
     def get_sl_treshold(self):
         threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
-        return (self.current_stop_loss + threshold) if self.trade.is_sell_order() else (self.current_stop_loss - threshold)
+        return (self.current_stop_loss + threshold) if self.trade.is_sell() else (self.current_stop_loss - threshold)
 
     def order_status_changed(self, t: Target, data):
         if not t.is_stoploss_target():
@@ -161,7 +161,7 @@ class StopLossStrategy(TradingStrategy):
 
     def get_sl_limit_price(self):
         return self.current_stop_loss + (
-            -1 if self.trade.is_sell_order() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
+            -1 if self.trade.is_sell() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
             self.current_stop_loss)
 
 

@@ -14,7 +14,7 @@ class StopLossSettings:
         self.type = StopLossSettings.Type(type.lower())
         self.val = Value(val)
         self.limit_price_threshold = Value(limit_price_threshold)
-        self.threshold = threshold
+        self.threshold = Value(threshold)
         self.initial_target = StopLossTarget(initial_target)
 
     def is_trailing(self):

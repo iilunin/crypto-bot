@@ -53,7 +53,7 @@ class OrderValidator:
             if t.status.is_completed():
                 continue
 
-            if (trade.side == Side.SELL and trade.get_initial_stop().price >= t.price) or \
+            if (trade.side.is_sell() and trade.get_initial_stop().price >= t.price) or \
                     (trade.side.is_buy() and trade.get_initial_stop().price <= t.price):
                 self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
                 return False
