@@ -1,6 +1,6 @@
 from binance.exceptions import BinanceAPIException
 
-from Bot.OrderEnums import OrderStatus, Side
+from Bot.TradeEnums import OrderStatus, Side
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.SmartOrder import SmartOrder
 from Bot.Strategy.TradingStrategy import TradingStrategy
@@ -13,7 +13,7 @@ class EntryStrategy(TradingStrategy):
 
         self.is_smart = smart
 
-        self.smart_order = SmartOrder(self.trade_side() == Side.BUY,
+        self.smart_order = SmartOrder(self.trade_side().is_buy(),
                                       self.trade_target().price,
                                       self.on_smart_buy,
                                       self.trade.entry.sl_threshold,
@@ -56,6 +56,9 @@ class EntryStrategy(TradingStrategy):
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
+    def get_available_amount(self):
+        return self.balance.avail
+
     def on_smart_buy(self, sl_price):
         t = self.trade_target()
 
@@ -64,7 +67,7 @@ class EntryStrategy(TradingStrategy):
             t.set_canceled()
             self.trigger_target_updated()
 
-        if self.trade_side() == Side.BUY:
+        if self.trade_side().is_buy():
             limit = max(sl_price, t.price + self.smart_order.sl_threshold_val)
         else:
             limit = min(sl_price, t.price - self.smart_order.sl_threshold_val)
@@ -92,19 +95,19 @@ class EntryStrategy(TradingStrategy):
         if self.trade.entry.side:
             return self.trade.entry.side
 
-        return Side.BUY if self.trade.side == Side.SELL else Side.SELL
+        return self.trade.side.reverse()
 
     def is_completed(self):
-        return self.trade.entry.target.is_completed()
+        return self.trade.entry.is_completed()
 
     def trade_target(self):
-        return self.trade.entry.target
+        return self.trade.entry.targets[0]
 
     def validate_all_orders(self, targets):
-        return all(t.status == OrderStatus.ACTIVE or t.has_id() for t in targets)
+        return all(t.status.is_active() or t.has_id() for t in targets)
 
     def validate_all_completed(self, targets):
-        return all(t.status == OrderStatus.COMPLETED for t in targets)
+        return all(t.status.is_completed() for t in targets)
 
     def place_orders(self, allocations):
         for a in allocations:

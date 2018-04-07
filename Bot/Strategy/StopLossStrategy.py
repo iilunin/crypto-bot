@@ -2,13 +2,10 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
-from Bot.OrderEnums import OrderStatus
-from Bot.StopLossSettings import StopLossSettings
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
 from Bot.Target import Target
 from Bot.Trade import Trade
-from Bot.Value import Value
 
 
 class StopLossStrategy(TradingStrategy):
@@ -35,10 +32,10 @@ class StopLossStrategy(TradingStrategy):
         self.log_stoploss()
 
     def is_stoploss_order_active(self):
-        return self.trade.get_initial_stop().is_active()
+        return self.initial_sl().is_active()
 
     def is_sl_completed(self):
-        return self.trade.get_initial_stop().is_completed()
+        return self.initial_sl().is_completed()
 
     def is_completed(self):
         return self.is_sl_completed()
@@ -55,16 +52,16 @@ class StopLossStrategy(TradingStrategy):
                 self.last_sl = self.current_stop_loss
 
     def adjust_stoploss_price(self, current_price=None):
-        closed_targets = [o for o in self.trade.get_closed_targets()]
-        has_closed_orders = len(closed_targets) > 0
+        completed_targets = [o for o in self.trade.exit.get_completed_targets()]
+        has_closed_orders = len(completed_targets) > 0
 
-        if has_closed_orders and closed_targets[-1].has_custom_stop():
+        if has_closed_orders and completed_targets[-1].has_custom_stop():
             # sort by order value
-            self.current_stop_loss = closed_targets[-1].sl
+            self.current_stop_loss = completed_targets[-1].sl
             return
 
         if current_price is None:
-            self.current_stop_loss = self.trade.get_initial_stop().price
+            self.current_stop_loss = self.initial_sl().price
             return
 
         if not has_closed_orders:
@@ -74,11 +71,6 @@ class StopLossStrategy(TradingStrategy):
         if self.trade.sl_settings.is_trailing():
             trialing_val = self.trade.sl_settings.val.get_val(current_price)
             expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val
-
-            # if trialing_val.type == Value.Type.ABS:
-            #     expected_stop_loss = current_price + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v
-            # else:
-            #     expected_stop_loss = current_price * (1 + (-1 if self.trade.is_sell_order() else 1) * trialing_val.v / 100)
 
             expected_stop_loss = round(expected_stop_loss, 8)
             if self.trade.is_sell_order() and expected_stop_loss > self.current_stop_loss:
@@ -137,19 +129,21 @@ class StopLossStrategy(TradingStrategy):
 
                 # stop_trigger
 
+                volume = self.initial_sl().vol.get_val(self.balance.avail)
+
                 try:
                     order = self.fx.create_stop_order(
                         sym=self.symbol(),
                         side=self.trade_side().name,
                         stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
                         price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
-                        volume=self.exchange_info.adjust_quanity(self.balance.avail)
+                        volume=self.exchange_info.adjust_quanity(volume)
                     )
                 except BinanceAPIException as sl_exception:
                     if sl_exception.message.lower().find('order would trigger immediately') > -1:
                         order = self.fx.create_makret_order(self.symbol(),
                                                             self.trade_side().name,
-                                                            self.exchange_info.adjust_quanity(self.balance.avail))
+                                                            self.exchange_info.adjust_quanity(volume))
                     else:
                         raise
 
@@ -162,6 +156,8 @@ class StopLossStrategy(TradingStrategy):
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
+    def initial_sl(self):
+        return self.trade.get_initial_stop()
 
     def get_sl_limit_price(self):
         return self.current_stop_loss + (

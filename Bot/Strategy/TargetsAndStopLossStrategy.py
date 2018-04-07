@@ -1,5 +1,5 @@
 from Bot.FXConnector import FXConnector
-from Bot.OrderEnums import OrderStatus
+from Bot.TradeEnums import OrderStatus
 from Bot.Strategy.EntryStrategy import EntryStrategy
 from Bot.Strategy.PlaceOrderStrategy import PlaceOrderStrategy
 from Bot.Strategy.StopLossStrategy import StopLossStrategy
@@ -17,10 +17,10 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             if trade.get_initial_stop() is not None else None
 
         self.strategy_po = PlaceOrderStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance) \
-            if len(trade.targets) > 0 else None
+            if trade.has_exit() and not trade.exit.is_completed() else None
 
         self.strategy_en = EntryStrategy(trade, fx, trade_updated, True, self.exchange_info, self.balance) \
-            if trade.has_entry() and not trade.entry.target.is_completed() else None
+            if trade.has_entry() and not trade.entry.is_completed() else None
             # if trade.has_entry() and not trade.entry.target.is_completed() else None
 
         self.last_price = 0
@@ -42,7 +42,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
         self.last_execution_price = new_price
 
-        if self.trade.status == OrderStatus.NEW:
+        if self.trade.status.is_new():
             if self.strategy_en:
                 self.strategy_en.execute(new_price)
                 # # implementy market entry
@@ -52,7 +52,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
                 self.trade.set_active()
                 self.trigger_target_updated()
 
-        if self.trade.status == OrderStatus.ACTIVE:
+        if self.trade.status.is_active():
             if self.strategy_sl:
                 self.strategy_sl.execute(new_price)
 
@@ -67,8 +67,13 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def order_status_changed(self, t: Target, data):
         if t.is_entry_target() and t.is_completed():
-            self.validate_asset_balance()
-            self.trade.set_active()
+            # validate balance and activate trade only if there are trading targets
+            if self.strategy_po:
+                self.validate_asset_balance()
+                self.trade.set_active()
+            else:
+                self.trade.set_completed()
+
             self.trigger_target_updated()
 
         if self.strategy_sl:

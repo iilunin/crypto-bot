@@ -1,35 +1,38 @@
 from typing import List
-from enum import Enum
-
-from Bot.EntrySettings import EntrySettings
-from Bot.OrderEnums import Side
+from Bot.EntryExitSettings import EntryExitSettings
+from Bot.TradeEnums import Side
 from Bot.StopLossSettings import StopLossSettings
 from Bot.Target import *
 
 
-class Trade:
-    def __init__(self, symbol, side, asset, targets=None, sl_settings=None, status=None, entry=None):
-        self.entry = EntrySettings(**entry) if entry else None
-
+class Trade(CustomSerializable):
+    def __init__(self, symbol, side, asset, sl_settings=None, status=None, entry=None, exit=None):
         self.side = Side(side.lower())
+
+        self.entry = None
+        self.exit = None
+
+        self._init_entry_exit(True, entry, self.side)
+        self._init_entry_exit(False, exit, self.side)
+
         self.symbol = symbol
         self.sl_settings = StopLossSettings(**sl_settings) if sl_settings else None
         self.asset = asset
-
-        self.targets: List[Target] = []
-
-        if targets:
-            self.set_targets(targets)
 
         if status:
             self.status = OrderStatus(status.lower())
         else:
             self.status = OrderStatus.ACTIVE if not entry else OrderStatus.NEW
 
+    def _init_entry_exit(self, is_entry, data, side: Side):
+        if data:
+            if 'side' not in data:
+                data['side'] = (side.reverse() if is_entry else side).value
 
-    def set_targets(self, targets):
-        self.targets.extend([RegularTarget(t) for t in targets])
-        self.targets.sort(key=lambda t: t.price, reverse=self.side == Side.BUY)
+            if is_entry:
+                self.entry = EntryExitSettings(is_entry=is_entry, **data)
+            else:
+                self.exit = EntryExitSettings(is_entry=is_entry, **data)
 
     def is_sell_order(self):
         return self.side == Side.SELL
@@ -37,14 +40,11 @@ class Trade:
     def has_entry(self):
         return self.entry is not None
 
+    def has_exit(self):
+        return self.exit is not None
+
     def has_stoploss(self):
         return self.sl_settings is not None and self.sl_settings.initial_target
-
-    def has_targets(self):
-        return len(self.targets) > 0
-
-    def get_available_targets(self) -> List[Target]:
-        return [t for t in self.targets if not t.is_completed()]
 
     def get_closed_targets(self) -> List[Target]:
         return [t for t in self.targets if t.is_completed()]
@@ -54,23 +54,36 @@ class Trade:
             return self.sl_settings.initial_target
         return None
 
+    def serializable_dict(self):
+        d = dict(self.__dict__)
+        if not self.sl_settings:
+            d.pop('sl_settings', None)
+        if not self.entry:
+            d.pop('entry', None)
+        if not self.exit:
+            d.pop('exit', None)
+        return d
+
     # TODO: add entry targets
     def get_all_active_placed_targets(self) -> List[Target]:
         tgt = []
-        if self.has_targets():
-            tgt.extend(self.targets)
+        if self.has_exit():
+            tgt.extend(self.exit.targets)
         if self.has_entry():
-            tgt.append(self.entry.target)
+            tgt.extend(self.entry.targets)
         if self.has_stoploss():
             tgt.append(self.sl_settings.initial_target)
 
         return [t for t in tgt if not t.is_completed() and t.has_id()]
 
     def is_completed(self):
-        return self.status == OrderStatus.COMPLETED
+        return self.status.is_completed()
 
     def set_active(self):
         self.status = OrderStatus.ACTIVE
+
+    def set_completed(self):
+        self.status = OrderStatus.COMPLETED
 
     def __str__(self):
         return '{}: {}'.format(self.symbol, self.side)

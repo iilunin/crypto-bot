@@ -1,5 +1,5 @@
 from Bot.Trade import Trade
-from Bot.OrderEnums import OrderStatus, Side
+from Bot.TradeEnums import OrderStatus, Side
 
 
 class OrderValidator:
@@ -31,30 +31,30 @@ class OrderValidator:
             self.errors["ORDER_COMPLETED"] = 'order already completed and should not be executed'
 
 
-    def validate_sl(self, order):
+    def validate_sl(self, trade):
         """
 
-        :type order: Trade
+        :type trade: Trade
         """
 
-        if not order.has_stoploss():
-            if not order.has_entry(): #in case it is entry only order
+        if not trade.has_stoploss():
+            if not trade.has_entry(): #in case it is entry only order
                 self.errors["NO_SL"] = 'no stop loss set'
             return False
 
-        if order.get_initial_stop().is_completed():
+        if trade.get_initial_stop().is_completed():
             self.errors["NO_SL"] = 'no active stop loss set'
             return False
 
-        if not order.has_targets():
+        if not (trade.has_exit() or trade.has_entry()):
             self.warnings["NO_TARG"] = 'no targets set'
 
-        for t in order.targets:
-            if t.status == OrderStatus.COMPLETED:
+        for t in trade.exit.targets:
+            if t.status.is_completed():
                 continue
 
-            if (order.side == Side.SELL and order.get_initial_stop().price >= t.price) or \
-                    (order.side == Side.BUY and order.get_initial_stop().price <= t.price):
+            if (trade.side == Side.SELL and trade.get_initial_stop().price >= t.price) or \
+                    (trade.side.is_buy() and trade.get_initial_stop().price <= t.price):
                 self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
                 return False
 

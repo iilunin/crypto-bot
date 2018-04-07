@@ -3,3 +3,5 @@ api.json
 /venv
 /Trades/Portfolio
 /Trades/Portfolio/*
+/Trades/NewPortfolio
+/Trades/Completed

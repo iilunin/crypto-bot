@@ -1,45 +1,56 @@
 {
     "trades": [
         {
-            "entry": {
-                "target": {
-                    "price": "0.00129000",
-                    "vol": "20"
-                },
-                "sl_threshold": "0.00000120",
-                "pullback_threshold": "0.00001800",
-                "side": "BUY"
-            },
-
             "side": "SELL",
-            "symbol": "LSKBTC",
-            "asset": "LSK",
-
+            "entry": {
+                "sl_threshold": "0.00000010",
+                "pullback_threshold": "0.00000010",
+                "side": "BUY",
+                "type": "SMART",
+                "targets": [
+                    {
+                        "price": "0.00000518",
+                        "vol": "3800"
+                    }
+                ]
+            },
+            "exit": {
+                "side": "SELL",
+                "type": "TARGET",
+                "targets": [
+                    {
+                        "price": "0.00000595",
+                        "vol": "25.00%",
+                        "sl": "0.00000528"
+                    },
+                    {
+                        "status":"COMPLETED",
+                        "price": "0.00000609",
+                        "vol": "25.00%"
+                    },
+                    {
+                        "price": "0.00000647",
+                        "vol": "50.00%"
+                    },
+                    {
+                        "price": "0.00000718",
+                        "vol": "100.00%"
+                    }
+                ]
+            },
+            "symbol": "TRXBTC",
             "sl_settings": {
-                "type": "TRAILING",
-                "val": "10.00%",
+                "type": "FIXED",
+                "val": "5.00%",
                 "limit_price_threshold": "0.10%",
-                "threshold": 0.0002,
-
+                "threshold": 0.003,
                 "initial_target": {
-                    "price": "0.00110000",
+                    "price": "0.00000469",
                     "vol": "100.00%"
                 }
             },
-
-
-            "targets": [
-                {
-                    "price": "0.00133000",
-                    "vol": "10",
-                    "sl": "0.00125000",
-                },
-                {
-                    "price": "0.00144000",
-                    "vol": "100.00%"
-                }
-            ],
-            "status": "NEW"
+            "asset": "TRX",
+            "status": "COMPLETED"
         }
     ]
 }

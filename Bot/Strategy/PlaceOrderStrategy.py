@@ -1,6 +1,6 @@
 from binance.exceptions import BinanceAPIException
 
-from Bot.OrderEnums import OrderStatus
+from Bot.TradeEnums import OrderStatus
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
 from Bot.Trade import Trade
@@ -35,13 +35,13 @@ class PlaceOrderStrategy(TradingStrategy):
             self.logError(str(bae))
 
     def trade_targets(self):
-        return self.trade.get_available_targets()
+        return self.trade.exit.targets
 
     def validate_all_orders(self, targets):
-        return all(t.status == OrderStatus.ACTIVE or t.has_id() for t in targets)
+        return all(t.status.is_completed() or (t.status.is_active() and t.has_id()) for t in targets)
 
     def validate_all_completed(self, targets):
-        return all(t.status == OrderStatus.COMPLETED for t in targets)
+        return all(t.status.is_completed() for t in targets)
 
     def prepare_volume_allocation(self, targets):
         bal = self.balance.avail + (self.balance.locked if any(t.is_active() for t in targets) else 0)
@@ -54,10 +54,7 @@ class PlaceOrderStrategy(TradingStrategy):
         for t in targets:
             price = self.exchange_info.adjust_price(t.price)
 
-            if t.vol.type == Value.Type.ABS:
-                vol = self.exchange_info.adjust_quanity(t.vol.v)
-            else:
-                vol = self.exchange_info.adjust_quanity(bal * (t.vol.v / 100))
+            vol = self.exchange_info.adjust_quanity(t.vol.get_val(bal))
 
             if vol == 0:
                 self.logWarning('No volume left to process order @ price {:.0f}'.format(price))

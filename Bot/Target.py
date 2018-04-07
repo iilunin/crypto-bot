@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from Bot.OrderEnums import OrderStatus
+from Bot.CustomSerializable import CustomSerializable
+from Bot.TradeEnums import OrderStatus
 from Bot.Value import Value
 
 
-class Target:
+class Target(CustomSerializable):
     def __init__(self, price, vol, status=OrderStatus.NEW.value, date=None, id=None, sl=0):
         self.date = date
         self.id = id
@@ -14,13 +15,13 @@ class Target:
         self.sl = float(sl)
 
     def is_completed(self):
-        return self.status == OrderStatus.COMPLETED
+        return self.status.is_completed()
 
     def is_new(self):
-        return self.status == OrderStatus.NEW
+        return self.status.is_new()
 
     def is_active(self):
-        return self.status == OrderStatus.ACTIVE
+        return self.status.is_active()
 
     def has_id(self):
         return self.id is not None
@@ -59,7 +60,8 @@ class Target:
         else:
             return '{}:{}@{}'.format('StopLoss' if self.is_stoploss_target() else 'Regular', self.price, self.vol)
 
-    def to_json_dict(self):
+
+    def serializable_dict(self):
         fmt = '{:.8f}'
         d = {}
 
@@ -72,7 +74,7 @@ class Target:
         if self.sl != 0:
             d['sl'] = fmt.format(self.sl)
 
-        if self.status != OrderStatus.NEW:
+        if not self.status.is_new():
             d['status'] = self.status
 
         if PriceHelper.is_float_price(self.price):
