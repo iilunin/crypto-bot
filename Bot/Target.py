@@ -48,7 +48,7 @@ class Target(CustomSerializable):
     def is_stoploss_target(self):
         return False
 
-    def is_regular_target(self):
+    def is_exit_target(self):
         return False
 
     def is_entry_target(self):
@@ -100,7 +100,7 @@ class PriceHelper:
         if self.is_digit:
             return self.price_val
 
-        if str(self.price_val).lower() == 'cp':
+        if str(self.price_val).lower() == PriceHelper.CURR_PRICE_TOKEN:
             if not self.operand:
                 return ref_price
             if self.operand in ['+', '-']:
@@ -149,11 +149,11 @@ class PriceHelper:
         return PriceHelper(False, token, operand, val)
 
 
-class RegularTarget(Target):
+class ExitTarget(Target):
     def __init__(self, params):
         super().__init__(**params)
 
-    def is_regular_target(self):
+    def is_exit_target(self):
         return True
 
 class StopLossTarget(Target):

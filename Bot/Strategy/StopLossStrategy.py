@@ -98,7 +98,7 @@ class StopLossStrategy(TradingStrategy):
                 self.validate_asset_balance()
 
     def get_sl_treshold(self):
-        threshold = round(self.current_stop_loss * self.trade.sl_settings.threshold, 8)
+        threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
         return (self.current_stop_loss + threshold) if self.trade.is_sell() else (self.current_stop_loss - threshold)
 
     def order_status_changed(self, t: Target, data):

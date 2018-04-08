@@ -2,7 +2,7 @@ from typing import List
 
 from Bot.CustomSerializable import CustomSerializable
 from Bot.TradeEnums import Side, Entry
-from Bot.Target import EntryTarget, Target, RegularTarget
+from Bot.Target import EntryTarget, Target, ExitTarget
 from Bot.Value import Value
 
 
@@ -40,7 +40,7 @@ class EntryExitSettings(CustomSerializable):
         return all(t.is_completed() for t in self.targets)
 
     def _create_target(self, t, is_entry):
-        return EntryTarget(t) if is_entry else RegularTarget(t)
+        return EntryTarget(t) if is_entry else ExitTarget(t)
 
     def serializable_dict(self):
         d = dict(self.__dict__)

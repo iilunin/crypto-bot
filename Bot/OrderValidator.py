@@ -49,13 +49,14 @@ class OrderValidator:
         if not (trade.has_exit() or trade.has_entry()):
             self.warnings["NO_TARG"] = 'no targets set'
 
-        for t in trade.exit.targets:
-            if t.status.is_completed():
-                continue
+        if trade.exit.type.is_target():
+            for t in trade.exit.targets:
+                if t.status.is_completed():
+                    continue
 
-            if (trade.side.is_sell() and trade.get_initial_stop().price >= t.price) or \
-                    (trade.side.is_buy() and trade.get_initial_stop().price <= t.price):
-                self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
-                return False
+                if (trade.side.is_sell() and trade.get_initial_stop().price >= t.price) or \
+                        (trade.side.is_buy() and trade.get_initial_stop().price <= t.price):
+                    self.errors['SL_PRICE_ERROR'] = 'stop loss price > than target price'
+                    return False
 
         return True

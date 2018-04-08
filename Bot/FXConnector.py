@@ -1,7 +1,13 @@
+from time import sleep
+
+from retrying import retry
+
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 from decimal import Decimal, ROUND_UP, ROUND_DOWN
 
+MAX_ATTEMPTS = 3
+DELAY = 1000
 
 class FXConnector:
 
@@ -73,20 +79,13 @@ class FXConnector:
             self.bs.stop_socket(self.connection)
             self.bs.stop_socket(self.user_data_connection)
 
-    # def set_new_symbols(self, symbols, socket_handler):
-    #     if self.connection:
-    #         self.bs.stop_socket(self.connection)
-    #
-    #     self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
-    #                                                      socket_handler)
-
-
     def cancel_order(self, sym, id):
         return self.client.cancel_order(symbol=sym, orderId=id)
 
     def get_open_orders(self, sym):
         return [o['orderId'] for o in self.client.get_open_orders(symbol=sym)]
 
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_all_orders(self, sym, limit=500):
         return {o['orderId']: {'status': o['status'],
                                'price': o['price'],
@@ -95,12 +94,16 @@ class FXConnector:
                                'vol_exec': o['executedQty']}
                 for o in self.client.get_all_orders(symbol=sym, limit=limit)}
 
+
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_all_tickers(self):
         return self.client.get_all_tickers()
 
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_order_status(self, id):
         return self.client.get_order(orderId=id)
 
+    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_makret_order(self, sym, side, volume):
         return self.client.create_order(
             symbol=sym,
@@ -108,6 +111,7 @@ class FXConnector:
             type=FXConnector.ORDER_TYPE_MARKET,
             quantity=FXConnector.format_number(volume))
 
+    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_limit_order(self, sym, side, price, volume):
         return self.client.create_order(
             symbol=sym,
@@ -117,6 +121,7 @@ class FXConnector:
             quantity=FXConnector.format_number(volume),
             price=FXConnector.format_number(price))
 
+    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_stop_order(self, sym, side, stop_price, price, volume):
         return self.client.create_order(
             symbol=sym,
@@ -127,6 +132,7 @@ class FXConnector:
             stopPrice=FXConnector.format_number(stop_price),
             price=FXConnector.format_number(price))
 
+    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_test_stop_order(self, sym, side, price, volume):
         return self.client.create_test_order(
             symbol=sym,
@@ -137,10 +143,12 @@ class FXConnector:
             stopPrice=FXConnector.format_number(price),
             price=FXConnector.format_number(price))
 
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_balance(self, asset):
         bal = self.client.get_asset_balance(asset=asset)
         return float(bal['free']), float(bal['locked'])
 
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_all_balances(self, assets: dict):
         res = self.client.get_account()
 
@@ -149,6 +157,7 @@ class FXConnector:
                 if bal['asset'] in assets:
                     assets[bal['asset']] = {'f': float(bal['free']), 'l':float(bal['locked'])}
 
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_exchange_info(self, sym):
         info = self.client.get_exchange_info()
 

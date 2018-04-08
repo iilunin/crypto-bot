@@ -9,8 +9,8 @@ class Trade(CustomSerializable):
     def __init__(self, symbol, side, asset, sl_settings=None, status=None, entry=None, exit=None):
         self.side = Side(side.lower())
 
-        self.entry = None
-        self.exit = None
+        self.entry: EntryExitSettings = None
+        self.exit: EntryExitSettings = None
 
         self._init_entry_exit(True, entry, self.side)
         self._init_entry_exit(False, exit, self.side)

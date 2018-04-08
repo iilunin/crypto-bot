@@ -84,7 +84,7 @@ class PlaceOrderStrategy(TradingStrategy):
         self.trigger_target_updated()
 
     def order_status_changed(self, t, data):
-        if not t.is_regular_target():
+        if not t.is_exit_target():
             return
 
         if t.is_completed():

@@ -1,5 +1,7 @@
 import logging
 
+from binance.exceptions import BinanceAPIException
+
 from Bot.FXConnector import FXConnector
 from Bot.TradeEnums import OrderStatus
 from Bot.Target import Target, PriceHelper
@@ -66,7 +68,11 @@ class TradingStrategy:
 
     # TODO: schedule validation once in some time
     def validate_target_orders(self):
-        orders_dict = self.fx.get_all_orders(self.symbol())
+        try:
+            orders_dict = self.fx.get_all_orders(self.symbol())
+        except BinanceAPIException as bae:
+            self.logError(str(bae))
+            return
 
         tgts = self.trade.get_all_active_placed_targets()
 
