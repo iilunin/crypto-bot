@@ -34,6 +34,9 @@ class PlaceOrderStrategy(TradingStrategy):
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
+    def update_trade(self, trade: Trade):
+        self.trade = trade
+
     def trade_targets(self):
         return self.trade.exit.targets
 

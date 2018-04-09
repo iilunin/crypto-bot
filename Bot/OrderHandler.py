@@ -19,8 +19,8 @@ class OrderHandler:
 
         self.strategies_dict = {}
         self.asset_dict = {}
-
         self.trade_info_buf = {}
+
         self.process_delay = 500
         self.last_ts = 0
         self.first_processing = True
@@ -42,7 +42,6 @@ class OrderHandler:
 
 
     def start_listening(self):
-
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.asset_dict = {s.trade.asset: s for s in self.strategies}
         self.trade_info_buf = {s.symbol(): [] for s in self.strategies}
@@ -134,3 +133,13 @@ class OrderHandler:
                 self.strategies.remove(s)
                 self.stop_listening()
                 self.start_listening()
+
+    def updated_trade(self, trade: Trade):
+        if trade.symbol in self.strategies_dict:
+            self.strategies_dict[trade.symbol].update_trade(trade)
+        # st = [s for s in self.strategies if s.symbol() == updated_trade.symbol()]
+        #
+        # TargetsAndStopLossStrategy()
+        # self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        # self.asset_dict = {s.trade.asset: s for s in self.strategies}
+        # self.trade_info_buf = {s.symbol(): [] for s in self.strategies}

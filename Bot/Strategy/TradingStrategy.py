@@ -33,6 +33,10 @@ class TradingStrategy:
         else:
             self.init()
 
+    def update_trade(self, trade: Trade):
+        self.trade = trade
+        self.init()
+
     def init(self):
         self.exchange_info = self.fx.get_exchange_info(self.symbol())
         self.validate_target_orders()
@@ -90,6 +94,7 @@ class TradingStrategy:
                         self.logInfo('Target price changed: {}'.format(t))
                         self.fx.cancel_order(self.symbol(), t.id)
                         t.set_canceled()
+                        update_required |= True
 
                 update_required |= self._update_trade_target_status_change(t, s)
 

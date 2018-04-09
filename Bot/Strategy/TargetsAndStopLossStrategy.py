@@ -34,6 +34,19 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         self.last_price = 0
         self.last_execution_price = 0
 
+    def update_trade(self, trade: Trade):
+        super().update_trade(trade)
+
+        # [s.update_trade(trade) for s in self.all_strategies()]
+        if self.strategy_sl:
+            self.strategy_sl.update_trade(trade)
+
+        if self.strategy_exit:
+            self.strategy_exit.update_trade(trade)
+
+        if self.strategy_entry and trade.is_new():
+            self.strategy_entry.update_trade(trade)
+
     def execute(self, new_price):
         if self.is_completed():
             self.logInfo('Trade Complete')
@@ -85,12 +98,26 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
             self.trigger_target_updated()
 
+        [s.order_status_changed(t, data) for s in self.all_strategies()]
+        # if self.strategy_sl:
+        #     self.strategy_sl.order_status_changed(t, data)
+        #
+        # if self.strategy_exit:
+        #     self.strategy_exit.order_status_changed(t, data)
+        #
+        # if self.strategy_entry:
+        #     self.strategy_entry.order_status_changed(t, data)
+
+    def all_strategies(self):
+        s = []
         if self.strategy_sl:
-            self.strategy_sl.order_status_changed(t, data)
+            s.append(self.strategy_sl)
 
         if self.strategy_exit:
-            self.strategy_exit.order_status_changed(t, data)
+            s.append(self.strategy_exit)
 
         if self.strategy_entry:
-            self.strategy_entry.order_status_changed(t, data)
+            s.append(self.strategy_entry)
+
+        return s
 

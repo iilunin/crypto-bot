@@ -11,13 +11,21 @@ from Bot.Value import Value
 class EntryStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
+        self.smart_order = None
+        self.init_smart_order()
 
+    def init_smart_order(self):
         self.smart_order = SmartOrder(self.trade_side().is_buy(),
                                       self.trade_target().price,
                                       self.on_smart_buy,
                                       self.get_trade_section().sl_threshold,
                                       self.get_trade_section().pullback_threshold,
                                       self.logger)
+
+    def update_trade(self, trade: Trade):
+        self.trade = trade
+        self.init_smart_order()
+
 
     def execute(self, new_price):
         try:

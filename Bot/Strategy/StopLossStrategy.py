@@ -19,6 +19,10 @@ class StopLossStrategy(TradingStrategy):
             self.last_sl = 0
             self.last_th = 0
 
+    def update_trade(self, trade: Trade):
+        self.trade = trade
+        self.adjust_stoploss_price()
+
     def execute(self, new_price):
         if self.is_completed():
             return

@@ -64,7 +64,6 @@ class Trade(CustomSerializable):
             d.pop('exit', None)
         return d
 
-    # TODO: add entry targets
     def get_all_active_placed_targets(self) -> List[Target]:
         tgt = []
         if self.has_exit():
@@ -78,6 +77,12 @@ class Trade(CustomSerializable):
 
     def is_completed(self):
         return self.status.is_completed()
+
+    def is_active(self):
+        return self.status.is_active()
+
+    def is_new(self):
+        return self.status.is_new()
 
     def set_active(self):
         self.status = OrderStatus.ACTIVE
