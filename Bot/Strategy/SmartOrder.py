@@ -5,7 +5,7 @@ from Bot.Value import Value
 
 
 class SmartOrder:
-    def __init__(self, is_buy, price, on_update=None, sl_threshold=Value("0.08%"), pull_back=Value("0.6%"), logger: Logger = None,
+    def __init__(self, is_buy, price, sl_threshold=Value("0.08%"), pull_back=Value("0.6%"), logger: Logger = None,
                  best_price=0):
         self.is_buy = is_buy
         self.target_price = None
@@ -18,7 +18,6 @@ class SmartOrder:
 
         self.best_pullback_limit_price = best_price
         self.target_zone_touched = False if self.best_pullback_limit_price == 0 else True
-        self.on_update = on_update
 
         self.init_price(price)
 
@@ -46,7 +45,6 @@ class SmartOrder:
     def is_init(self):
         return self.initialized
 
-
     def log_event(self, msg):
         if self.logger:
             self.logger.log(logging.INFO, msg)
@@ -55,7 +53,7 @@ class SmartOrder:
 
     def price_update(self, price):
         if not self.initialized:
-            return
+            return None
 
         if self.within_target_zone(price):
             self.target_zone_touched = True
@@ -75,22 +73,29 @@ class SmartOrder:
             if self.best_pullback_limit_price != 0:
                 limit_for_this_price = minormax(limit_for_this_price, self.best_pullback_limit_price)
 
-            limit_for_this_price = round(limit_for_this_price, 8)
+
+            self.best_pullback_limit_price = round(limit_for_this_price, 8)
             # print('{} will be triggered when price will reach {}; Current price: {}'.format(
             #     'Buy' if self.is_buy else 'Sell', limit_for_this_price, price))
 
-            # if pullback limit changed
-            if ((self.is_buy and self.best_pullback_limit_price > limit_for_this_price) or
-                    (not self.is_buy and self.best_pullback_limit_price < limit_for_this_price) or
-                    self.best_pullback_limit_price == 0):
-                self.best_pullback_limit_price = limit_for_this_price
-                self.trigger_buy(self.best_pullback_limit_price)
+            # self.best_pullback_limit_price = limit_for_this_price
+            # self.trigger_buy(self.best_pullback_limit_price)
 
-            # if price approaches limit
-            elif (((self.is_buy and price >= limit_for_this_price) or
-                  (not self.is_buy and price <= limit_for_this_price)) and
-                  self.best_pullback_limit_price != limit_for_this_price):
-                self.trigger_buy(self.best_pullback_limit_price)
+
+            # # if pullback limit changed
+            # if ((self.is_buy and self.best_pullback_limit_price > limit_for_this_price) or
+            #         (not self.is_buy and self.best_pullback_limit_price < limit_for_this_price) or
+            #         self.best_pullback_limit_price == 0):
+            #     self.best_pullback_limit_price = limit_for_this_price
+            #     self.trigger_buy(self.best_pullback_limit_price)
+            #
+            # # if price approaches limit
+            # elif (((self.is_buy and price >= limit_for_this_price) or
+            #       (not self.is_buy and price <= limit_for_this_price)) and
+            #       self.best_pullback_limit_price != limit_for_this_price):
+            #     self.trigger_buy(self.best_pullback_limit_price)
+
+        return self.best_pullback_limit_price
 
     def within_target_zone(self, price):
         return (self.is_buy and price <= self.target_price) or (
@@ -103,10 +108,10 @@ class SmartOrder:
     def get_last_pullback_limit(self):
         return self.best_pullback_limit_price
 
-    def trigger_buy(self, pb_limit):
-        self.log_event('Setting StopLoss-{} for {:.08f}'.format('Buy' if self.is_buy else 'Sell', pb_limit))
-        if self.on_update:
-            self.on_update(pb_limit, self.best_pullback_limit_price)
+    # def trigger_buy(self, pb_limit):
+    #     self.log_event('Setting StopLoss-{} for {:.08f}'.format('Buy' if self.is_buy else 'Sell', pb_limit))
+    #     if self.on_update:
+    #         self.on_update(pb_limit)
 
 
 

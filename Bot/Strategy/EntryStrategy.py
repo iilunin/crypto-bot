@@ -12,12 +12,12 @@ class EntryStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.smart_order = None
+        self.last_smart_price = 0
         self.init_smart_order()
 
     def init_smart_order(self):
         self.smart_order = SmartOrder(is_buy=self.trade_side().is_buy(),
                                       price=self.trade_target().price,
-                                      on_update=self.on_smart_buy,
                                       sl_threshold=self.get_trade_section().sl_threshold,
                                       pull_back=self.get_trade_section().pullback_threshold,
                                       logger=self.logger,
@@ -51,7 +51,8 @@ class EntryStrategy(TradingStrategy):
                 self.trigger_target_updated()
 
             # TODO: add automatic order placement if it was canceled by someone
-            self.smart_order.price_update(price)
+            trigger_order_price = self.smart_order.price_update(price)
+            self.on_smart_buy(trigger_order_price)
 
 
         except BinanceAPIException as bae:
@@ -60,44 +61,61 @@ class EntryStrategy(TradingStrategy):
     def get_available_amount(self):
         return self.balance.avail
 
-    def on_smart_buy(self, sl_price, best_pb_price):
-        t = self.trade_target()
+    def on_smart_buy(self, trigger_order_price):
+        if not trigger_order_price:
+            return
 
-        if t.is_active():
-            status = self.fx.get_order_status(self.symbol(), t.id)
+        if (self.trade_side().is_sell() and trigger_order_price > self.last_smart_price) or \
+                (self.trade_side().is_buy() and trigger_order_price < self.last_smart_price) or \
+                self.last_smart_price == 0:
 
-            if self.fx.cancel_order(self.symbol(), t.id):
-                t.set_canceled()
-                self.trigger_target_updated()
-                self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
+            self.logInfo('Setting StopLoss-{} for {:.08f}'.format(self.trade_side().name, trigger_order_price))
 
-        if self.trade_side().is_buy():
-            limit = max(sl_price, t.price + self.smart_order.sl_threshold_val)
-        else:
-            limit = min(sl_price, t.price - self.smart_order.sl_threshold_val)
+            t = self.trade_target()
 
-        try:
-            order = self.fx.create_stop_order(
-                sym=self.symbol(),
-                side=self.trade_side().name,
-                stop_price=self.exchange_info.adjust_price(sl_price),
-                price=self.exchange_info.adjust_price(limit),
-                volume=self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail))
-            )
-        except BinanceAPIException as sl_exception:
-            if sl_exception.message.lower().find('order would trigger immediately') > -1:
-                order = self.fx.create_makret_order(
-                    self.symbol(),
-                    self.trade_side().name,
-                    self.exchange_info.adjust_quanity(
-                        self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail)))
-                )
+            if t.is_active():
+                status = self.fx.get_order_status(self.symbol(), t.id)
+
+                if self.fx.cancel_order(self.symbol(), t.id):
+                    t.set_canceled()
+                    self.trigger_target_updated()
+                    self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
+
+            # if self.trade_side().is_buy():
+            #     limit = max(trigger_order_price, t.price + self.smart_order.sl_threshold_val)
+            # else:
+            #     limit = min(trigger_order_price, t.price - self.smart_order.sl_threshold_val)
+
+            if self.trade_side().is_buy():
+                limit = max(trigger_order_price + self.smart_order.sl_threshold_val,
+                            t.price + self.smart_order.sl_threshold_val)
             else:
-                raise
+                limit = min(trigger_order_price - self.smart_order.sl_threshold_val,
+                            t.price - self.smart_order.sl_threshold_val)
 
-        self.get_trade_section().best_price = best_pb_price
-        t.set_active(order['orderId'])
-        self.trigger_target_updated()
+            try:
+                order = self.fx.create_stop_order(
+                    sym=self.symbol(),
+                    side=self.trade_side().name,
+                    stop_price=self.exchange_info.adjust_price(trigger_order_price),
+                    price=self.exchange_info.adjust_price(limit),
+                    volume=self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail))
+                )
+            except BinanceAPIException as sl_exception:
+                if sl_exception.message.lower().find('order would trigger immediately') > -1:
+                    order = self.fx.create_makret_order(
+                        self.symbol(),
+                        self.trade_side().name,
+                        self.exchange_info.adjust_quanity(
+                            self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail)))
+                    )
+                else:
+                    raise
+
+            self.get_trade_section().best_price = trigger_order_price
+            self.last_smart_price = trigger_order_price
+            t.set_active(order['orderId'])
+            self.trigger_target_updated()
 
     def trade_side(self):
         return self.get_trade_section().side if self.get_trade_section().side else self.trade.side.reverse()
@@ -106,7 +124,7 @@ class EntryStrategy(TradingStrategy):
         return self.get_trade_section().is_completed()
 
     def trade_target(self):
-        return self.get_trade_section().targets[0]
+        return self.get_trade_section().targets[-1]
 
     def validate_all_orders(self, targets):
         return all(t.is_completed() or (t.status.is_active() or t.has_id()) for t in targets)

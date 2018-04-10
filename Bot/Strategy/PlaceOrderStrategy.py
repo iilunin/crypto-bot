@@ -1,5 +1,6 @@
 from binance.exceptions import BinanceAPIException
 
+from Bot.Strategy.EntryStrategy import ExitStrategy
 from Bot.TradeEnums import OrderStatus
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
@@ -10,6 +11,16 @@ from Bot.Value import Value
 class PlaceOrderStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
+        self.strategy_exit = None
+        self.init_smart_exit()
+
+    def last_target_smart(self):
+        return self.trade.exit.last_target_smart
+
+    def init_smart_exit(self):
+        if self.last_target_smart():
+            self.strategy_exit = ExitStrategy(self.trade, self.fx, self.trade_updated, True, self.exchange_info,
+                                              self.balance)
 
     def execute(self, new_price):
         try:
@@ -22,6 +33,12 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.logInfo('All Orders are Completed')
                 self.set_trade_completed()
                 return
+
+            if self.last_target_smart():
+                not_completed_targets = self.not_completed_targets()
+                if len(not_completed_targets) == 1:
+                    self.strategy_exit.execute(new_price)
+                    return
 
             if self.validate_all_orders(targets):
                 return
@@ -37,10 +54,21 @@ class PlaceOrderStrategy(TradingStrategy):
     def update_trade(self, trade: Trade):
         self.trade = trade
 
+        if self.trade.exit.last_target_smart:
+            self.init_smart_exit()
+        else:
+            self.strategy_exit = None
+
     def trade_targets(self):
         return self.trade.exit.targets
 
+    def not_completed_targets(self):
+        return [t for t in self.trade_targets() if not t.is_completed()]
+
     def validate_all_orders(self, targets):
+        if self.last_target_smart():
+            if len(targets) > 1:
+                targets = targets[:-1]
         return all(t.status.is_completed() or (t.status.is_active() and t.has_id()) for t in targets)
 
     def validate_all_completed(self, targets):
@@ -54,6 +82,8 @@ class PlaceOrderStrategy(TradingStrategy):
             return
 
         orders = []
+        last_target = targets[-1] if self.last_target_smart() else None
+
         for t in targets:
             price = self.exchange_info.adjust_price(t.price)
 
@@ -67,7 +97,7 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
                 return
 
-            if t.is_new():
+            if t.is_new() and t != last_target:
                 orders.append({
                     'price': self.exchange_info.adjust_price(price),
                     'volume': self.exchange_info.adjust_quanity(vol),

@@ -24,6 +24,7 @@ class TradingStrategy:
         self.trade_updated = order_updated
         self.name = '{}({})'.format(self.__class__.__name__, self.symbol())
         self.logger = logging.getLogger(self.name)
+        self.last_execution_price = 0
 
         if nested:
             self.exchange_info = exchange_info
@@ -32,6 +33,7 @@ class TradingStrategy:
                 self.balance = balance
         else:
             self.init()
+
 
     def update_trade(self, trade: Trade):
         self.trade = trade
@@ -59,6 +61,7 @@ class TradingStrategy:
         for t in tgts:
             if t.id == orderId:
                 if self._update_trade_target_status_change(t, data['status']):
+                    self.last_execution_price = 0
                     self.trigger_target_updated()
                     self.order_status_changed(t, data)
                 break
@@ -127,8 +130,9 @@ class TradingStrategy:
         self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)
 
     def set_trade_completed(self):
-        self.trade.status = OrderStatus.COMPLETED
-        self.trigger_target_updated()
+        if not self.trade.is_completed():
+            self.trade.set_completed()
+            self.trigger_target_updated()
 
     def trigger_target_updated(self):
         if self.trade_updated:
