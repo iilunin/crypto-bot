@@ -81,25 +81,28 @@ class TradingStrategy:
         tgts = self.trade.get_all_active_placed_targets()
 
         update_required = False
-        for t in tgts:
-            if t.id not in orders_dict:
-                t.set_canceled()
-                update_required = True
-            else:
-                s = orders_dict[t.id]['status']
-                if s == 'NEW':
-                    if not PriceHelper.is_float_price(t.price) or (
-                            self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
-                                                                       float(orders_dict[t.id]['stop_price']))):
-                        self.logInfo('Target price changed: {}'.format(t))
-                        self.fx.cancel_order(self.symbol(), t.id)
-                        t.set_canceled()
-                        update_required |= True
+        if len(tgts) == 0:
+            self.fx.cancel_open_orders(self.symbol())
+        else:
+            for t in tgts:
+                if t.id not in orders_dict:
+                    t.set_canceled()
+                    update_required = True
+                else:
+                    s = orders_dict[t.id]['status']
+                    if s == 'NEW':
+                        if not PriceHelper.is_float_price(t.price) or (
+                                self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
+                                                                           float(orders_dict[t.id]['stop_price']))):
+                            self.logInfo('Target price changed: {}'.format(t))
+                            self.fx.cancel_order(self.symbol(), t.id)
+                            t.set_canceled()
+                            update_required |= True
 
-                update_required |= self._update_trade_target_status_change(t, s)
+                    update_required |= self._update_trade_target_status_change(t, s)
 
-        if update_required:
-            self.trigger_target_updated()
+            if update_required:
+                self.trigger_target_updated()
 
     def _update_trade_target_status_change(self, t: Target, status: str) -> bool:
         if status == 'FILLED':

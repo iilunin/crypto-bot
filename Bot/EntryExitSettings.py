@@ -14,13 +14,15 @@ class EntryExitSettings(CustomSerializable):
                  sl_threshold=None,
                  pullback_threshold=None,
                  type=Entry.TARGET.value,
-                 is_entry=True):
+                 is_entry=True,
+                 best_price=0):
 
         self.sl_threshold = Value(sl_threshold) if sl_threshold else None
         self.pullback_threshold = Value(pullback_threshold) if pullback_threshold else None
         self.side = Side(side.lower()) if side else None
         self.type = Entry(type.lower())
         self.is_entry = is_entry
+        self.best_price = best_price
 
         self.targets: [Target] = []
 
@@ -51,6 +53,8 @@ class EntryExitSettings(CustomSerializable):
             d.pop("pullback_threshold", None)
         if not self.side:
             d.pop("side", None)
+        if self.best_price == 0:
+            d.pop("best_price", None)
 
         d.pop("is_entry", None)
 

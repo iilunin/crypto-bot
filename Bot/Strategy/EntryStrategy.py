@@ -15,12 +15,13 @@ class EntryStrategy(TradingStrategy):
         self.init_smart_order()
 
     def init_smart_order(self):
-        self.smart_order = SmartOrder(self.trade_side().is_buy(),
-                                      self.trade_target().price,
-                                      self.on_smart_buy,
-                                      self.get_trade_section().sl_threshold,
-                                      self.get_trade_section().pullback_threshold,
-                                      self.logger)
+        self.smart_order = SmartOrder(is_buy=self.trade_side().is_buy(),
+                                      price=self.trade_target().price,
+                                      on_update=self.on_smart_buy,
+                                      sl_threshold=self.get_trade_section().sl_threshold,
+                                      pull_back=self.get_trade_section().pullback_threshold,
+                                      logger=self.logger,
+                                      best_price=self.get_trade_section().best_price)
 
     def update_trade(self, trade: Trade):
         self.trade = trade
@@ -59,13 +60,16 @@ class EntryStrategy(TradingStrategy):
     def get_available_amount(self):
         return self.balance.avail
 
-    def on_smart_buy(self, sl_price):
+    def on_smart_buy(self, sl_price, best_pb_price):
         t = self.trade_target()
 
         if t.is_active():
-            self.fx.cancel_order(self.symbol(), t.id)
-            t.set_canceled()
-            self.trigger_target_updated()
+            status = self.fx.get_order_status(self.symbol(), t.id)
+
+            if self.fx.cancel_order(self.symbol(), t.id):
+                t.set_canceled()
+                self.trigger_target_updated()
+                self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
 
         if self.trade_side().is_buy():
             limit = max(sl_price, t.price + self.smart_order.sl_threshold_val)
@@ -91,6 +95,7 @@ class EntryStrategy(TradingStrategy):
             else:
                 raise
 
+        self.get_trade_section().best_price = best_pb_price
         t.set_active(order['orderId'])
         self.trigger_target_updated()
 

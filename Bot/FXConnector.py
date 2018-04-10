@@ -88,6 +88,12 @@ class FXConnector:
     def cancel_order(self, sym, id):
         return self.client.cancel_order(symbol=sym, orderId=id)
 
+    def cancel_open_orders(self, sym):
+        orders = self.get_open_orders(sym)
+        if orders:
+            for order_id in orders:
+                self.client.cancel_order(symbol=sym, orderId=order_id)
+
     def get_open_orders(self, sym):
         return [o['orderId'] for o in self.client.get_open_orders(symbol=sym)]
 
@@ -110,8 +116,8 @@ class FXConnector:
         return self.client.get_orderbook_tickers()
 
     @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
-    def get_order_status(self, id):
-        return self.client.get_order(orderId=id)
+    def get_order_status(self, sym, id):
+        return self.client.get_order(symbol=sym, orderId=id)
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_makret_order(self, sym, side, volume):

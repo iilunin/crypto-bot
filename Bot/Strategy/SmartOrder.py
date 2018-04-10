@@ -5,10 +5,10 @@ from Bot.Value import Value
 
 
 class SmartOrder:
-    def __init__(self, is_buy, price, on_update=None, sl_threshold=Value("0.08%"), pull_back=Value("0.6%"), logger: Logger = None):
+    def __init__(self, is_buy, price, on_update=None, sl_threshold=Value("0.08%"), pull_back=Value("0.6%"), logger: Logger = None,
+                 best_price=0):
         self.is_buy = is_buy
         self.target_price = None
-        self.best_pullback_limit_price = 0
         self.initialized = False
 
         self.logger = logger
@@ -16,7 +16,8 @@ class SmartOrder:
         self.temp_sl_threshold = sl_threshold
         self.temp_pull_back = pull_back
 
-        self.target_zone_touched = False
+        self.best_pullback_limit_price = best_price
+        self.target_zone_touched = False if self.best_pullback_limit_price == 0 else True
         self.on_update = on_update
 
         self.init_price(price)
@@ -105,7 +106,7 @@ class SmartOrder:
     def trigger_buy(self, pb_limit):
         self.log_event('Setting StopLoss-{} for {:.08f}'.format('Buy' if self.is_buy else 'Sell', pb_limit))
         if self.on_update:
-            self.on_update(pb_limit)
+            self.on_update(pb_limit, self.best_pullback_limit_price)
 
 
 
