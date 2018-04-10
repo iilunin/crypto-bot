@@ -38,17 +38,19 @@ class EntryStrategy(TradingStrategy):
                 self.logInfo('All Orders are Completed')
                 return
 
+            price = self.get_single_price(new_price, self.price_selector(self.trade_side()))
+
             # if self.is_smart:
             if not self.smart_order.is_init():
                 ph = PriceHelper.create_price_helper(self.trade_target().price)
-                actual_price = ph.get_value(new_price)
+                actual_price = ph.get_value(price)
                 self.smart_order.init_price(actual_price)
 
                 self.trade_target().price = actual_price
                 self.trigger_target_updated()
 
             # TODO: add automatic order placement if it was canceled by someone
-            self.smart_order.price_update(new_price)
+            self.smart_order.price_update(price)
 
 
         except BinanceAPIException as bae:

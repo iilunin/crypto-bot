@@ -4,7 +4,7 @@ import os
 
 from os.path import isfile, join
 
-from os import listdir
+from os import listdir, environ
 
 from datetime import datetime
 from threading import Timer
@@ -20,12 +20,10 @@ from Bot.Trade import Trade
 
 TRADE_FILE_PATH_PATTERN = '{}{}.json'
 
-NEW_ORDER_PATH_PORTFOLIO = 'Trades/Portfolio/'
-# NEW_ORDER_PATH_PORTFOLIO = 'Trades/NewPortfolio/'
+TRADE_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Portfolio/')
+COMPLETED_ORDER_PATH_PORTFOLIO = environ.get('TRADE_COMPLETED_DIR', 'Trades/Completed/')
+CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
-COMPLETED_ORDER_PATH_PORTFOLIO = 'Trades/Completed/'
-ORDER_PATH = 'trades.json'
-ORDER_PATH_UPD = 'trades.json'
 
 LOG_FORMAT = '%(asctime)s[%(levelname)s][%(name)s]: %(message)s'
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
@@ -40,7 +38,7 @@ def main():
     # res = get_historical_klines('LTCBTC', '1d', 'December 21, 2017', 'December 21, 2017')
     # print(res)
     # test_smart_order()
-    test_start_app(NEW_ORDER_PATH_PORTFOLIO)
+    test_start_app(TRADE_PORTFOLIO_PATH)
     # save_new_order_file_structure(path=NEW_ORDER_PATH_PORTFOLIO, new_path='Trades/NewPortfolio/')
     # test_change_order()
 
@@ -91,7 +89,7 @@ def save_new_order_file_structure(path, new_path):
             new_trade_path = new_path + t.symbol + '.json'
             cl.save_trades(cl.json_saver(new_trade_path), [t])
 
-def test_start_app(path=ORDER_PATH):
+def test_start_app(path):
     o_loader = cl.advanced_loader(path)
     # o_saver = cl.json_saver(path)
     trades = cl.load_trade_list(o_loader)
@@ -107,7 +105,7 @@ def test_start_app(path=ORDER_PATH):
                 print(ov.warnings)
             trades.remove(trade)
 
-    api = cl.json_loader('api.json')()
+    api = cl.json_loader(os.path.join(CONF_DIR, 'api.json'))()
 
     global handler
     handler = OrderHandler(
@@ -134,7 +132,7 @@ def update_trade(trade: Trade, cl: ConfigLoader, path):
         move_completed_trade(trade.symbol)
 
 def move_completed_trade(symbol):
-    os.rename(TRADE_FILE_PATH_PATTERN.format(NEW_ORDER_PATH_PORTFOLIO, symbol),
+    os.rename(TRADE_FILE_PATH_PATTERN.format(TRADE_PORTFOLIO_PATH, symbol),
               TRADE_FILE_PATH_PATTERN.format(COMPLETED_ORDER_PATH_PORTFOLIO, datetime.now().strftime('%Y-%m-%d_%H-%M-') + symbol))
 
 @atexit.register
@@ -162,7 +160,7 @@ def stop_timer():
 
 def check_files_changed():
     try:
-        path = NEW_ORDER_PATH_PORTFOLIO
+        path = TRADE_PORTFOLIO_PATH
 
         global file_watch_list, handler, cl
 

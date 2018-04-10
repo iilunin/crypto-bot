@@ -131,6 +131,22 @@ class TradingStrategy:
         if self.trade_updated:
             self.trade_updated(self.trade)
 
+    def get_bid_ask(self, price):
+        return price['b'], price['a']
+
+    def get_single_price(self, price, selector=None):
+        if not selector:
+            selector = self.price_selector()
+
+        return price[selector]
+
+    def price_selector(self, side=None):
+        if not side:
+            side = self.trade_side()
+
+        return 'b' if side.is_sell() else 'a'
+
+
     #TODO: move logging to another class
     def logInfo(self, msg):
         self.logger.log(logging.INFO, msg)

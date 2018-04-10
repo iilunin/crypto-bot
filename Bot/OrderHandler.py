@@ -20,6 +20,7 @@ class OrderHandler:
         self.strategies_dict = {}
         self.asset_dict = {}
         self.trade_info_buf = {}
+        self.trade_info_ticker_buf = {}
 
         self.process_delay = 500
         self.last_ts = 0
@@ -34,8 +35,11 @@ class OrderHandler:
 
             self.first_processing = False
 
-            tickers = self.fx.get_all_tickers()
-            prices = {t['symbol']: float(t['price']) for t in tickers}
+            tickers = self.fx.get_orderbook_tickers()
+            # tickers = self.fx.get_all_tickers()
+            # prices = {t['symbol']: float(t['price']) for t in tickers}
+
+            prices = {t['symbol']: {'b': float(t['bidPrice']), 'a': float(t['askPrice'])} for t in tickers}
             self.execute_strategy(prices)
         except Exception as e:
             self.logger.error(traceback.format_exc())
@@ -97,18 +101,40 @@ class OrderHandler:
         try:
             d = msg['data']
             if d['e'] == 'error':
-                print(msg['data'])
-            else:
-                self.trade_info_buf[d['s']].append(d['p'])
+                self.logger.error(msg)
+            # elif d['e'] == 'trade':
+            #     self.trade_info_buf[d['s']].append(d['p'])
+            #     delta = dt.now() - self.last_ts
+            #     if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
+            #         self.last_ts = dt.now()
+            #         mean_prices = self.aggreagate_fx_prices()
+            #         self.check_strategy_is_complete()
+            #         self.execute_strategy(mean_prices)
+            elif d['e'] == '24hrTicker':
+                # print('{}: Bid:{} Ask:{}'.format(d['s'], d['b'], d['a']))
+
+                self.trade_info_ticker_buf[d['s']] = {'b': float(d['b']), 'a': float(d['a'])}
+
                 delta = dt.now() - self.last_ts
+
                 if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
                     self.last_ts = dt.now()
-                    mean_prices = self.aggreagate_fx_prices()
-                    self.check_strategy_is_complete()
-                    self.execute_strategy(mean_prices)
+                    self.check_strategies_status()
+                    prices = dict(self.trade_info_ticker_buf)
+                    self.trade_info_ticker_buf = {}
+                    self.execute_strategy(prices)
+
+                # strategy = self.strategies_dict[d['s']]
+                # if strategy:
+                #     if self.handle_completed_strategy(strategy):
+                #         return
+                #
+                #     strategy.execute({'b': float(d['b']), 'a': float(d['a'])})
+
         except Exception as e:
             self.logger.error(str(e))
             traceback.print_exc()
+
 
     def aggreagate_fx_prices(self):
         mp = {}
@@ -127,12 +153,17 @@ class OrderHandler:
             if s.symbol() in prices:
                 s.execute(prices[s.symbol()])
 
-    def check_strategy_is_complete(self):
+    def check_strategies_status(self):
         for s in self.strategies[:]:
-            if s.is_completed():
-                self.strategies.remove(s)
-                self.stop_listening()
-                self.start_listening()
+            self.handle_completed_strategy(s)
+
+    def handle_completed_strategy(self, s):
+        if s.is_completed():
+            self.strategies.remove(s)
+            self.stop_listening()
+            self.start_listening()
+        return s.is_completed()
+
 
     def updated_trade(self, trade: Trade):
         if trade.symbol in self.strategies_dict:

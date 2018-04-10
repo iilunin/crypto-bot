@@ -60,30 +60,29 @@ class FXConnector:
 
     def __init__(self, key=None, secret=None):
         self.client = Client(key, secret)
-        # client.create_test_order()
         self.bs = None
-        self.connection = None
-        # self.ticker_connection = None
+        # self.connection = None
+        self.ticker_connection = None
         self.user_data_connection = None
 
     def listen_symbols(self, symbols, socket_handler, user_data_handler):
         self.bs = BinanceSocketManager(self.client)
         self.stop_listening()
 
-        self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
-                                                         socket_handler)
-
-        # self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
+        # self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
         #                                                  socket_handler)
+
+        self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
+                                                         socket_handler)
         self.user_data_connection = self.bs.start_user_socket(user_data_handler)
 
     def start_listening(self):
         self.bs.start()
 
     def stop_listening(self):
-        if self.connection:
-            self.bs.stop_socket(self.connection)
-            # self.bs.stop_socket(self.ticker_connection)
+        if self.ticker_connection:
+            # self.bs.stop_socket(self.connection)
+            self.bs.stop_socket(self.ticker_connection)
             self.bs.stop_socket(self.user_data_connection)
 
     def cancel_order(self, sym, id):
@@ -105,6 +104,10 @@ class FXConnector:
     @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_all_tickers(self):
         return self.client.get_all_tickers()
+
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
+    def get_orderbook_tickers(self):
+        return self.client.get_orderbook_tickers()
 
     @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_order_status(self, id):

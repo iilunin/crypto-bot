@@ -1,8 +1,9 @@
 .idea
 api.json
-/Conf/api.json
 /venv
 /Trades/Portfolio
 /Trades/Portfolio/*
 /Trades/NewPortfolio
 /Trades/Completed
+api.json
+/Conf/api.json

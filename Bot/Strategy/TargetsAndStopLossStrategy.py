@@ -36,6 +36,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def update_trade(self, trade: Trade):
         super().update_trade(trade)
+        self.last_execution_price = 0
 
         # [s.update_trade(trade) for s in self.all_strategies()]
         if self.strategy_sl:

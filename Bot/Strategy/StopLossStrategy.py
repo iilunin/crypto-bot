@@ -30,8 +30,10 @@ class StopLossStrategy(TradingStrategy):
         if self.is_sl_completed():
             return
 
-        self.adjust_stoploss_price(new_price)
-        self.adjust_stoploss_order(new_price)
+        price = self.get_single_price(new_price)
+
+        self.adjust_stoploss_price(price)
+        self.adjust_stoploss_order(price)
 
         self.log_stoploss()
 
