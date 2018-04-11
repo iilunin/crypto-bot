@@ -85,6 +85,9 @@ class PlaceOrderStrategy(TradingStrategy):
         last_target = targets[-1] if self.last_target_smart() else None
 
         for t in targets:
+            if t.is_completed():
+                continue
+
             price = self.exchange_info.adjust_price(t.price)
 
             vol = self.exchange_info.adjust_quanity(t.vol.get_val(bal))

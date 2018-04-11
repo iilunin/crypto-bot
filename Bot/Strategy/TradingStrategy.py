@@ -2,33 +2,39 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
+from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
 from Bot.TradeEnums import OrderStatus
 from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
 
 
-class Balance:
-    def __init__(self, available=0., locked=0.):
-        self.avail = available
-        self.locked = locked
+# class Balance:
+#     def __init__(self, available=0., locked=0.):
+#         self.avail = available
+#         self.locked = locked
 
 
 class TradingStrategy:
-    def __init__(self, trade: Trade, fx: FXConnector, order_updated=None, nested=False, exchange_info=None, balance=None):
+    def __init__(self,
+                 trade: Trade,
+                 fx: FXConnector,
+                 trade_updated=None,
+                 nested=False,
+                 exchange_info=None,
+                 balance: Balance=None):
         self.trade = trade
         self.fx = fx
-        self.balance = Balance()
+        self.balance: Balance = balance if balance else Balance()
         self.exchange_info = None
         self.simulate = False
-        self.trade_updated = order_updated
+        self.trade_updated = trade_updated
         self.name = '{}({})'.format(self.__class__.__name__, self.symbol())
         self.logger = logging.getLogger(self.name)
         self.last_execution_price = 0
 
         if nested:
             self.exchange_info = exchange_info
-
             if balance:
                 self.balance = balance
         else:
@@ -40,6 +46,7 @@ class TradingStrategy:
         self.init()
 
     def init(self):
+        #TODO: make one call for each symbols
         self.exchange_info = self.fx.get_exchange_info(self.symbol())
         self.validate_target_orders()
 
@@ -69,9 +76,9 @@ class TradingStrategy:
     def order_status_changed(self, t: Target, data):
         pass
 
-    def account_info(self, data):
-        self.balance.avail = float(data['f'])
-        self.balance.locked = float(data['l'])
+    # def account_info(self, data):
+    #     self.balance.avail = float(data['f'])
+    #     self.balance.locked = float(data['l'])
 
     # TODO: schedule validation once in some time
     def validate_target_orders(self):
@@ -122,12 +129,12 @@ class TradingStrategy:
     def execute(self, new_price):
         pass
 
-    def update_asset_balance(self, avail, locked):
-        self.balance.avail = avail
-        self.balance.locked = locked
+    # def update_asset_balance(self, avail, locked):
+    #     self.balance.avail = avail
+    #     self.balance.locked = locked
 
-    def validate_asset_balance(self):
-        self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)
+    # def validate_asset_balance(self):
+    #     self.balance.avail, self.balance.locked = self.fx.get_balance(self.trade.asset)
 
     def set_trade_completed(self):
         if not self.trade.is_completed():

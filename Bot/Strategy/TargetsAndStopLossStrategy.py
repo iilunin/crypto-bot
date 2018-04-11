@@ -9,8 +9,8 @@ from Bot.Trade import Trade
 
 
 class TargetsAndStopLossStrategy(TradingStrategy):
-    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None):
-        super().__init__(trade, fx, trade_updated)
+    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, balance=None):
+        super().__init__(trade=trade, fx=fx, trade_updated=trade_updated, balance=balance)
 
         if trade.has_stoploss():
             self.create_sl_strategy(trade)
@@ -125,7 +125,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             if t.is_entry_target():
                 # validate balance and activate trade only if there are trading targets
                 if self.strategy_exit:
-                    self.validate_asset_balance()
+                    self.balance.invalidate()
                     self.trade.set_active()
                     self.trigger_target_updated()
                 else:

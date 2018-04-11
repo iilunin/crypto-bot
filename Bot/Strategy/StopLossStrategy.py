@@ -101,7 +101,7 @@ class StopLossStrategy(TradingStrategy):
             self.exit_threshold = 0
 
             if self.cancel_stoploss_orders():
-                self.validate_asset_balance()
+                self.balance.invalidate()
 
     def get_sl_treshold(self):
         threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
@@ -131,7 +131,7 @@ class StopLossStrategy(TradingStrategy):
                 order['orderId'] = 2333123
             else:
                 self.cancel_all_orders()
-                self.validate_asset_balance()
+                self.balance.invalidate()
 
                 # stop_trigger
 

@@ -5,6 +5,7 @@ from datetime import datetime as dt
 
 import logging
 
+from Bot.AccountBalances import AccountBalances
 from Bot.FXConnector import FXConnector
 from Bot.Trade import Trade
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
@@ -14,8 +15,10 @@ class OrderHandler:
     def __init__(self, trades: List[Trade], fx: FXConnector, order_updated_handler=None):
         # self.orders = {o.symbol: o for o in orders}
         self.fx = fx
+        self.balances = AccountBalances(fx)
 
-        self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler) for t in trades]
+        self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler, self.balances.get_balance(t.asset))
+                           for t in trades]
 
         self.strategies_dict = {}
         self.asset_dict = {}
@@ -50,10 +53,12 @@ class OrderHandler:
         self.asset_dict = {s.trade.asset: s for s in self.strategies}
         self.trade_info_buf = {s.symbol(): [] for s in self.strategies}
 
-        balances = dict.fromkeys(self.asset_dict.keys())
-        self.fx.get_all_balances(balances)
+        self.balances.update_balances(self.fx.get_all_balances_dict())
 
-        [s.update_asset_balance(balances[s.trade.asset]['f'], balances[s.trade.asset]['l']) for s in self.strategies]
+        # balances = dict.fromkeys(self.asset_dict.keys())
+        # self.fx.get_all_balances(balances)
+
+        # [s.update_asset_balance(balances[s.trade.asset]['f'], balances[s.trade.asset]['l']) for s in self.strategies]
 
 
         self.process_initial_prices()
@@ -70,17 +75,22 @@ class OrderHandler:
     def user_data_handler(self, msg):
         try:
             if msg['e'] == 'outboundAccountInfo':
-                assets = list(self.asset_dict.keys())
-                for asset in msg['B']:
-                    if asset['a'] in assets:
-                        asset_name = asset['a']
-                        strategy = self.asset_dict[asset_name]
-
-                        strategy.account_info(asset)
-                        assets.remove(asset_name)
-
-                        if len(asset) == 0:
-                            break
+                self.balances.update_balances(
+                    {bal['a']: {'f': float(bal['f']), 'l': float(bal['l'])} for bal in msg['B']})
+                #
+                #
+                #
+                # assets = list(self.asset_dict.keys())
+                # for asset in msg['B']:
+                #     if asset['a'] in assets:
+                #         asset_name = asset['a']
+                #         strategy = self.asset_dict[asset_name]
+                #
+                #         strategy.account_info(asset)
+                #         assets.remove(asset_name)
+                #
+                #         if len(asset) == 0:
+                #             break
             elif msg['e'] == 'executionReport':
                 sym = msg['s']
 

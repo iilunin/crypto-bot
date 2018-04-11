@@ -174,6 +174,15 @@ class FXConnector:
                     assets[bal['asset']] = {'f': float(bal['free']), 'l':float(bal['locked'])}
 
     @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
+    def get_all_balances_dict(self):
+        res = self.client.get_account()
+
+        if 'balances' in res:
+            return {bal['asset']: {'f': float(bal['free']), 'l': float(bal['locked'])} for bal in res['balances']}
+
+        return {}
+
+    @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def get_exchange_info(self, sym):
         info = self.client.get_exchange_info()
 
