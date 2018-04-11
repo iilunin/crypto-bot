@@ -1,4 +1,5 @@
 import traceback
+from threading import Lock
 from typing import List
 import numpy as np
 from datetime import datetime as dt
@@ -31,6 +32,7 @@ class OrderHandler:
         self.first_processing = True
 
         self.logger = logging.getLogger('OrderHandler')
+        self.lock = Lock()
 
     def process_initial_prices(self):
         try:
@@ -111,7 +113,7 @@ class OrderHandler:
     def listen_handler(self, msg):
         try:
             d = msg['data']
-            if d['e'] == 'error':
+            if 'error' in (msg.get('e', None), d.get('e', None)):
                 self.logger.error(msg)
             # elif d['e'] == 'trade':
             #     self.trade_info_buf[d['s']].append(d['p'])
@@ -160,9 +162,10 @@ class OrderHandler:
         return mp
 
     def execute_strategy(self, prices):
-        for s in self.strategies:
-            if s.symbol() in prices:
-                s.execute(prices[s.symbol()])
+        with self.lock:
+            for s in self.strategies:
+                if s.symbol() in prices:
+                    s.execute(prices[s.symbol()])
 
     def check_strategies_status(self):
         for s in self.strategies[:]:
@@ -175,14 +178,24 @@ class OrderHandler:
             self.start_listening()
         return s.is_completed()
 
+    def remove_trade(self, sym):
+        with self.lock:
+            if sym in self.strategies_dict:
+                self.logger.info('Removing trade [{}]'.format(sym))
+                self.stop_listening()
+                self.strategies.remove(self.strategies_dict[sym])
+                self.start_listening()
 
     def updated_trade(self, trade: Trade):
-        if trade.symbol in self.strategies_dict:
-            self.strategies_dict[trade.symbol].update_trade(trade)
-        else:
-            self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
-            self.stop_listening()
-            self.start_listening()
+        with self.lock:
+            if trade.symbol in self.strategies_dict:
+                self.strategies_dict[trade.symbol].update_trade(trade)
+                self.logger.info('Updating trade [{}]'.format(trade.symbol))
+            else:
+                self.logger.info('Adding trade [{}]'.format(trade.symbol))
+                self.stop_listening()
+                self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
+                self.start_listening()
         # st = [s for s in self.strategies if s.symbol() == updated_trade.symbol()]
         #
         # TargetsAndStopLossStrategy()

@@ -64,7 +64,6 @@ class ConsoleLauncher:
         self.init_file_watch_list()
         self.start_timer()
         self.order_handler.start_listening()
-        xyz = 5
 
     def init_file_watch_list(self):
         target_path_list = [f for f in listdir(self.trades_path) if
@@ -92,27 +91,31 @@ class ConsoleLauncher:
     def check_files_changed(self):
         try:
             with self.lock:
-                target_path_list = [f for f in listdir(self.trades_path) if
+                target_path_list = [join(self.trades_path, f) for f in listdir(self.trades_path) if
                                     isfile(join(self.trades_path, f)) and f.lower().endswith('json')]
 
-            for trade_path in target_path_list:
-                file = join(self.trades_path, trade_path)
+                removed_files = set(self.file_watch_list.keys()) - set(target_path_list)
+                if removed_files:
+                    for file in removed_files:
+                        sym, _ = os.path.splitext(os.path.basename(file))
+                        self.order_handler.updated_trade(sym)
 
-                current_mtime = os.stat(file).st_mtime
+                for file in target_path_list:
+                    current_mtime = os.stat(file).st_mtime
 
-                if file in self.file_watch_list:
-                    if not self.file_watch_list[file] == current_mtime:
+                    if file in self.file_watch_list:
+                        if not self.file_watch_list[file] == current_mtime:
+                            trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
+                            for t in trades:
+                                self.order_handler.updated_trade(t)
+                            self.logInfo('File "{}" has changed'.format(file))
+                    else:
+                        self.logInfo('New file detected "{}"'.format(file))
                         trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
                         for t in trades:
                             self.order_handler.updated_trade(t)
-                        self.logInfo('File "{}" has changed'.format(file))
-                else:
-                    self.logInfo('New file detected "{}"'.format(file))
-                    trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
-                    for t in trades:
-                        self.order_handler.updated_trade(t)
 
-                self.file_watch_list[file] = os.stat(file).st_mtime
+                    self.file_watch_list[file] = os.stat(file).st_mtime
         except Exception as e:
             self.logError(traceback.format_exc())
         finally:

@@ -68,7 +68,7 @@ class FXConnector:
         self.user_data_connection = None
 
     def listen_symbols(self, symbols, socket_handler, user_data_handler):
-        # self.client = Client(self.key, self.secret)
+        self.client = Client(self.key, self.secret)
         self.bs = BinanceSocketManager(self.client)
         # self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
         #                                                  socket_handler)
