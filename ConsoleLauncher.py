@@ -11,7 +11,7 @@ from os import listdir
 from Bot import Trade
 from Bot.ConfigLoader import ConfigLoader
 from Bot.FXConnector import FXConnector
-from Bot.OrderHandler import OrderHandler
+from Bot.TradeHandler import TradeHandler
 from Bot.OrderValidator import OrderValidator
 
 
@@ -30,7 +30,7 @@ class ConsoleLauncher:
 
         self.logger = logging.getLogger(__class__.__name__)
 
-        self.order_handler: OrderHandler = None
+        self.order_handler: TradeHandler = None
         self.fx = None
 
         self.file_watch_list = {}
@@ -55,7 +55,7 @@ class ConsoleLauncher:
 
         self.fx = FXConnector(api['key'], api['secret'])
 
-        self.order_handler = OrderHandler(
+        self.order_handler = TradeHandler(
             trades,
             self.fx,
             lambda trade: self.update_trade(trade)
@@ -91,31 +91,30 @@ class ConsoleLauncher:
     def check_files_changed(self):
         try:
             with self.lock:
-                target_path_list = [join(self.trades_path, f) for f in listdir(self.trades_path) if
-                                    isfile(join(self.trades_path, f)) and f.lower().endswith('json')]
+                target_path_dict = {join(self.trades_path, f): os.stat(join(self.trades_path, f)).st_mtime for f in
+                                    listdir(self.trades_path) if
+                                    isfile(join(self.trades_path, f)) and f.lower().endswith('json')}
 
-                removed_files = set(self.file_watch_list.keys()) - set(target_path_list)
-                if removed_files:
-                    for file in removed_files:
-                        sym, _ = os.path.splitext(os.path.basename(file))
-                        self.order_handler.updated_trade(sym)
+            removed_files = set(self.file_watch_list.keys()) - set(target_path_dict.keys())
+            if removed_files:
+                for file in removed_files:
+                    sym, _ = os.path.splitext(os.path.basename(file))
+                    self.order_handler.remove_trade(sym)
 
-                for file in target_path_list:
-                    current_mtime = os.stat(file).st_mtime
-
-                    if file in self.file_watch_list:
-                        if not self.file_watch_list[file] == current_mtime:
-                            trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
-                            for t in trades:
-                                self.order_handler.updated_trade(t)
-                            self.logInfo('File "{}" has changed'.format(file))
-                    else:
-                        self.logInfo('New file detected "{}"'.format(file))
+            for file, current_mtime in target_path_dict.items():
+                if file in self.file_watch_list:
+                    if not self.file_watch_list[file] == current_mtime:
                         trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
                         for t in trades:
                             self.order_handler.updated_trade(t)
+                        self.logInfo('File "{}" has changed'.format(file))
+                else:
+                    self.logInfo('New file detected "{}"'.format(file))
+                    trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
+                    for t in trades:
+                        self.order_handler.updated_trade(t)
 
-                    self.file_watch_list[file] = os.stat(file).st_mtime
+                self.file_watch_list[file] = os.stat(file).st_mtime
         except Exception as e:
             self.logError(traceback.format_exc())
         finally:
@@ -139,7 +138,9 @@ class ConsoleLauncher:
                   self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
     def get_file_path(self, path, symbol, time=''):
-        return ConsoleLauncher.TRADE_FILE_PATH_PATTERN.format(path=path, symbol=symbol, time=time)
+        # TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
+        return os.path.join(path, '{time}{symbol}.json'.format(symbol=symbol, time=time))
+        # return ConsoleLauncher.TRADE_FILE_PATH_PATTERN.format(path=path, symbol=symbol, time=time)
 
     def logInfo(self, msg):
         self.logger.info(msg)

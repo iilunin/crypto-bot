@@ -12,7 +12,7 @@ from Bot.Trade import Trade
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 
 
-class OrderHandler:
+class TradeHandler:
     def __init__(self, trades: List[Trade], fx: FXConnector, order_updated_handler=None):
         # self.orders = {o.symbol: o for o in orders}
         self.fx = fx
@@ -80,20 +80,6 @@ class OrderHandler:
             if msg['e'] == 'outboundAccountInfo':
                 self.balances.update_balances(
                     {bal['a']: {'f': float(bal['f']), 'l': float(bal['l'])} for bal in msg['B']})
-                #
-                #
-                #
-                # assets = list(self.asset_dict.keys())
-                # for asset in msg['B']:
-                #     if asset['a'] in assets:
-                #         asset_name = asset['a']
-                #         strategy = self.asset_dict[asset_name]
-                #
-                #         strategy.account_info(asset)
-                #         assets.remove(asset_name)
-                #
-                #         if len(asset) == 0:
-                #             break
             elif msg['e'] == 'executionReport':
                 sym = msg['s']
 
