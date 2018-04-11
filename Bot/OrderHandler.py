@@ -17,6 +17,7 @@ class OrderHandler:
         self.fx = fx
         self.balances = AccountBalances(fx)
 
+        self.order_updated_handler = order_updated_handler
         self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler, self.balances.get_balance(t.asset))
                            for t in trades]
 
@@ -26,7 +27,7 @@ class OrderHandler:
         self.trade_info_ticker_buf = {}
 
         self.process_delay = 500
-        self.last_ts = 0
+        self.last_ts = dt.now()
         self.first_processing = True
 
         self.logger = logging.getLogger('OrderHandler')
@@ -178,6 +179,10 @@ class OrderHandler:
     def updated_trade(self, trade: Trade):
         if trade.symbol in self.strategies_dict:
             self.strategies_dict[trade.symbol].update_trade(trade)
+        else:
+            self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
+            self.stop_listening()
+            self.start_listening()
         # st = [s for s in self.strategies if s.symbol() == updated_trade.symbol()]
         #
         # TargetsAndStopLossStrategy()

@@ -59,6 +59,8 @@ class FXConnector:
     ORDER_RESP_TYPE_FULL = 'FULL'
 
     def __init__(self, key=None, secret=None):
+        self.key = key
+        self.secret = secret
         self.client = Client(key, secret)
         self.bs = None
         # self.connection = None
@@ -66,15 +68,15 @@ class FXConnector:
         self.user_data_connection = None
 
     def listen_symbols(self, symbols, socket_handler, user_data_handler):
+        # self.client = Client(self.key, self.secret)
         self.bs = BinanceSocketManager(self.client)
-        self.stop_listening()
-
         # self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
         #                                                  socket_handler)
 
         self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
                                                          socket_handler)
         self.user_data_connection = self.bs.start_user_socket(user_data_handler)
+        self.bs.name = self.ticker_connection
 
     def start_listening(self):
         self.bs.start()

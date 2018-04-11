@@ -2,7 +2,7 @@ import logging
 import os
 import traceback
 from datetime import datetime
-from threading import Timer
+from threading import Timer, Lock
 
 from os.path import isfile, join
 
@@ -35,6 +35,7 @@ class ConsoleLauncher:
 
         self.file_watch_list = {}
         self.file_watch_timer = None
+        self.lock = Lock()
 
     def start_bot(self):
         o_loader = self.config_loader.advanced_loader(self.trades_path)
@@ -60,8 +61,19 @@ class ConsoleLauncher:
             lambda trade: self.update_trade(trade)
         )
 
+        self.init_file_watch_list()
         self.start_timer()
         self.order_handler.start_listening()
+        xyz = 5
+
+    def init_file_watch_list(self):
+        target_path_list = [f for f in listdir(self.trades_path) if
+                            isfile(join(self.trades_path, f)) and f.lower().endswith('json')]
+
+        for trade_path in target_path_list:
+            file = join(self.trades_path, trade_path)
+
+            self.file_watch_list[file] = os.stat(file).st_mtime
 
     def stop_bot(self):
         if self.order_handler:
@@ -79,8 +91,9 @@ class ConsoleLauncher:
 
     def check_files_changed(self):
         try:
-            target_path_list = [f for f in listdir(self.trades_path) if
-                                isfile(join(self.trades_path, f)) and f.lower().endswith('json')]
+            with self.lock:
+                target_path_list = [f for f in listdir(self.trades_path) if
+                                    isfile(join(self.trades_path, f)) and f.lower().endswith('json')]
 
             for trade_path in target_path_list:
                 file = join(self.trades_path, trade_path)
@@ -93,6 +106,11 @@ class ConsoleLauncher:
                         for t in trades:
                             self.order_handler.updated_trade(t)
                         self.logInfo('File "{}" has changed'.format(file))
+                else:
+                    self.logInfo('New file detected "{}"'.format(file))
+                    trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
+                    for t in trades:
+                        self.order_handler.updated_trade(t)
 
                 self.file_watch_list[file] = os.stat(file).st_mtime
         except Exception as e:
@@ -101,16 +119,17 @@ class ConsoleLauncher:
             self.start_timer()
 
     def update_trade(self, trade: Trade):
-        file = self.get_file_path(self.trades_path, trade.symbol)
+        with self.lock:
+            file = self.get_file_path(self.trades_path, trade.symbol)
 
-        self.config_loader.persist_updated_trade(trade,
-                                                 self.config_loader.json_loader(file),
-                                                 self.config_loader.json_saver(file))
+            self.config_loader.persist_updated_trade(trade,
+                                                     self.config_loader.json_loader(file),
+                                                     self.config_loader.json_saver(file))
 
-        self.file_watch_list[file] = os.stat(file).st_mtime
+            self.file_watch_list[file] = os.stat(file).st_mtime
 
-        if trade.is_completed():
-            self.move_completed_trade(trade.symbol)
+            if trade.is_completed():
+                self.move_completed_trade(trade.symbol)
 
     def move_completed_trade(self, symbol):
         os.rename(self.get_file_path(self.trades_path, symbol),

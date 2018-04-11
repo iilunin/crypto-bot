@@ -15,9 +15,9 @@ class StopLossStrategy(TradingStrategy):
         self.exit_threshold = 0
         self.adjust_stoploss_price()
 
-        if self.logger.isEnabledFor(logging.INFO):
-            self.last_sl = 0
-            self.last_th = 0
+        # if self.logger.isEnabledFor(logging.INFO):
+        self.last_sl = 0
+        self.last_th = 0
 
     def update_trade(self, trade: Trade):
         self.trade = trade
@@ -35,7 +35,13 @@ class StopLossStrategy(TradingStrategy):
         self.adjust_stoploss_price(price)
         self.adjust_stoploss_order(price)
 
+        self.save_last_sl()
         self.log_stoploss()
+
+    def save_last_sl(self):
+        if self.last_sl != self.current_stop_loss and self.last_sl != 0:
+            self.trade.sl_settings.last_stoploss = self.current_stop_loss
+            self.trigger_target_updated()
 
     def is_stoploss_order_active(self):
         return self.initial_sl().is_active()
@@ -47,15 +53,13 @@ class StopLossStrategy(TradingStrategy):
         return self.is_sl_completed()
 
     def log_stoploss(self):
-        if self.logger.isEnabledFor(logging.INFO):
+        treshold = self.get_sl_treshold()
 
-            treshold = self.get_sl_treshold()
-
-            if self.last_sl != self.current_stop_loss or self.last_th != treshold:
-                self.logInfo('SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(self.current_stop_loss,
-                                                                                            treshold))
-                self.last_th = treshold
-                self.last_sl = self.current_stop_loss
+        if self.last_sl != self.current_stop_loss or self.last_th != treshold:
+            self.logInfo('SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(self.current_stop_loss,
+                                                                                        treshold))
+            self.last_th = treshold
+            self.last_sl = self.current_stop_loss
 
     def adjust_stoploss_price(self, current_price=None):
         completed_targets = [o for o in self.trade.exit.get_completed_targets()]
@@ -67,13 +71,14 @@ class StopLossStrategy(TradingStrategy):
             return
 
         if current_price is None:
-            self.current_stop_loss = self.initial_sl().price
+            self.current_stop_loss = self.trade.sl_settings.last_stoploss if self.trade.sl_settings.last_stoploss != 0 \
+                else self.initial_sl().price
             return
 
         if not has_closed_orders:
             return
 
-        expected_stop_loss = 0
+        # expected_stop_loss = 0
         if self.trade.sl_settings.is_trailing():
             trialing_val = self.trade.sl_settings.val.get_val(current_price)
             expected_stop_loss = current_price + (-1 if self.trade.is_sell() else 1) * trialing_val
@@ -156,7 +161,7 @@ class StopLossStrategy(TradingStrategy):
 
             self.trade.sl_settings.initial_target.set_active(order['orderId'])
             self.trigger_target_updated()
-            self.logInfo('Setting stop loss order: {}:{}'.format(
+            self.logInfo('Setting stop loss order: {:.08f}:{:.08f}'.format(
                 self.exchange_info.adjust_price(self.current_stop_loss),
                 self.exchange_info.adjust_price(self.get_sl_limit_price())))
         except BinanceAPIException as bae:
