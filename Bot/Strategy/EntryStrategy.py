@@ -27,6 +27,8 @@ class EntryStrategy(TradingStrategy):
         self.trade = trade
         self.init_smart_order()
 
+    def place_market_orders(self):
+        return False
 
     def execute(self, new_price):
         try:
@@ -52,23 +54,46 @@ class EntryStrategy(TradingStrategy):
 
             # TODO: add automatic order placement if it was canceled by someone
             trigger_order_price = self.smart_order.price_update(price)
-            self.on_smart_buy(trigger_order_price)
-
-
+            self.on_smart_buy(trigger_order_price, new_price)
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
     def get_available_amount(self):
         return self.balance.avail
 
-    def on_smart_buy(self, trigger_order_price):
+    def on_smart_buy(self, trigger_order_price, current_price):
         if not trigger_order_price:
             return
+        if self.place_market_orders():
+            self.handle_market_order(trigger_order_price, current_price)
+        else:
+            self.handle_stoploss_order(trigger_order_price, current_price)
 
-        if (self.trade_side().is_sell() and trigger_order_price > self.last_smart_price) or \
-                (self.trade_side().is_buy() and trigger_order_price < self.last_smart_price) or \
-                self.last_smart_price == 0:
+    def handle_market_order(self, trigger_order_price, current_price):
+        if (self.trade_side().is_sell() and trigger_order_price > current_price) or \
+                (self.trade_side().is_buy() and trigger_order_price < current_price):
+            self.logInfo(
+                'Trigger Order Price {:.08f}; Current Price {:.08f}'.format(trigger_order_price, current_price))
 
+            t = self.trade_target()
+
+            order = self.fx.create_makret_order(
+                self.symbol(),
+                self.trade_side().name,
+                self.exchange_info.adjust_quanity(
+                    self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail)))
+            )
+
+            t.set_active(order['orderId'])
+            t.set_completed()
+            self.trigger_target_updated()
+            return
+
+        if self.update_last_smart_price(trigger_order_price):
+            self.trigger_target_updated()
+
+    def handle_stoploss_order(self, trigger_order_price, current_price):
+        if self.need_update_last_trigger_price(trigger_order_price):
             self.logInfo('Setting StopLoss-{} for {:.08f}'.format(self.trade_side().name, trigger_order_price))
 
             t = self.trade_target()
@@ -80,11 +105,6 @@ class EntryStrategy(TradingStrategy):
                     t.set_canceled()
                     self.trigger_target_updated()
                     self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
-
-            # if self.trade_side().is_buy():
-            #     limit = max(trigger_order_price, t.price + self.smart_order.sl_threshold_val)
-            # else:
-            #     limit = min(trigger_order_price, t.price - self.smart_order.sl_threshold_val)
 
             if self.trade_side().is_buy():
                 limit = max(trigger_order_price + self.smart_order.sl_threshold_val,
@@ -112,10 +132,22 @@ class EntryStrategy(TradingStrategy):
                 else:
                     raise
 
-            self.get_trade_section().best_price = trigger_order_price
-            self.last_smart_price = trigger_order_price
+            self.update_last_smart_price(trigger_order_price)
             t.set_active(order['orderId'])
             self.trigger_target_updated()
+
+
+    def update_last_smart_price(self, trigger_price):
+        if self.need_update_last_trigger_price(trigger_price):
+            self.get_trade_section().best_price = trigger_price
+            self.last_smart_price = trigger_price
+            return True
+        return False
+
+    def need_update_last_trigger_price(self, trigger_price):
+        return (self.trade_side().is_sell() and trigger_price > self.last_smart_price) or \
+               (self.trade_side().is_buy() and trigger_price < self.last_smart_price) or \
+               self.last_smart_price == 0
 
     def trade_side(self):
         return self.get_trade_section().side if self.get_trade_section().side else self.trade.side.reverse()
