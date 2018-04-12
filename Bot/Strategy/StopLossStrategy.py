@@ -57,8 +57,10 @@ class StopLossStrategy(TradingStrategy):
         treshold = self.get_sl_treshold()
 
         if self.last_sl != self.current_stop_loss or self.last_th != treshold:
-            self.logInfo('SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(self.current_stop_loss,
-                                                                                        treshold))
+            self.logInfo('{}SL:{:.08f}. Will be placed if price drops to: {:.08f}'.format(
+                'TRAILING ' if self.trade.sl_settings.is_trailing() else '',
+                self.current_stop_loss,
+                treshold))
             self.last_th = treshold
             self.last_sl = self.current_stop_loss
 

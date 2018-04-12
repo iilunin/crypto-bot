@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import traceback
 from datetime import datetime
 from threading import Timer, Lock, RLock
@@ -145,8 +146,11 @@ class ConsoleLauncher:
                 self.move_completed_trade(trade.symbol)
 
     def move_completed_trade(self, symbol):
-        os.rename(self.get_file_path(self.trades_path, symbol),
+        shutil.move(self.get_file_path(self.trades_path, symbol),
                   self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
+
+        # os.rename(self.get_file_path(self.trades_path, symbol),
+        #           self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
     def get_file_path(self, path, symbol, time=''):
         # TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
