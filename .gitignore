@@ -1,6 +1,6 @@
 .idea
 api.json
-/Conf/api.json
+/Conf/*
 /venv
 /Trades/Portfolio
 /Trades/Portfolio/*

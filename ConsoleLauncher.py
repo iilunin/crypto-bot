@@ -6,7 +6,7 @@ from threading import Timer, Lock, RLock
 
 from os.path import isfile, join
 
-from os import listdir
+from os import listdir, environ
 
 from Bot import Trade
 from Bot.ConfigLoader import ConfigLoader
@@ -51,9 +51,19 @@ class ConsoleLauncher:
                     self.logInfo('{}:{}'.format(trade.symbol, ov.warnings))
                 trades.remove(trade)
 
-        api = self.config_loader.json_loader(os.path.join(self.config_path, 'api.json'))()
+        api_path = os.path.join(self.config_path, 'api.json')
+        if os.path.exists(api_path):
+            api = self.config_loader.json_loader(os.path.join(self.config_path, 'api.json'))()
+            key = api['key']
+            secret = api['secret']
+        else:
+            key = os.environ.get('KEY')
+            secret = os.environ.get('SECRET')
 
-        self.fx = FXConnector(api['key'], api['secret'])
+        if not key or not secret:
+            raise ValueError('API Key and Secret are not provided')
+
+        self.fx = FXConnector(key, secret)
 
         self.order_handler = TradeHandler(
             trades,
