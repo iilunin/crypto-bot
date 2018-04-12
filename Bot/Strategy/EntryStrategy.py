@@ -54,12 +54,20 @@ class EntryStrategy(TradingStrategy):
 
             # TODO: add automatic order placement if it was canceled by someone
             trigger_order_price = self.smart_order.price_update(price)
-            self.on_smart_buy(trigger_order_price, new_price)
+            self.on_smart_buy(trigger_order_price, price)
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
-    def get_available_amount(self):
-        return self.balance.avail
+    def get_trade_volume(self, exchange_rate):
+        t = self.trade_target()
+
+        #if buying asset using % value of the volume
+        if self.trade_side().is_buy() and t.vol.is_rel():
+            buying_currency_vol = t.vol.get_val(self.secondary_asset_balance().avail)
+            self.exchange_info.adjust_quanity(vol)
+            return buying_currency_vol / exchange_rate
+
+        return t.vol.get_val(self.balance.avail)
 
     def on_smart_buy(self, trigger_order_price, current_price):
         if not trigger_order_price:
@@ -77,11 +85,14 @@ class EntryStrategy(TradingStrategy):
 
             t = self.trade_target()
 
+            # vol = t.vol.get_val(self.balance.avail)
+            vol = self.get_trade_volume(current_price)
+
             order = self.fx.create_makret_order(
                 self.symbol(),
                 self.trade_side().name,
                 self.exchange_info.adjust_quanity(
-                    self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail)))
+                    self.exchange_info.adjust_quanity(vol))
             )
 
             t.set_active(order['orderId'])
@@ -113,13 +124,15 @@ class EntryStrategy(TradingStrategy):
                 limit = min(trigger_order_price - self.smart_order.sl_threshold_val,
                             t.price - self.smart_order.sl_threshold_val)
 
+                # vol = t.vol.get_val(self.balance.avail)
+                vol = self.get_trade_volume(current_price)
             try:
                 order = self.fx.create_stop_order(
                     sym=self.symbol(),
                     side=self.trade_side().name,
                     stop_price=self.exchange_info.adjust_price(trigger_order_price),
                     price=self.exchange_info.adjust_price(limit),
-                    volume=self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail))
+                    volume=self.exchange_info.adjust_quanity(vol)
                 )
             except BinanceAPIException as sl_exception:
                 if sl_exception.message.lower().find('order would trigger immediately') > -1:
@@ -127,7 +140,7 @@ class EntryStrategy(TradingStrategy):
                         self.symbol(),
                         self.trade_side().name,
                         self.exchange_info.adjust_quanity(
-                            self.exchange_info.adjust_quanity(t.vol.get_val(self.balance.avail)))
+                            self.exchange_info.adjust_quanity(vol))
                     )
                 else:
                     raise

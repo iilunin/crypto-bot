@@ -2,6 +2,7 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
+from Bot.AccountBalances import AccountBalances
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TradingStrategy import TradingStrategy
 from Bot.Target import Target
@@ -106,7 +107,7 @@ class StopLossStrategy(TradingStrategy):
             self.exit_threshold = 0
 
             if self.cancel_stoploss_orders():
-                self.balance.invalidate()
+                AccountBalances().update_balances(self.fx.get_all_balances_dict())
 
     def get_sl_treshold(self):
         threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
@@ -136,7 +137,8 @@ class StopLossStrategy(TradingStrategy):
                 order['orderId'] = 2333123
             else:
                 self.cancel_all_orders()
-                self.balance.invalidate()
+                AccountBalances().update_balances(self.fx.get_all_balances_dict())
+
 
                 # stop_trigger
 

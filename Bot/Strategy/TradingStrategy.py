@@ -2,6 +2,7 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
+from Bot.AccountBalances import AccountBalances
 from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
 from Bot.TradeEnums import OrderStatus
@@ -55,6 +56,18 @@ class TradingStrategy:
 
     def trade_side(self):
         return self.trade.side
+
+    def self_update_balances(self):
+        AccountBalances().update_balances(self.fx.get_all_balances_dict())
+
+    def asset(self):
+        return self.trade.asset.upper()
+
+    def secondary_asset(self):
+        return self.symbol().replace(self.asset(), '')
+
+    def secondary_asset_balance(self):
+        return AccountBalances().get_balance(self.secondary_asset())
 
     def symbol(self):
         return self.trade.symbol

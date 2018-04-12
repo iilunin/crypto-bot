@@ -1,5 +1,5 @@
 import traceback
-from threading import Lock
+from threading import Lock, RLock
 from typing import List
 import numpy as np
 from datetime import datetime as dt
@@ -14,9 +14,8 @@ from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 
 class TradeHandler:
     def __init__(self, trades: List[Trade], fx: FXConnector, order_updated_handler=None):
-        # self.orders = {o.symbol: o for o in orders}
         self.fx = fx
-        self.balances = AccountBalances(fx)
+        self.balances = AccountBalances()
 
         self.order_updated_handler = order_updated_handler
         self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler, self.balances.get_balance(t.asset))
@@ -32,7 +31,7 @@ class TradeHandler:
         self.first_processing = True
 
         self.logger = logging.getLogger('OrderHandler')
-        self.lock = Lock()
+        self.lock = RLock()
 
     def process_initial_prices(self):
         try:
@@ -110,8 +109,6 @@ class TradeHandler:
             #         self.check_strategy_is_complete()
             #         self.execute_strategy(mean_prices)
             elif d['e'] == '24hrTicker':
-                # print('{}: Bid:{} Ask:{}'.format(d['s'], d['b'], d['a']))
-
                 self.trade_info_ticker_buf[d['s']] = {'b': float(d['b']), 'a': float(d['a'])}
 
                 delta = dt.now() - self.last_ts
@@ -122,13 +119,6 @@ class TradeHandler:
                     prices = dict(self.trade_info_ticker_buf)
                     self.trade_info_ticker_buf = {}
                     self.execute_strategy(prices)
-
-                # strategy = self.strategies_dict[d['s']]
-                # if strategy:
-                #     if self.handle_completed_strategy(strategy):
-                #         return
-                #
-                #     strategy.execute({'b': float(d['b']), 'a': float(d['a'])})
 
         except Exception as e:
             self.logger.error(str(e))
@@ -159,32 +149,31 @@ class TradeHandler:
 
     def handle_completed_strategy(self, s):
         if s.is_completed():
-            self.strategies.remove(s)
-            self.stop_listening()
-            self.start_listening()
+            self.remove_trade_by_strategy(s)
         return s.is_completed()
 
-    def remove_trade(self, sym):
+    def remove_trade_by_strategy(self, strategy):
+        if not strategy:
+            return
+
         with self.lock:
-            if sym in self.strategies_dict:
-                self.logger.info('Removing trade [{}]'.format(sym))
-                self.stop_listening()
-                self.strategies.remove(self.strategies_dict[sym])
-                self.start_listening()
+            self.logger.info('Removing trade [{}]'.format(strategy.symbol()))
+            self.stop_listening()
+            self.strategies.remove(strategy)
+            self.start_listening()
+
+    def remove_trade_by_symbol(self, sym):
+        with self.lock:
+            self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
 
     def updated_trade(self, trade: Trade):
         with self.lock:
             if trade.symbol in self.strategies_dict:
                 self.strategies_dict[trade.symbol].update_trade(trade)
+                self.balances.update_balances(self.fx.get_all_balances_dict())
                 self.logger.info('Updating trade [{}]'.format(trade.symbol))
             else:
                 self.logger.info('Adding trade [{}]'.format(trade.symbol))
                 self.stop_listening()
                 self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
                 self.start_listening()
-        # st = [s for s in self.strategies if s.symbol() == updated_trade.symbol()]
-        #
-        # TargetsAndStopLossStrategy()
-        # self.strategies_dict = {s.symbol(): s for s in self.strategies}
-        # self.asset_dict = {s.trade.asset: s for s in self.strategies}
-        # self.trade_info_buf = {s.symbol(): [] for s in self.strategies}

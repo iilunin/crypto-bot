@@ -1,3 +1,4 @@
+from Bot.AccountBalances import AccountBalances
 from Bot.FXConnector import FXConnector
 from Bot.TradeEnums import OrderStatus
 from Bot.Strategy.EntryStrategy import EntryStrategy, ExitStrategy
@@ -125,7 +126,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             if t.is_entry_target():
                 # validate balance and activate trade only if there are trading targets
                 if self.strategy_exit:
-                    self.balance.invalidate()
+                    AccountBalances().update_balances(self.fx.get_all_balances_dict())
                     self.trade.set_active()
                     self.trigger_target_updated()
                 else:

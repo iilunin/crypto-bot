@@ -2,7 +2,7 @@ import logging
 import os
 import traceback
 from datetime import datetime
-from threading import Timer, Lock
+from threading import Timer, Lock, RLock
 
 from os.path import isfile, join
 
@@ -35,7 +35,7 @@ class ConsoleLauncher:
 
         self.file_watch_list = {}
         self.file_watch_timer = None
-        self.lock = Lock()
+        self.lock = RLock()
 
     def start_bot(self):
         o_loader = self.config_loader.advanced_loader(self.trades_path)
@@ -99,7 +99,8 @@ class ConsoleLauncher:
             if removed_files:
                 for file in removed_files:
                     sym, _ = os.path.splitext(os.path.basename(file))
-                    self.order_handler.remove_trade(sym)
+                    self.order_handler.remove_trade_by_symbol(sym)
+                    self.file_watch_list.pop(sym, None)
 
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
