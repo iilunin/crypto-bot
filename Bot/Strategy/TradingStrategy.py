@@ -44,12 +44,14 @@ class TradingStrategy:
 
     def update_trade(self, trade: Trade):
         self.trade = trade
-        self.init()
+        self.init(True)
 
-    def init(self):
+    def init(self, force_cancel_open_orders=False):
         #TODO: make one call for each symbols
-        self.exchange_info = self.fx.get_exchange_info(self.symbol())
-        self.validate_target_orders()
+        if not force_cancel_open_orders:
+            self.exchange_info = self.fx.get_exchange_info(self.symbol())
+
+        self.validate_target_orders(force_cancel_open_orders)
 
     def is_completed(self):
         return self.trade.is_completed()
@@ -94,7 +96,7 @@ class TradingStrategy:
     #     self.balance.locked = float(data['l'])
 
     # TODO: schedule validation once in some time
-    def validate_target_orders(self):
+    def validate_target_orders(self, force_cancel_open_orders=False):
         try:
             orders_dict = self.fx.get_all_orders(self.symbol())
         except BinanceAPIException as bae:
@@ -104,7 +106,7 @@ class TradingStrategy:
         tgts = self.trade.get_all_active_placed_targets()
 
         update_required = False
-        if len(tgts) == 0:
+        if force_cancel_open_orders or len(tgts) == 0:
             self.fx.cancel_open_orders(self.symbol())
         else:
             for t in tgts:

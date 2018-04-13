@@ -114,7 +114,7 @@ class ConsoleLauncher:
         try:
             deleted_by_s3, updated_by_s3 = set(), set()
             if self.enable_cloud:
-                deleted_by_s3, updated_by_s3 = self.s3pers.check_s3_events()
+                deleted_by_s3, updated_by_s3 = self.s3pers.check_s3_events(self.file_watch_list)
 
             with self.lock:
                 target_path_dict = {join(self.trades_path, f): os.stat(join(self.trades_path, f)).st_mtime for f in

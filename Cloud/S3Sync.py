@@ -47,7 +47,7 @@ class S3Persistence:
         if self.thread and self.thread.is_alive():
             self.thread.join()
 
-    def check_s3_events(self):
+    def check_s3_events(self, file_watch_list):
         del_set, upd_set = set(), set()
         ret_val = (del_set, upd_set)
 
@@ -73,6 +73,7 @@ class S3Persistence:
 
                 if os.path.exists(full_path):
                     os.remove(full_path)
+                    file_watch_list.pop(full_path, None)
 
             if updated_files:
                 bucket = session.resource('s3').Bucket(self.bucket)
@@ -84,6 +85,7 @@ class S3Persistence:
                     if not os.path.exists(full_path) or self.get_md5(full_path) != etag:
                         bucket.download_file(k, full_path)
                         upd_set.add(full_path)
+                        file_watch_list[full_path] = os.stat(full_path).st_mtime
 
         except Exception:
             self.logger.error(traceback.format_exc())
