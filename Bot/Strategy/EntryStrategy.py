@@ -105,7 +105,10 @@ class EntryStrategy(TradingStrategy):
 
     def handle_stoploss_order(self, trigger_order_price, current_price):
         if self.need_update_last_trigger_price(trigger_order_price):
-            self.logInfo('Setting StopLoss-{} for {:.08f}'.format(self.trade_side().name, trigger_order_price))
+            self.logInfo('Setting StopLoss-{} for {:.08f} - {} of current Price: {:.08f}'.format(self.trade_side().name,
+                                                                                                 trigger_order_price,
+                                                                                                 self.get_trade_section().sl_threshold,
+                                                                                                 current_price))
 
             t = self.trade_target()
 
