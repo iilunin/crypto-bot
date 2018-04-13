@@ -2,7 +2,7 @@ from Bot.Trade import Trade
 from Bot.TradeEnums import OrderStatus, Side
 
 
-class OrderValidator:
+class TradeValidator:
 
     def __init__(self):
         self.errors = {}

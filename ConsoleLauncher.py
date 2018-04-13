@@ -13,7 +13,8 @@ from Bot import Trade
 from Bot.ConfigLoader import ConfigLoader
 from Bot.FXConnector import FXConnector
 from Bot.TradeHandler import TradeHandler
-from Bot.OrderValidator import OrderValidator
+from Bot.TradeValidator import TradeValidator
+from Cloud.S3Sync import S3Persistence
 
 
 class ConsoleLauncher:
@@ -22,7 +23,7 @@ class ConsoleLauncher:
     LOG_FORMAT = '%(asctime)s[%(levelname)s][%(name)s]: %(message)s'
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
-    def __init__(self, trades_path, completed_trades_path, config_path):
+    def __init__(self, trades_path, completed_trades_path, config_path, enable_cloud=False):
         self.trades_path = trades_path
         self.completed_trades_path = completed_trades_path
         self.config_path = config_path
@@ -38,18 +39,28 @@ class ConsoleLauncher:
         self.file_watch_timer = None
         self.lock = RLock()
 
+        self.enable_cloud = enable_cloud
+        self.s3pers: S3Persistence = None
+
+        if enable_cloud:
+            self.s3pers: S3Persistence = S3Persistence(os.getenv('TRADE_BUCKET'), {trades_path: 'Portfolio/', completed_trades_path: 'Completed/'})
+
     def start_bot(self):
-        o_loader = self.config_loader.advanced_loader(self.trades_path)
-        trades = self.config_loader.load_trade_list(o_loader)
-        ov = OrderValidator()
+        if self.enable_cloud:
+            self.s3pers.sync(False, True)
+            self.s3pers.await()
+
+        trade_loader = self.config_loader.advanced_loader(self.trades_path)
+        trades = self.config_loader.load_trade_list(trade_loader)
+        trade_validator = TradeValidator()
 
         for trade in trades[:]:
             if trade.is_completed():
                 self.move_completed_trade(trade.symbol)
-            if not ov.validate(trade):
-                self.logError('{}:{}'.format(trade.symbol, ov.errors))
-                if len(ov.warnings) > 0:
-                    self.logInfo('{}:{}'.format(trade.symbol, ov.warnings))
+            if not trade_validator.validate(trade):
+                self.logError('{}:{}'.format(trade.symbol, trade_validator.errors))
+                if len(trade_validator.warnings) > 0:
+                    self.logInfo('{}:{}'.format(trade.symbol, trade_validator.warnings))
                 trades.remove(trade)
 
         api_path = os.path.join(self.config_path, 'api.json')
@@ -69,7 +80,7 @@ class ConsoleLauncher:
         self.order_handler = TradeHandler(
             trades,
             self.fx,
-            lambda trade: self.update_trade(trade)
+            lambda trade: self.on_trade_updated_by_handler(trade)
         )
 
         self.init_file_watch_list()
@@ -107,11 +118,16 @@ class ConsoleLauncher:
                                     isfile(join(self.trades_path, f)) and f.lower().endswith('json')}
 
             removed_files = set(self.file_watch_list.keys()) - set(target_path_dict.keys())
+
+            update_cloud_files = False
+
             if removed_files:
                 for file in removed_files:
                     sym, _ = os.path.splitext(os.path.basename(file))
                     self.order_handler.remove_trade_by_symbol(sym)
                     self.file_watch_list.pop(sym, None)
+
+                update_cloud_files = True
 
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
@@ -120,19 +136,29 @@ class ConsoleLauncher:
                         for t in trades:
                             self.order_handler.updated_trade(t)
                         self.logInfo('File "{}" has changed'.format(file))
+                        update_cloud_files = True
                 else:
                     self.logInfo('New file detected "{}"'.format(file))
+                    update_cloud_files = True
                     trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
                     for t in trades:
                         self.order_handler.updated_trade(t)
 
                 self.file_watch_list[file] = os.stat(file).st_mtime
+
+            if update_cloud_files and self.enable_cloud:
+                self.on_trade_files_updated_externally()
+
         except Exception as e:
             self.logError(traceback.format_exc())
         finally:
             self.start_timer()
 
-    def update_trade(self, trade: Trade):
+    def on_trade_files_updated_externally(self):
+        if self.enable_cloud:
+            self.s3pers.sync(True, True)
+
+    def on_trade_updated_by_handler(self, trade: Trade):
         with self.lock:
             file = self.get_file_path(self.trades_path, trade.symbol)
 
@@ -144,6 +170,9 @@ class ConsoleLauncher:
 
             if trade.is_completed():
                 self.move_completed_trade(trade.symbol)
+
+            if self.enable_cloud:
+                self.s3pers.sync(True, True)
 
     def move_completed_trade(self, symbol):
         shutil.move(self.get_file_path(self.trades_path, symbol),
