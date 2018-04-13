@@ -21,6 +21,8 @@ def main():
     # test_smart_order()
     # pers = S3Persistence('bot-trades', {'Trades/Completed': 'Completed/',
     #                                     'Trades/Portfolio': 'Portfolio/'})
+    # while True:
+    #     pers.check_s3_events()
     # pers.sync(delete=True, resolve_conflict_using_local=False)
     launcher.start_bot()
 

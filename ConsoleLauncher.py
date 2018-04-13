@@ -112,6 +112,10 @@ class ConsoleLauncher:
 
     def check_files_changed(self):
         try:
+            deleted_by_s3, updated_by_s3 = set(), set()
+            if self.enable_cloud:
+                deleted_by_s3, updated_by_s3 = self.s3pers.check_s3_events()
+
             with self.lock:
                 target_path_dict = {join(self.trades_path, f): os.stat(join(self.trades_path, f)).st_mtime for f in
                                     listdir(self.trades_path) if
@@ -125,9 +129,10 @@ class ConsoleLauncher:
                 for file in removed_files:
                     sym, _ = os.path.splitext(os.path.basename(file))
                     self.order_handler.remove_trade_by_symbol(sym)
-                    self.file_watch_list.pop(sym, None)
+                    self.file_watch_list.pop(file, None)
 
-                update_cloud_files = True
+                if file not in deleted_by_s3:
+                    update_cloud_files = True
 
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
@@ -136,7 +141,9 @@ class ConsoleLauncher:
                         for t in trades:
                             self.order_handler.updated_trade(t)
                         self.logInfo('File "{}" has changed'.format(file))
-                        update_cloud_files = True
+
+                        if file not in updated_by_s3:
+                            update_cloud_files = True
                 else:
                     self.logInfo('New file detected "{}"'.format(file))
                     update_cloud_files = True

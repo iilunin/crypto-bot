@@ -12,7 +12,7 @@ class PlaceOrderStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.strategy_exit = None
-        self.init_smart_exit()
+        # self.init_smart_exit()
 
     def last_target_smart(self):
         return self.trade.exit.last_target_smart
@@ -37,6 +37,10 @@ class PlaceOrderStrategy(TradingStrategy):
             if self.last_target_smart():
                 not_completed_targets = self.not_completed_targets()
                 if len(not_completed_targets) == 1:
+
+                    if not self.strategy_exit: # LAZY LOAD
+                        self.init_smart_exit()
+
                     self.strategy_exit.execute(new_price)
                     return
 
