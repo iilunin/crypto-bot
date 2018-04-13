@@ -85,10 +85,10 @@ class S3Persistence:
                         bucket.download_file(k, full_path)
                         upd_set.add(full_path)
 
-            return ret_val
-
         except Exception:
             self.logger.error(traceback.format_exc())
+
+        return ret_val
 
     def get_s3_deleted_and_updated_event_messages(self, session):
         EVT_OBJ_CREATED = 'ObjectCreated'
