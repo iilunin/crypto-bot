@@ -32,7 +32,7 @@ class ConsoleLauncher:
 
         self.logger = logging.getLogger(__class__.__name__)
 
-        self.order_handler: TradeHandler = None
+        self.trade_handler: TradeHandler = None
         self.fx = None
 
         self.file_watch_list = {}
@@ -77,15 +77,15 @@ class ConsoleLauncher:
 
         self.fx = FXConnector(key, secret)
 
-        self.order_handler = TradeHandler(
+        self.trade_handler = TradeHandler(
             trades,
             self.fx,
-            lambda trade: self.on_trade_updated_by_handler(trade)
+            lambda trade, cloud_sync: self.on_trade_updated_by_handler(trade, cloud_sync)
         )
 
         self.init_file_watch_list()
         self.start_timer()
-        self.order_handler.start_listening()
+        self.trade_handler.start_listening()
 
     def init_file_watch_list(self):
         target_path_list = [f for f in listdir(self.trades_path) if
@@ -97,8 +97,8 @@ class ConsoleLauncher:
             self.file_watch_list[file] = os.stat(file).st_mtime
 
     def stop_bot(self):
-        if self.order_handler:
-            self.order_handler.stop_listening()
+        if self.trade_handler:
+            self.trade_handler.stop_listening()
         self.stop_timer()
 
     def start_timer(self):
@@ -114,7 +114,7 @@ class ConsoleLauncher:
         try:
             deleted_by_s3, updated_by_s3 = set(), set()
             if self.enable_cloud:
-                deleted_by_s3, updated_by_s3 = self.s3pers.check_s3_events(self.file_watch_list)
+                deleted_by_s3, updated_by_s3 = self.s3pers.check_s3_events()
 
             with self.lock:
                 target_path_dict = {join(self.trades_path, f): os.stat(join(self.trades_path, f)).st_mtime for f in
@@ -128,7 +128,7 @@ class ConsoleLauncher:
             if removed_files:
                 for file in removed_files:
                     sym, _ = os.path.splitext(os.path.basename(file))
-                    self.order_handler.remove_trade_by_symbol(sym)
+                    self.trade_handler.remove_trade_by_symbol(sym)
                     self.file_watch_list.pop(file, None)
 
                 if file not in deleted_by_s3:
@@ -137,35 +137,34 @@ class ConsoleLauncher:
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
                     if not self.file_watch_list[file] == current_mtime:
+                        self.logInfo('File "{}" has changed. Updating trades...'.format(file))
                         trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
                         for t in trades:
-                            self.order_handler.updated_trade(t)
-                        self.logInfo('File "{}" has changed'.format(file))
+                            self.trade_handler.updated_trade(t)
 
                         if file not in updated_by_s3:
                             update_cloud_files = True
                 else:
-                    self.logInfo('New file detected "{}"'.format(file))
+                    self.logInfo('New file detected "{}". Updating trades...'.format(file))
                     update_cloud_files = True
                     trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
                     for t in trades:
-                        self.order_handler.updated_trade(t)
+                        self.trade_handler.updated_trade(t)
+
+                    if file not in updated_by_s3:
+                        update_cloud_files = True
 
                 self.file_watch_list[file] = os.stat(file).st_mtime
 
             if update_cloud_files and self.enable_cloud:
-                self.on_trade_files_updated_externally()
+                self.s3pers.sync(True, True)
 
         except Exception as e:
             self.logError(traceback.format_exc())
         finally:
             self.start_timer()
 
-    def on_trade_files_updated_externally(self):
-        if self.enable_cloud:
-            self.s3pers.sync(True, True)
-
-    def on_trade_updated_by_handler(self, trade: Trade):
+    def on_trade_updated_by_handler(self, trade: Trade, needs_cloud_sync=True):
         with self.lock:
             file = self.get_file_path(self.trades_path, trade.symbol)
 
@@ -178,7 +177,7 @@ class ConsoleLauncher:
             if trade.is_completed():
                 self.move_completed_trade(trade.symbol)
 
-            if self.enable_cloud:
+            if self.enable_cloud and needs_cloud_sync:
                 self.s3pers.sync(True, True)
 
     def move_completed_trade(self, symbol):

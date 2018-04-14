@@ -13,12 +13,12 @@ from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 
 
 class TradeHandler:
-    def __init__(self, trades: List[Trade], fx: FXConnector, order_updated_handler=None):
+    def __init__(self, trades: List[Trade], fx: FXConnector, trade_updated_handler=None):
         self.fx = fx
         self.balances = AccountBalances()
 
-        self.order_updated_handler = order_updated_handler
-        self.strategies = [TargetsAndStopLossStrategy(t, fx, order_updated_handler, self.balances.get_balance(t.asset))
+        self.order_updated_handler = trade_updated_handler
+        self.strategies = [TargetsAndStopLossStrategy(t, fx, trade_updated_handler, self.balances.get_balance(t.asset))
                            for t in trades]
 
         self.strategies_dict = {}
@@ -123,19 +123,6 @@ class TradeHandler:
         except Exception as e:
             self.logger.error(str(e))
             traceback.print_exc()
-
-
-    def aggreagate_fx_prices(self):
-        mp = {}
-        for sym, prices in self.trade_info_buf.items():
-            if not prices:
-                continue
-            mean_price = np.mean(np.array(prices).astype(np.float))
-            self.trade_info_buf[sym] = []
-
-            mp[sym] = round(mean_price, 8)
-
-        return mp
 
     def execute_strategy(self, prices):
         with self.lock:

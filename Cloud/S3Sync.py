@@ -34,6 +34,7 @@ class S3Persistence:
         self.queue_url = None
         self.queue_not_available = False
         self.thread = None
+        self.uploaded_requests = {}
 
     def sync(self, resolve_conflict_using_local=True, delete=False):
         self.await()
@@ -47,7 +48,7 @@ class S3Persistence:
         if self.thread and self.thread.is_alive():
             self.thread.join()
 
-    def check_s3_events(self, file_watch_list):
+    def check_s3_events(self):
         del_set, upd_set = set(), set()
         ret_val = (del_set, upd_set)
 
@@ -73,7 +74,7 @@ class S3Persistence:
 
                 if os.path.exists(full_path):
                     os.remove(full_path)
-                    file_watch_list.pop(full_path, None)
+                    # file_watch_list.pop(full_path, None)
 
             if updated_files:
                 bucket = session.resource('s3').Bucket(self.bucket)
@@ -85,7 +86,7 @@ class S3Persistence:
                     if not os.path.exists(full_path) or self.get_md5(full_path) != etag:
                         bucket.download_file(k, full_path)
                         upd_set.add(full_path)
-                        file_watch_list[full_path] = os.stat(full_path).st_mtime
+                        # file_watch_list[full_path] = os.stat(full_path).st_mtime
 
         except Exception:
             self.logger.error(traceback.format_exc())
@@ -115,13 +116,36 @@ class S3Persistence:
                     if event_name in (EVT_OBJ_CREATED, EVT_OBJ_DELETED):
                         d = deleted_files if event_name == EVT_OBJ_DELETED else updated_files
                         s3obj = record['s3']['object']
-                        d[s3obj['key']] = s3obj.get('eTag', None)
+                        key = s3obj['key']
+                        etag = s3obj.get('eTag', 'DEL')
 
-                        self.logger.info('SQS: {}: {}'.format(event_name, s3obj['key']))
+                        if self.check_upload_req(key, etag):
+                            self.remove_upload_req(key, etag)
+                            continue
+
+                        d[key] = etag
+                        self.logger.info('SQS: {}: {}'.format(event_name, key))
 
             message.delete()
 
         return deleted_files, updated_files
+
+    def add_upload_req(self, key, etag):
+        etag_list = self.uploaded_requests.get(key, [])
+        self.uploaded_requests[key] = etag_list
+        etag_list.append(etag)
+
+    def check_upload_req(self, key, etag):
+        if etag is None:
+            return key in self.uploaded_requests[key]
+
+        return etag in self.uploaded_requests.get(key, [])
+
+    def remove_upload_req(self, key, etag):
+        if etag is None:
+            self.uploaded_requests.pop(key, None)
+        else:
+            self.uploaded_requests.get(key, []).remove(etag)
 
     def get_local_path(self, key):
         path, file_name = os.path.split(key)
@@ -176,6 +200,8 @@ class S3Persistence:
                                 'Quiet': True
                             }
                             bucket.delete_objects(Delete=del_obj)
+                            [self.add_upload_req(s3_prefix + key, 'DEL') for key in remote_files_missing_from_local]
+
                             remote_files_missing_from_local.clear()
                     else:  # delete local files which are not available remotely
                         for file in local_files_missing_from_remote:
@@ -198,6 +224,7 @@ class S3Persistence:
                     local_files_missing_from_remote |= common_changed_files
 
                 for file in local_files_missing_from_remote:
+                    self.add_upload_req(s3_prefix+file, self.get_md5(join(local_folder, file)))
                     bucket.upload_file(join(local_folder, file), s3_prefix+file)
 
         except Exception as e:

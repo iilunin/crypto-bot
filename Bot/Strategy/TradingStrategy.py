@@ -156,9 +156,9 @@ class TradingStrategy:
             self.trade.set_completed()
             self.trigger_target_updated()
 
-    def trigger_target_updated(self):
+    def trigger_target_updated(self, sync_cloud=True):
         if self.trade_updated:
-            self.trade_updated(self.trade)
+            self.trade_updated(self.trade, sync_cloud)
 
     def get_bid_ask(self, price):
         return price['b'], price['a']
