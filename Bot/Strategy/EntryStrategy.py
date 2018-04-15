@@ -64,7 +64,7 @@ class EntryStrategy(TradingStrategy):
         #if buying asset using % value of the volume
         if self.trade_side().is_buy() and t.vol.is_rel():
             buying_currency_vol = t.vol.get_val(self.secondary_asset_balance().avail)
-            self.exchange_info.adjust_quanity(vol)
+            # self.exchange_info.adjust_quanity(t.vol)
             return buying_currency_vol / exchange_rate
 
         return t.vol.get_val(self.balance.avail)
@@ -120,12 +120,12 @@ class EntryStrategy(TradingStrategy):
                     self.trigger_target_updated()
                     self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
 
+
+            th_sl_price = self.smart_order.sl_threshold.get_val(t.price)
             if self.trade_side().is_buy():
-                limit = max(trigger_order_price + self.smart_order.sl_threshold_val,
-                            t.price + self.smart_order.sl_threshold_val)
+                limit = max(trigger_order_price + th_sl_price, t.price + th_sl_price)
             else:
-                limit = min(trigger_order_price - self.smart_order.sl_threshold_val,
-                            t.price - self.smart_order.sl_threshold_val)
+                limit = min(trigger_order_price - th_sl_price, t.price - th_sl_price)
 
                 # vol = t.vol.get_val(self.balance.avail)
                 vol = self.get_trade_volume(current_price)
