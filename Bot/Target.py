@@ -6,7 +6,7 @@ from Bot.Value import Value
 
 
 class Target(CustomSerializable):
-    def __init__(self, price, vol, status=OrderStatus.NEW.value, date=None, id=None, sl=0):
+    def __init__(self, price, vol=Value('100%'), status=OrderStatus.NEW.value, date=None, id=None, sl=0):
         self.date = date
         self.id = id
         self.status = OrderStatus(status.lower())
