@@ -1,6 +1,5 @@
 import json
 import hashlib
-import logging
 import traceback
 from threading import Thread
 
@@ -8,6 +7,8 @@ import boto3
 import os
 from os import path, listdir
 from os.path import join, isfile
+
+from Utils.Logger import Logger
 
 
 class BotThread(Thread):
@@ -21,13 +22,13 @@ class BotThread(Thread):
         self.fn(*self.args, **self.kvargs)
 
 
-class S3Persistence:
+class S3Persistence(Logger):
     def __init__(self, bucket, mapping: {}):
+        super().__init__()
 
         if not bucket:
             raise ValueError('bucket cannot be empty')
 
-        self.logger = logging.getLogger(__class__.__name__)
         self.bucket = bucket
         self.mapping = mapping
         self.rev_mapping = {v: k for k, v in mapping.items()}
@@ -89,7 +90,7 @@ class S3Persistence:
                         # file_watch_list[full_path] = os.stat(full_path).st_mtime
 
         except Exception:
-            self.logger.error(traceback.format_exc())
+            self.logError(traceback.format_exc())
 
         return ret_val
 
@@ -124,7 +125,7 @@ class S3Persistence:
                             continue
 
                         d[key] = etag
-                        self.logger.info('SQS: {}: {}'.format(event_name, key))
+                        self.logInfo('SQS: {}: {}'.format(event_name, key))
 
             message.delete()
 
@@ -160,7 +161,7 @@ class S3Persistence:
 
     def __sync_thread(self, resolve_conflict_using_local=True, delete=True):
         try:
-            self.logger.info('S3 Sync started. Delete: {}, Direction: {}'.format(delete,
+            self.logInfo('S3 Sync started. Delete: {}, Direction: {}'.format(delete,
                                                                                  'UP' if resolve_conflict_using_local else 'DOWN'))
 
             session = boto3.session.Session()
@@ -228,9 +229,9 @@ class S3Persistence:
                     bucket.upload_file(join(local_folder, file), s3_prefix+file)
 
         except Exception as e:
-            self.logger.error(traceback.format_exc())
+            self.logError(traceback.format_exc())
         finally:
-            self.logger.info('S3 Sync completed')
+            self.logInfo('S3 Sync completed')
 
     def set_queue_url(self, session):
         if self.queue_url:

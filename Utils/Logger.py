@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
 class Logger:
     def __init__(self, logger=None):
-        self.logger = logger if logger else logging.getLogger(__class__.__name__)
+        self.logger = logger if logger else logging.getLogger(self._get_logger_name())
 
     def logInfo(self, msg):
         self.logger.log(logging.INFO, msg)
@@ -16,3 +16,7 @@ class Logger:
 
     def logError(self, msg):
         self.logger.log(logging.ERROR, msg)
+
+    def _get_logger_name(self):
+        return self.__class__.__name__
+

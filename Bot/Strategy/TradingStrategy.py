@@ -17,16 +17,15 @@ class TradingStrategy(Logger):
                  nested=False,
                  exchange_info=None,
                  balance: Balance=None):
-        super().__init__()
-
         self.trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self.exchange_info = None
         self.simulate = False
         self.trade_updated = trade_updated
-        self.name = '{}({})'.format(self.__class__.__name__, self.symbol())
         self.last_execution_price = 0
+
+        super().__init__()
 
         if nested:
             self.exchange_info = exchange_info
@@ -35,6 +34,8 @@ class TradingStrategy(Logger):
         else:
             self.init()
 
+    def _get_logger_name(self):
+        return '{}({})'.format(self.__class__.__name__, self.symbol())
 
     def update_trade(self, trade: Trade):
         self.trade = trade
