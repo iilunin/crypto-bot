@@ -28,7 +28,8 @@ class Value:
         return round(rel_val * self.v / 100, 8)
 
     def __str__(self):
-        return '{:.2f}%'.format(self.v) if self.is_rel() else '{:.8f}'.format(self.v)
+        return ('{:.0f}%'.format(self.v) if self.v.is_integer() else '{:.2f}%'.format(
+            self.v)) if self.is_rel() else '{:.8f}'.format(self.v)
 
     def __repr__(self):
         return self.__str__()
