@@ -51,22 +51,19 @@ class TradeHandler(Logger):
 
 
     def start_listening(self):
+        self.init_trades()
+        self.fx.start_listening()
+        self.last_ts = dt.now()
+
+    def init_trades(self):
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.balances.update_balances(self.fx.get_all_balances_dict())
-
         # balances = dict.fromkeys(self.asset_dict.keys())
         # self.fx.get_all_balances(balances)
-
         # [s.update_asset_balance(balances[s.trade.asset]['f'], balances[s.trade.asset]['l']) for s in self.strategies]
-
-
         self.process_initial_prices()
-
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
         self.socket_message_rcvd = False
-        self.fx.start_listening()
-
-        self.last_ts = dt.now()
 
     def stop_listening(self):
         self.fx.stop_listening()
@@ -97,28 +94,27 @@ class TradeHandler(Logger):
             if not self.socket_message_rcvd:
                 self.confirm_socket_msg_rcvd()
 
-            d = msg['data']
-            if 'error' in (msg.get('e', None), d.get('e', None)):
-                self.logError(msg)
-            # elif d['e'] == 'trade':
-            #     self.trade_info_buf[d['s']].append(d['p'])
-            #     delta = dt.now() - self.last_ts
-            #     if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
-            #         self.last_ts = dt.now()
-            #         mean_prices = self.aggreagate_fx_prices()
-            #         self.check_strategy_is_complete()
-            #         self.execute_strategy(mean_prices)
-            elif d['e'] == '24hrTicker':
-                self.trade_info_ticker_buf[d['s']] = {'b': float(d['b']), 'a': float(d['a'])}
+            delta = dt.now() - self.last_ts
+            if isinstance(msg, list):
+                for ticker in msg:
+                    if ticker['s'] in self.strategies_dict and ticker['e'] == '24hrTicker':
+                        self.trade_info_ticker_buf[ticker['s']] = {'b': float(ticker['b']), 'a': float(ticker['a'])}
+            else:
+                d = msg['data']
 
-                delta = dt.now() - self.last_ts
+                if 'error' in (msg.get('e', None), d.get('e', None)):
+                    self.logError(msg)
+                    return
+                elif d['e'] == '24hrTicker':
+                    self.trade_info_ticker_buf[d['s']] = {'b': float(d['b']), 'a': float(d['a'])}
+                    # delta = dt.now() - self.last_ts
 
-                if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
-                    self.last_ts = dt.now()
-                    self.check_strategies_status()
-                    prices = dict(self.trade_info_ticker_buf)
-                    self.trade_info_ticker_buf = {}
-                    self.execute_strategy(prices)
+            if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
+                self.last_ts = dt.now()
+                self.check_strategies_status()
+                prices = dict(self.trade_info_ticker_buf)
+                self.trade_info_ticker_buf = {}
+                self.execute_strategy(prices)
 
         except Exception as e:
             self.logError(traceback.print_exc())
@@ -144,9 +140,10 @@ class TradeHandler(Logger):
 
         with self.lock:
             self.logInfo('Removing trade [{}]'.format(strategy.symbol()))
-            self.stop_listening()
+            # self.stop_listening()
             self.strategies.remove(strategy)
-            self.start_listening()
+            self.init_trades()
+            # self.start_listening()
 
     def remove_trade_by_symbol(self, sym):
         with self.lock:
@@ -160,9 +157,10 @@ class TradeHandler(Logger):
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
             else:
                 self.logInfo('Adding trade [{}]'.format(trade.symbol))
-                self.stop_listening()
+                # self.stop_listening()
                 self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
-                self.start_listening()
+                self.init_trades()
+                # self.start_listening()
 
     def confirm_socket_msg_rcvd(self):
         self.socket_message_rcvd = True

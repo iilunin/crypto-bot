@@ -78,14 +78,15 @@ class FXConnector(Logger):
         self.ticker_connection = None
         self.user_data_connection = None
 
-    def listen_symbols(self, symbols, socket_handler, user_data_handler):
+    def listen_symbols(self, symbols, on_ticker_received, user_data_handler):
         # self.client = Client(self.__key, self.__secret)
         self.bs = BinanceSocketManager(self.client)
         # self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
         #                                                  socket_handler)
 
-        self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
-                                                         socket_handler)
+        self.bs.start_ticker_socket(on_ticker_received)
+        # self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
+        #                                                         on_ticker_received)
         self.user_data_connection = self.bs.start_user_socket(user_data_handler)
         self.logInfo('Ticker and User WS initialized')
         self.bs.name = 'Binance WS'
@@ -95,11 +96,13 @@ class FXConnector(Logger):
         self.logInfo('WS listening started')
 
     def stop_listening(self):
-        if self.ticker_connection:
-            # self.bs.stop_socket(self.connection)
-            self.bs.stop_socket(self.ticker_connection)
-            self.bs.stop_socket(self.user_data_connection)
-            self.logInfo('Socket stopped')
+        self.bs.close()
+        self.logInfo('Socket stopped')
+        # if self.ticker_connection:
+        #     # self.bs.stop_socket(self.connection)
+        #     self.bs.stop_socket(self.ticker_connection)
+        #     self.bs.stop_socket(self.user_data_connection)
+
 
 
     @retry(**DEFAULT_RETRY_SETTINGS)
