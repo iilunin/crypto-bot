@@ -1,22 +1,15 @@
-import logging
-
 from binance.exceptions import BinanceAPIException
 
 from Bot.AccountBalances import AccountBalances
 from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
-from Bot.TradeEnums import OrderStatus
 from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
 
-
-# class Balance:
-#     def __init__(self, available=0., locked=0.):
-#         self.avail = available
-#         self.locked = locked
+from Utils.Logger import Logger
 
 
-class TradingStrategy:
+class TradingStrategy(Logger):
     def __init__(self,
                  trade: Trade,
                  fx: FXConnector,
@@ -24,6 +17,8 @@ class TradingStrategy:
                  nested=False,
                  exchange_info=None,
                  balance: Balance=None):
+        super().__init__()
+
         self.trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
@@ -31,7 +26,6 @@ class TradingStrategy:
         self.simulate = False
         self.trade_updated = trade_updated
         self.name = '{}({})'.format(self.__class__.__name__, self.symbol())
-        self.logger = logging.getLogger(self.name)
         self.last_execution_price = 0
 
         if nested:
@@ -74,7 +68,7 @@ class TradingStrategy:
     def symbol(self):
         return self.trade.symbol
 
-    def execution_rpt(self, data):
+    def on_execution_rpt(self, data):
         self.logInfo('Execution Rpt: {}'.format(data))
         orderId = data['orderId']
 
@@ -85,15 +79,11 @@ class TradingStrategy:
                 if self._update_trade_target_status_change(t, data['status']):
                     self.last_execution_price = 0
                     self.trigger_target_updated()
-                    self.order_status_changed(t, data)
+                    self.on_order_status_changed(t, data)
                 break
 
-    def order_status_changed(self, t: Target, data):
+    def on_order_status_changed(self, t: Target, data):
         pass
-
-    # def account_info(self, data):
-    #     self.balance.avail = float(data['f'])
-    #     self.balance.locked = float(data['l'])
 
     # TODO: schedule validation once in some time
     def validate_target_orders(self, force_cancel_open_orders=False):
@@ -174,14 +164,3 @@ class TradingStrategy:
             side = self.trade_side()
 
         return 'b' if side.is_sell() else 'a'
-
-
-    #TODO: move logging to another class
-    def logInfo(self, msg):
-        self.logger.log(logging.INFO, msg)
-
-    def logWarning(self, msg):
-        self.logger.log(logging.WARNING, msg)
-
-    def logError(self, msg):
-        self.logger.log(logging.ERROR, msg)

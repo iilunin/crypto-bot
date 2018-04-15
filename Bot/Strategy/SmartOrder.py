@@ -1,18 +1,15 @@
-import logging
-from logging import *
-
 from Bot.Value import Value
+from Utils.Logger import Logger
 
 
-class SmartOrder:
+class SmartOrder(Logger):
     def __init__(self, is_buy, price, sl_threshold=Value("1%"), pull_back=Value("1%"), logger: Logger = None,
                  best_price=0):
 
+        super().__init__(logger)
         self.is_buy = is_buy
         self.target_price = None
         self.initialized = False
-
-        self.logger = logger
 
         self.sl_threshold = sl_threshold
         self.pb_threshold = pull_back
@@ -31,7 +28,7 @@ class SmartOrder:
             self.initialized = True
 
         sl_limit, pb_limit = self.get_sl_and_pb(price)
-        self.log_event(
+        self.logInfo(
             'Target Price: {:.8f}; Max Pullback Trigger: {:.8f}; Allowed Limit: {:.8f}'.format(self.target_price,
                                                                                                pb_limit,
                                                                                                sl_limit))
@@ -45,12 +42,6 @@ class SmartOrder:
 
     def is_init(self):
         return self.initialized
-
-    def log_event(self, msg):
-        if self.logger:
-            self.logger.log(logging.INFO, msg)
-        else:
-            print(msg)
 
     def price_update(self, price):
         if not self.initialized:

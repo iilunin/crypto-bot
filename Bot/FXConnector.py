@@ -1,11 +1,11 @@
-from time import sleep
-
 from binance.exceptions import BinanceAPIException, BinanceOrderException
 from retrying import retry
 
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 from decimal import Decimal, ROUND_UP, ROUND_DOWN
+
+from Utils.Logger import Logger
 
 MAX_ATTEMPTS = 3
 DELAY = 1000
@@ -19,7 +19,7 @@ DEFAULT_RETRY_SETTINGS = {
     'retry_on_exception': retry_on_exception
 }
 
-class FXConnector:
+class FXConnector(Logger):
 
     class ExchangeInfo:
         def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional):
@@ -69,16 +69,17 @@ class FXConnector:
     ORDER_RESP_TYPE_FULL = 'FULL'
 
     def __init__(self, key=None, secret=None):
+        super().__init__()
         self.__key = key
         self.__secret = secret
         self.client = Client(key, secret)
-        self.bs = None
+        self.bs = BinanceSocketManager(self.client)
         # self.connection = None
         self.ticker_connection = None
         self.user_data_connection = None
 
     def listen_symbols(self, symbols, socket_handler, user_data_handler):
-        self.client = Client(self.__key, self.__secret)
+        # self.client = Client(self.__key, self.__secret)
         self.bs = BinanceSocketManager(self.client)
         # self.connection = self.bs.start_multiplex_socket(['{}@trade'.format(s.lower()) for s in symbols],
         #                                                  socket_handler)
@@ -86,16 +87,20 @@ class FXConnector:
         self.ticker_connection = self.bs.start_multiplex_socket(['{}@ticker'.format(s.lower()) for s in symbols],
                                                          socket_handler)
         self.user_data_connection = self.bs.start_user_socket(user_data_handler)
-        self.bs.name = self.ticker_connection
+        self.logInfo('Ticker and User WS initialized')
+        self.bs.name = 'Binance WS'
 
     def start_listening(self):
         self.bs.start()
+        self.logInfo('WS listening started')
 
     def stop_listening(self):
         if self.ticker_connection:
             # self.bs.stop_socket(self.connection)
             self.bs.stop_socket(self.ticker_connection)
             self.bs.stop_socket(self.user_data_connection)
+            self.logInfo('Socket stopped')
+
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def cancel_order(self, sym, id):

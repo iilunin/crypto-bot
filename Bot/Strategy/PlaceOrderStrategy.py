@@ -123,7 +123,7 @@ class PlaceOrderStrategy(TradingStrategy):
             target.set_active(order['orderId'])
         self.trigger_target_updated()
 
-    def order_status_changed(self, t, data):
+    def on_order_status_changed(self, t, data):
         if not t.is_exit_target():
             return
 

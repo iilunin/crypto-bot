@@ -83,7 +83,7 @@ class TradeHandler:
                 sym = msg['s']
 
                 if sym in self.strategies_dict:
-                    self.strategies_dict[sym].execution_rpt(
+                    self.strategies_dict[sym].on_execution_rpt(
                         {'orderId': msg['i'],
                          'status': msg['X'],
                          'symbol': sym,

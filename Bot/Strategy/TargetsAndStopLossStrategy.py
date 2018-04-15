@@ -119,7 +119,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.logInfo('Price: {:.08f}'.format(new_price))
             self.last_price = new_price
 
-    def order_status_changed(self, t: Target, data):
+    def on_order_status_changed(self, t: Target, data):
         complete_trade = False
 
         if t.is_completed():
@@ -141,7 +141,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         if complete_trade:
             self.set_trade_completed()
 
-        [s.order_status_changed(t, data) for s in self.all_strategies()]
+        [s.on_order_status_changed(t, data) for s in self.all_strategies()]
         # if self.strategy_sl:
         #     self.strategy_sl.order_status_changed(t, data)
         #

@@ -115,7 +115,7 @@ class StopLossStrategy(TradingStrategy):
         threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
         return (self.current_stop_loss + threshold) if self.trade.is_sell() else (self.current_stop_loss - threshold)
 
-    def order_status_changed(self, t: Target, data):
+    def on_order_status_changed(self, t: Target, data):
         if not t.is_stoploss_target():
             return
 

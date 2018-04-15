@@ -183,7 +183,7 @@ class EntryStrategy(TradingStrategy):
     def get_trade_section(self):
         return self.trade.entry
 
-    def order_status_changed(self, t: Target, data):
+    def on_order_status_changed(self, t: Target, data):
         if not t.is_entry_target():
             return
 
@@ -203,7 +203,7 @@ class ExitStrategy(EntryStrategy):
     def trade_side(self):
         return self.get_trade_section().side if self.get_trade_section().side else self.trade.side
 
-    def order_status_changed(self, t: Target, data):
+    def on_order_status_changed(self, t: Target, data):
         if not t.is_exit_target():
             return
 

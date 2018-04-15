@@ -15,22 +15,19 @@ from Bot.FXConnector import FXConnector
 from Bot.TradeHandler import TradeHandler
 from Bot.TradeValidator import TradeValidator
 from Cloud.S3Sync import S3Persistence
+from Utils.Logger import Logger
 
 
-class ConsoleLauncher:
+class ConsoleLauncher(Logger):
     TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
 
-    LOG_FORMAT = '%(asctime)s[%(levelname)s][%(name)s]: %(message)s'
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
     def __init__(self, trades_path, completed_trades_path, config_path, enable_cloud=False):
+        super().__init__()
         self.trades_path = trades_path
         self.completed_trades_path = completed_trades_path
         self.config_path = config_path
 
         self.config_loader = ConfigLoader()
-
-        self.logger = logging.getLogger(__class__.__name__)
 
         self.trade_handler: TradeHandler = None
         self.fx = None
@@ -103,6 +100,7 @@ class ConsoleLauncher:
 
     def start_timer(self):
         self.file_watch_timer = Timer(5, self.check_files_changed)
+        self.file_watch_timer.name = 'Filewatch Timer'
         self.file_watch_timer.start()
 
     def stop_timer(self):
@@ -184,16 +182,8 @@ class ConsoleLauncher:
         shutil.move(self.get_file_path(self.trades_path, symbol),
                   self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
-        # os.rename(self.get_file_path(self.trades_path, symbol),
-        #           self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
     def get_file_path(self, path, symbol, time=''):
         # TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
         return os.path.join(path, '{time}{symbol}.json'.format(symbol=symbol, time=time))
         # return ConsoleLauncher.TRADE_FILE_PATH_PATTERN.format(path=path, symbol=symbol, time=time)
-
-    def logInfo(self, msg):
-        self.logger.info(msg)
-
-    def logError(self, msg):
-        self.logger.error(msg)
