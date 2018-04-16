@@ -104,7 +104,11 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
                 return
 
-            if t.is_new() and t != last_target:
+
+            if t.is_new():
+                if self.last_target_smart() and t == last_target:
+                    continue
+
                 orders.append({
                     'price': self.exchange_info.adjust_price(price),
                     'volume': self.exchange_info.adjust_quanity(vol),
