@@ -128,7 +128,8 @@ class EntryStrategy(TradingStrategy):
                 limit = min(trigger_order_price - th_sl_price, t.price - th_sl_price)
 
                 # vol = t.vol.get_val(self.balance.avail)
-                vol = self.get_trade_volume(current_price)
+            vol = self.get_trade_volume(current_price)
+
             try:
                 order = self.fx.create_stop_order(
                     sym=self.symbol(),
