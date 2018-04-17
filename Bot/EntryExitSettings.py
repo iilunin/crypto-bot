@@ -27,6 +27,9 @@ class EntryExitSettings(CustomSerializable):
             if not self.sl_threshold:
                 self.sl_threshold = Value("1%")
                 self.pullback_threshold = Value("1%")
+        else:
+            if not self.sl_threshold:
+                self.sl_threshold = Value("0")
 
         self.side = Side(side.lower()) if side else None
         self.type = Entry(type.lower())

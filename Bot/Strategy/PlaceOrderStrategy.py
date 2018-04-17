@@ -79,7 +79,7 @@ class PlaceOrderStrategy(TradingStrategy):
         return all(t.status.is_completed() for t in targets)
 
     def prepare_volume_allocation(self, targets):
-        bal = self.balance.avail + (self.balance.locked if any(t.is_active() for t in targets) else 0)
+        bal = self.trade.get_cap(self.balance.avail) + (self.balance.locked if any(t.is_active() for t in targets) else 0)
 
         if bal <= 0:
             self.logWarning('Available balance is 0')

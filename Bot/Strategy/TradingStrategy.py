@@ -160,6 +160,10 @@ class TradingStrategy(Logger):
 
         return price[selector]
 
+    def get_info(self):
+        # return TradeInfo(self)
+        pass
+
     def price_selector(self, side=None):
         if not side:
             side = self.trade_side()

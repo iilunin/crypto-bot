@@ -144,7 +144,7 @@ class StopLossStrategy(TradingStrategy):
 
                 # stop_trigger
 
-                volume = self.initial_sl().vol.get_val(self.balance.avail)
+                volume = self.initial_sl().vol.get_val(self.trade.get_cap(self.balance.avail))
 
                 try:
                     order = self.fx.create_stop_order(

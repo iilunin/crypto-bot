@@ -56,9 +56,9 @@ class Target(CustomSerializable):
 
     def __str__(self):
         if PriceHelper.is_float_price(self.price):
-            return '{}:{:.08f}@{}'.format('StopLoss' if self.is_stoploss_target() else 'Regular', self.price, self.vol)
+            return '{}:{:.08f}@{}'.format(self.__class__.__name__, self.price, self.vol)
         else:
-            return '{}:{}@{}'.format('StopLoss' if self.is_stoploss_target() else 'Regular', self.price, self.vol)
+            return '{}:{}@{}'.format(self.__class__.__name__, self.price, self.vol)
 
 
     def serializable_dict(self):

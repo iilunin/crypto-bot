@@ -6,8 +6,8 @@ from Bot.Target import *
 
 
 class Trade(CustomSerializable):
-    def __init__(self, symbol, side, asset, sl_settings=None, status=None, entry=None, exit=None):
-
+    # def __init__(self, symbol, side, asset, status=None, sl_settings=None, entry=None, exit=None):
+    def __init__(self, symbol, side, asset, status=None, *args, **kvargs):
         self.side = Side(side.lower())
         self.symbol = symbol.upper()
         self.asset = asset.upper()
@@ -15,15 +15,17 @@ class Trade(CustomSerializable):
         self.entry: EntryExitSettings = None
         self.exit: EntryExitSettings = None
 
-        self._init_entry_exit(True, entry, self.side)
-        self._init_entry_exit(False, exit, self.side)
+        self._init_entry_exit(True, kvargs.get('entry'), self.side)
+        self._init_entry_exit(False, kvargs.get('exit'), self.side)
 
-        self.sl_settings = StopLossSettings(**sl_settings) if sl_settings else None
+        self.sl_settings = StopLossSettings(**kvargs.get('sl_settings')) if kvargs.get('sl_settings') else None
 
         if status:
             self.status = OrderStatus(status.lower())
         else:
-            self.status = OrderStatus.ACTIVE if not entry else OrderStatus.NEW
+            self.status = OrderStatus.ACTIVE if not kvargs.get('entry') else OrderStatus.NEW
+
+        self.cap = float(kvargs.get('cap')) if kvargs.get('cap') else None
 
     def _init_entry_exit(self, is_entry, data, side: Side):
         if data:
@@ -34,6 +36,9 @@ class Trade(CustomSerializable):
                 self.entry = EntryExitSettings(is_entry=is_entry, **data)
             else:
                 self.exit = EntryExitSettings(is_entry=is_entry, **data)
+
+    def get_cap(self, available_balance):
+        return min(self.cap if self.cap else available_balance, available_balance)
 
     def is_sell(self):
         return self.side.is_sell()
@@ -63,6 +68,8 @@ class Trade(CustomSerializable):
             d.pop('entry', None)
         if not self.exit:
             d.pop('exit', None)
+        if not self.cap:
+            d.pop('cap', None)
         return d
 
     def get_all_active_placed_targets(self) -> List[Target]:

@@ -1,3 +1,5 @@
+import traceback
+
 from binance.exceptions import BinanceAPIException
 
 from Bot.TradeEnums import OrderStatus, Side
@@ -67,7 +69,7 @@ class EntryStrategy(TradingStrategy):
             # self.exchange_info.adjust_quanity(t.vol)
             return buying_currency_vol / exchange_rate
 
-        return t.vol.get_val(self.balance.avail)
+        return t.vol.get_val(self.trade.get_cap(self.balance.avail))
 
     def on_smart_buy(self, trigger_order_price, current_price):
         if not trigger_order_price:
@@ -113,12 +115,15 @@ class EntryStrategy(TradingStrategy):
             t = self.trade_target()
 
             if t.is_active():
-                status = self.fx.get_order_status(self.symbol(), t.id)
+                try:
+                    status = self.fx.get_order_status(self.symbol(), t.id)
 
-                if self.fx.cancel_order(self.symbol(), t.id):
-                    t.set_canceled()
-                    self.trigger_target_updated()
-                    self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
+                    if self.fx.cancel_order(self.symbol(), t.id):
+                        t.set_canceled()
+                        self.trigger_target_updated()
+                        self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
+                except BinanceAPIException:
+                    self.logError(traceback.format_exc())
 
 
             th_sl_price = self.smart_order.sl_threshold.get_val(t.price)
@@ -152,7 +157,6 @@ class EntryStrategy(TradingStrategy):
             self.update_last_smart_price(trigger_order_price)
             t.set_active(order['orderId'])
             self.trigger_target_updated()
-
 
     def update_last_smart_price(self, trigger_price):
         if self.need_update_last_trigger_price(trigger_price):
