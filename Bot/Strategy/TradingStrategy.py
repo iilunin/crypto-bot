@@ -1,5 +1,6 @@
 from binance.exceptions import BinanceAPIException
 
+from Bot.ExchangeInfo import ExchangeInfo
 from Bot.AccountBalances import AccountBalances
 from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
@@ -20,7 +21,7 @@ class TradingStrategy(Logger):
         self.trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
-        self.exchange_info = None
+        self.exchange_info = ExchangeInfo().symbol_info(self.symbol())
         self.simulate = False
         self.trade_updated = trade_updated
         self.last_execution_price = 0
@@ -28,7 +29,6 @@ class TradingStrategy(Logger):
         super().__init__()
 
         if nested:
-            self.exchange_info = exchange_info
             if balance:
                 self.balance = balance
         else:
@@ -42,10 +42,10 @@ class TradingStrategy(Logger):
         self.init(True)
 
     def init(self, force_cancel_open_orders=False):
-        #TODO: make one call for each symbols
-        if not force_cancel_open_orders:
-            self.exchange_info = self.fx.get_exchange_info(self.symbol())
-
+        # #TODO: make one call for each symbols
+        # if not force_cancel_open_orders:
+        #     self.exchange_info = self.fx.get_exchange_info(self.symbol())
+        # self.exchange_info = self.ExchangeInfo().symbol_info(self.symbol())
         self.validate_target_orders(force_cancel_open_orders)
 
     def is_completed(self):

@@ -7,6 +7,7 @@ from datetime import datetime as dt
 import logging
 
 from Bot.AccountBalances import AccountBalances
+from Bot.ExchangeInfo import ExchangeInfo
 from Bot.FXConnector import FXConnector
 from Bot.Trade import Trade
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
@@ -20,6 +21,7 @@ class TradeHandler(Logger):
         self.balances = AccountBalances()
 
         self.order_updated_handler = trade_updated_handler
+        ExchangeInfo().update(fx.get_exchange_info())
         self.strategies = [TargetsAndStopLossStrategy(t, fx, trade_updated_handler, self.balances.get_balance(t.asset))
                            for t in trades]
 
@@ -58,9 +60,10 @@ class TradeHandler(Logger):
     def init_trades(self):
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.balances.update_balances(self.fx.get_all_balances_dict())
-        # balances = dict.fromkeys(self.asset_dict.keys())
-        # self.fx.get_all_balances(balances)
-        # [s.update_asset_balance(balances[s.trade.asset]['f'], balances[s.trade.asset]['l']) for s in self.strategies]
+
+        if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
+            ExchangeInfo().update(self.fx.get_exchange_info())
+
         self.process_initial_prices()
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
         self.socket_message_rcvd = False

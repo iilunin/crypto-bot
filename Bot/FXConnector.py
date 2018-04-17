@@ -20,27 +20,6 @@ DEFAULT_RETRY_SETTINGS = {
 }
 
 class FXConnector(Logger):
-
-    class ExchangeInfo:
-        def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional):
-            self.minNotional = Decimal(self.strip_zeros(minNotional))
-            self.stepSize = Decimal(self.strip_zeros(stepSize))
-            self.maxQty = Decimal(self.strip_zeros(maxQty))
-            self.minQty = Decimal(self.strip_zeros(minQty))
-            self.tickSize = Decimal(self.strip_zeros(tickSize))
-            self.maxPrice = Decimal(self.strip_zeros(maxPrice))
-            self.minPrice = Decimal(self.strip_zeros(minPrice))
-
-        def strip_zeros(self, s):
-            return s.rstrip('0')
-
-        def adjust_quanity(self, q, round_down=True):
-            return float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
-
-        def adjust_price(self, q, round_down=True):
-            return float(round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
-
-
     ORDER_STATUS_NEW = 'NEW'
     ORDER_STATUS_PARTIALLY_FILLED = 'PARTIALLY_FILLED'
     ORDER_STATUS_FILLED = 'FILLED'
@@ -208,22 +187,23 @@ class FXConnector(Logger):
         return {}
 
     @retry(**DEFAULT_RETRY_SETTINGS)
-    def get_exchange_info(self, sym):
-        info = self.client.get_exchange_info()
-
-        symbol_info = None
-        for s in info['symbols']:
-            if s['symbol'] == sym:
-                symbol_info = s
-                break
-
-        props = {}
-        for f in symbol_info['filters']:
-            props.update(f)
-
-        props.pop('filterType', None)
-
-        return FXConnector.ExchangeInfo(**props)
+    def get_exchange_info(self):
+        return self.client.get_exchange_info()
+        # info = self.client.get_exchange_info()
+        #
+        # symbol_info = None
+        # for s in info['symbols']:
+        #     if s['symbol'] == sym:
+        #         symbol_info = s
+        #         break
+        #
+        # props = {}
+        # for f in symbol_info['filters']:
+        #     props.update(f)
+        #
+        # props.pop('filterType', None)
+        #
+        # return FXConnector.ExchangeInfo(**props)
 
     @classmethod
     def format_number(cls, num):
