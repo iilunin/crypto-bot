@@ -86,46 +86,53 @@ class TradingStrategy(Logger):
     def on_order_status_changed(self, t: Target, data):
         pass
 
-    # TODO: schedule validation once in some time
     def validate_target_orders(self, force_cancel_open_orders=False):
+        NEW_STATUSES = [FXConnector.ORDER_STATUS_NEW, FXConnector.ORDER_STATUS_PARTIALLY_FILLED]
+
         try:
-            orders_dict = self.fx.get_all_orders(self.symbol())
+            exchange_orders = self.fx.get_all_orders(self.symbol())
+            has_open_orders = any([eo['status'] in NEW_STATUSES for eo in exchange_orders.values()])
+
         except BinanceAPIException as bae:
             self.logError(str(bae))
             return
 
-        tgts = self.trade.get_all_active_placed_targets()
+        active_trade_targets = self.trade.get_all_active_placed_targets()
 
         update_required = False
-        if force_cancel_open_orders or len(tgts) == 0:
+        if force_cancel_open_orders or (len(active_trade_targets) == 0 and has_open_orders):
+            self.logInfo('Cancelling all Open orders')
             self.fx.cancel_open_orders(self.symbol())
         else:
-            for t in tgts:
-                if t.id not in orders_dict:
-                    t.set_canceled()
+            for active_trade_target in active_trade_targets:
+
+                if active_trade_target.id not in exchange_orders:
+                    active_trade_target.set_canceled()
                     update_required = True
                 else:
-                    s = orders_dict[t.id]['status']
-                    if s == 'NEW':
-                        if not PriceHelper.is_float_price(t.price) or (
-                                self.exchange_info.adjust_price(t.price) not in(float(orders_dict[t.id]['price']),
-                                                                           float(orders_dict[t.id]['stop_price']))):
-                            self.logInfo('Target price changed: {}'.format(t))
-                            self.fx.cancel_order(self.symbol(), t.id)
-                            t.set_canceled()
-                            update_required |= True
+                    s = exchange_orders[active_trade_target.id]['status']
+                    if s in NEW_STATUSES:
+                        if not PriceHelper.is_float_price(active_trade_target.price) or (
+                                self.exchange_info.adjust_price(active_trade_target.price) not in(float(exchange_orders[active_trade_target.id]['price']),
+                                                                           float(exchange_orders[active_trade_target.id]['stop_price']))):
+                            self.logInfo('Target price changed: {}'.format(active_trade_target))
+                            self.fx.cancel_order(self.symbol(), active_trade_target.id)
+                            active_trade_target.set_canceled()
+                            update_required = True
 
-                    update_required |= self._update_trade_target_status_change(t, s)
+                    update_required |= self._update_trade_target_status_change(active_trade_target, s)
 
             if update_required:
                 self.trigger_target_updated()
 
     def _update_trade_target_status_change(self, t: Target, status: str) -> bool:
-        if status == 'FILLED':
+        if status == FXConnector.ORDER_STATUS_FILLED:
             t.set_completed()
             return True
 
-        if status in ['CANCELED', 'REJECTED', 'EXPIRED']:
+        if status in [FXConnector.ORDER_STATUS_CANCELED,
+                      FXConnector.ORDER_STATUS_REJECTED,
+                      FXConnector.ORDER_STATUS_EXPIRED]:
             t.set_canceled()
             return True
 
