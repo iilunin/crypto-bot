@@ -25,17 +25,3 @@ ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 CMD ["python3", "main.py"]
-
-#docker run -i -t --rm --privileged --name cryptobot \
-#-e "TZ=America/New_York" \
-#-v $(pwd)/Trades/Portfolio:/usr/src/trades \
-#-v $(pwd)/Trades/Completed:/usr/src/complete_trades \
-#-v $(pwd)/Conf:/usr/src/configs:ro \
-#-v /etc/localtime:/etc/localtime:ro \
-#cryptobot
-
-#docker run -d --name cryptobot \
-#-v $(pwd)/Trades/Portfolio:/usr/src/trades \
-#-v $(pwd)/Trades/Completed:/usr/src/complete_trades \
-#-v $(pwd)/Conf:/usr/src/configs:ro \
-#cryptobot:latest
