@@ -1,4 +1,4 @@
-from Bot.AccountBalances import Balance, AccountBalances
+from Bot.AccountBalances import AccountBalances
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
 from Bot.Strategy.TradingStrategy import TradingStrategy
 

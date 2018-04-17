@@ -20,11 +20,11 @@ class ConfigLoader:
     def advanced_loader(self, path):
         def load():
             target_path_list = [f for f in listdir(path) if isfile(join(path, f)) and f.lower().endswith('json')]
-            targets = []
-            d = {ConfigLoader.PARENT_ELEMENT: targets}
+            trades = []
+            d = {ConfigLoader.PARENT_ELEMENT: trades}
             for t_path in target_path_list:
                 with open(join(path, t_path), 'r') as f:
-                    targets.extend(json.load(f)[ConfigLoader.PARENT_ELEMENT])
+                    trades.extend(json.load(f)[ConfigLoader.PARENT_ELEMENT])
             return d
 
         return load
@@ -32,7 +32,7 @@ class ConfigLoader:
     def json_saver(self, path):
         def save(obj):
             with open(path() if callable(path) else path, 'w') as f:
-                json.dump(obj, fp=f, cls=CustomJsonEncoder, indent=4)
+                json.dump(obj, fp=f, cls=CustomJsonEncoder, indent=2)
 
         return save
 
@@ -50,13 +50,16 @@ class ConfigLoader:
         saver(d)
 
     def persist_updated_trade(self, trade: Trade, loader, saver):
-        old_trades = self.load_trade_list(loader)
-        old_order = next(o for o in old_trades if o.symbol == trade.symbol)
-        old_trades.remove(old_order)
-        old_trades.append(trade)
+        #TODO: don't need to read file as there is only 1 trade per file at the moment
+        # old_trades = self.load_trade_list(loader)
+        # old_order = next(o for o in old_trades if o.symbol == trade.symbol)
+        # old_trades.remove(old_order)
+        # old_trades.append(trade)
+        #
+        # old_trades.sort(key=lambda trade: trade.symbol)
+        # self.save_trades(saver, old_trades)
 
-        old_trades.sort(key=lambda trade: trade.symbol)
-        self.save_trades(saver, old_trades)
+        self.save_trades(saver, [trade])
 
 
 
