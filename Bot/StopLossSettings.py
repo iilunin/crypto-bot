@@ -32,6 +32,8 @@ class StopLossSettings(CustomSerializable):
 
         if not self.last_stoploss:
             d.pop('last_stoploss', None)
+        else:
+            d['last_stoploss'] = self.format_float(self.last_stoploss)
 
         if self.limit_price_threshold.get_val(1) == Value(StopLossSettings.DEFAULT_LIMIT_PRICE).get_val(1):
             d.pop('limit_price_threshold', None)
