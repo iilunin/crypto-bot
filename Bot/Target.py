@@ -14,8 +14,18 @@ class Target(CustomSerializable):
         self.date = kvargs.get('date')
         self.status = OrderStatus(kvargs.get('status', OrderStatus.NEW.name).lower())
         self.sl = float(kvargs.get('sl', 0))
-        self.smart = kvargs.get('smart', None)
+        self.smart = self.s2b(kvargs.get('smart', None))
         self.parent_smart = kvargs.get('parent_smart', None)
+
+    def s2b(self, s):
+        if isinstance(s, bool):
+            return s
+        if s is None:
+            return None
+        if s.lower() in ['true', 'yes']:
+            return True
+        return False
+
 
     def is_completed(self):
         return self.status.is_completed()
