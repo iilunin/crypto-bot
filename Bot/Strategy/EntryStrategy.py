@@ -131,7 +131,7 @@ class EntryStrategy(TradingStrategy):
                     if self.fx.cancel_order(self.symbol(), self.current_target.id):
                         self.current_target.set_canceled()
                         self.trigger_target_updated()
-                        self.balance.avail = float(status["origQty"]) - float(status["executedQty"])
+                        self.balance.avail = self.balance.avail + (float(status["origQty"]) - float(status["executedQty"]))
                 except BinanceAPIException:
                     self.logError(traceback.format_exc())
 
