@@ -60,11 +60,7 @@ class EntryExitSettings(CustomSerializable):
         return all(t.is_completed() for t in self.targets)
 
     def _create_target(self, t, is_entry):
-        target = EntryTarget(**t, parent_smart=self.smart) if is_entry else ExitTarget(**t, parent_smart=self.smart)
-        if not is_entry:
-            if target.smart is None:
-                target.smart = self.smart
-        return target
+        return EntryTarget(**t, parent_smart=self.smart) if is_entry else ExitTarget(**t, parent_smart=self.smart)
 
     def serializable_dict(self):
         d = dict(self.__dict__)

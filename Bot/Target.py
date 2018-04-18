@@ -15,7 +15,7 @@ class Target(CustomSerializable):
         self.status = OrderStatus(kvargs.get('status', OrderStatus.NEW.name).lower())
         self.sl = float(kvargs.get('sl', 0))
         self.smart = kvargs.get('smart', None)
-        self.partent_smart = kvargs.get('partent_smart', None)
+        self.parent_smart = kvargs.get('parent_smart', None)
 
     def is_completed(self):
         return self.status.is_completed()
@@ -58,18 +58,16 @@ class Target(CustomSerializable):
         return False
 
     def is_smart(self):
-        if self.partent_smart is not None:
+        if self.parent_smart is not None:
             if self.smart is not None:
                 return self.smart
-            return self.partent_smart
+            return self.parent_smart
 
         return False if self.smart is None else self.smart
 
     def __str__(self):
-        if PriceHelper.is_float_price(self.price):
-            return '{}:{:.08f}@{}{}'.format(self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.smart else '')
-        else:
-            return '{}:{}@{}{}'.format(self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.smart else '')
+        return ('{}:{:.08f}@{}{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
+            self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.is_smart() else '')
 
 
     def serializable_dict(self):

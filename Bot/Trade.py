@@ -32,7 +32,9 @@ class Trade(CustomSerializable):
             if 'side' not in data:
                 data['side'] = (side.reverse() if is_entry else side).value
 
+            # TODO: right now there is only Smart Entry option allowed
             if is_entry:
+                data['smart'] = True
                 self.entry = EntryExitSettings(is_entry=is_entry, **data)
             else:
                 self.exit = EntryExitSettings(is_entry=is_entry, **data)
