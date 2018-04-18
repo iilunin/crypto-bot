@@ -67,8 +67,10 @@ class EntryExitSettings(CustomSerializable):
 
         if not self.sl_threshold:
             d.pop('sl_threshold', None)
+            d.pop('threshold', None)
         else:
             d['threshold'] = self.sl_threshold
+            d.pop('sl_threshold', None)
 
         if not self.side:
             d.pop('side', None)

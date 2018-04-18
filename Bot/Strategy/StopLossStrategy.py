@@ -97,12 +97,13 @@ class StopLossStrategy(TradingStrategy):
 
 
     def adjust_stoploss_order(self, current_price):
-        threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
+        threshold = self.trade.sl_settings.zone_entry.get_val(self.current_stop_loss)
 
         if (self.trade.is_sell() and (self.current_stop_loss + threshold + self.exit_threshold) >= current_price) or \
             (not self.trade.is_sell() and (self.current_stop_loss - threshold - self.exit_threshold) <= current_price):
             self.set_stoploss_order()
 
+            # if price bounce between placing and canceling order - additing small exit threshold
             if self.exit_threshold == 0:
                 self.exit_threshold = threshold / 2
         else:
@@ -112,7 +113,7 @@ class StopLossStrategy(TradingStrategy):
                 AccountBalances().update_balances(self.fx.get_all_balances_dict())
 
     def get_sl_treshold(self):
-        threshold = self.trade.sl_settings.threshold.get_val(self.current_stop_loss)
+        threshold = self.trade.sl_settings.zone_entry.get_val(self.current_stop_loss)
         return (self.current_stop_loss + threshold) if self.trade.is_sell() else (self.current_stop_loss - threshold)
 
     def on_order_status_changed(self, t: Target, data):

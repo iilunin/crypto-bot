@@ -18,7 +18,9 @@ class Trade(CustomSerializable):
         self._init_entry_exit(True, kvargs.get('entry'), self.side)
         self._init_entry_exit(False, kvargs.get('exit'), self.side)
 
-        self.sl_settings = StopLossSettings(**kvargs.get('sl_settings')) if kvargs.get('sl_settings') else None
+        sl_settings = kvargs.get('stoploss', kvargs.get('sl_settings'))
+
+        self.sl_settings: StopLossSettings = StopLossSettings(**sl_settings) if sl_settings else None
 
         if status:
             self.status = OrderStatus(status.lower())
@@ -64,8 +66,14 @@ class Trade(CustomSerializable):
 
     def serializable_dict(self):
         d = dict(self.__dict__)
+        if self.sl_settings:
+            d['stoploss'] = self.sl_settings
+            d.pop('sl_settings', None)
+
         if not self.sl_settings:
             d.pop('sl_settings', None)
+            d.pop('stoploss', None)
+
         if not self.entry:
             d.pop('entry', None)
         if not self.exit:
