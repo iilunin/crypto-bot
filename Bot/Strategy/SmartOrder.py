@@ -27,7 +27,7 @@ class SmartOrder(Logger):
             self.initialized = True
 
         sl_limit = self.get_sl_and_pb(price)
-        self.logInfo('Target Price: {:.8f}; Threshold: {:.8f}'.format(self.target_price, sl_limit))
+        self.logInfo('Target Price: {:.8f}; With Stop Loss Threshold: {:.8f}'.format(self.target_price, sl_limit))
 
     def get_sl_and_pb(self, price):
         return self.get_price_limit(price, self.sl_threshold)

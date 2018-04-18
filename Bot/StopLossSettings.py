@@ -7,13 +7,16 @@ from Bot.Value import Value
 
 class StopLossSettings(CustomSerializable):
     DEFAULT_ZONE_ENTRY = '0.3%'
-    DEFAULT_LIMIT_PRICE = '0.05%'
+    DEFAULT_LIMIT_PRICE = '0.1%'
+    DEFAULT_TRAILING_SL_VALUE = '5%'
 
     class Type(Enum):
         TRAILING = 'trailing'
         FIXED = 'fixed'
 
-    def __init__(self, type, val, initial_target, zone_entry=DEFAULT_ZONE_ENTRY, limit_price_threshold=DEFAULT_LIMIT_PRICE, last_stoploss=0, **kvargs):
+    def __init__(self, initial_target, type=Type.FIXED.name, val=DEFAULT_TRAILING_SL_VALUE,
+                 zone_entry=DEFAULT_ZONE_ENTRY, limit_price_threshold=DEFAULT_LIMIT_PRICE, last_stoploss=0,
+                 **kvargs):
         self.type = StopLossSettings.Type(type.lower())
         self.val = Value(val)
         self.limit_price_threshold = Value(limit_price_threshold)
@@ -40,6 +43,9 @@ class StopLossSettings(CustomSerializable):
 
         if self.zone_entry.get_val(1) == Value(StopLossSettings.DEFAULT_ZONE_ENTRY).get_val(1):
             d.pop('zone_entry', None)
+
+        if self.val.get_val(1) == Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE).get_val(1):
+            d.pop('val', None)
 
         else:
             d['last_stoploss'] = self.format_float(self.last_stoploss)
