@@ -27,6 +27,12 @@ class Value:
             return self.v
         return round(rel_val * self.v / 100, 8)
 
+    def __eq__(self, other):
+        return self.v == other.v and self.type == other.type
+
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         return ('{:.0f}%'.format(self.v) if self.v.is_integer() else '{:.2f}%'.format(
             self.v)) if self.is_rel() else '{:.8f}'.format(self.v)

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from enum import Enum
 
 from Bot.CustomSerializable import CustomSerializable
@@ -31,23 +32,23 @@ class StopLossSettings(CustomSerializable):
         return self.type == StopLossSettings.Type.FIXED
 
     def serializable_dict(self):
-        d = dict(self.__dict__)
+        # d = dict(self.__dict__)
+        d = OrderedDict()
 
-        if not self.last_stoploss:
-            d.pop('last_stoploss', None)
-        else:
-            d['last_stoploss'] = self.format_float(self.last_stoploss)
+        d['type'] = self.type
 
-        if self.limit_price_threshold.get_val(1) == Value(StopLossSettings.DEFAULT_LIMIT_PRICE).get_val(1):
-            d.pop('limit_price_threshold', None)
+        if self.is_trailing() and self.val != Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE):
+            d['val'] = self.val
 
-        if self.zone_entry.get_val(1) == Value(StopLossSettings.DEFAULT_ZONE_ENTRY).get_val(1):
-            d.pop('zone_entry', None)
+        if self.last_stoploss:
+            d['last_stoploss'] = self.last_stoploss
 
-        if self.is_fixed() and self.val.get_val(1) == Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE).get_val(1):
-            d.pop('val', None)
+        if self.limit_price_threshold != Value(StopLossSettings.DEFAULT_LIMIT_PRICE):
+            d['limit_price_threshold'] = self.limit_price_threshold
 
-        else:
-            d['last_stoploss'] = self.format_float(self.last_stoploss)
+        if self.zone_entry != Value(StopLossSettings.DEFAULT_ZONE_ENTRY):
+            d['zone_entry'] = self.zone_entry
+
+        d['initial_target'] = self.initial_target
 
         return d

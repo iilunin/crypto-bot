@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime
 
 from Bot.CustomSerializable import CustomSerializable
@@ -82,32 +83,32 @@ class Target(CustomSerializable):
 
 
     def serializable_dict(self):
-        d = {}
+        d = OrderedDict()
 
-        if self.date:
-            d['date'] = self.date
+        if not self.status.is_new():
+            d['status'] = self.status
 
         if self.id:
             d['id'] = self.id
 
-        if self.sl != 0:
-            d['sl'] = self.format_float(self.sl)
-
-        if not self.status.is_new():
-            d['status'] = self.status
+        if self.date:
+            d['date'] = self.date
 
         if PriceHelper.is_float_price(self.price):
             d['price'] = self.format_float(self.price)
         else:
             d['price'] = self.price
 
+        d['vol'] = self.vol
+
         if self.smart is not None:
             d['smart'] = self.smart
 
+        if self.sl != 0:
+            d['sl'] = self.format_float(self.sl)
+
         if self.best_price > 0:
             d['best_price'] = self.format_float(self.best_price)
-
-        d['vol'] = self.vol
 
         return d
 

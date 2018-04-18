@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List
 from Bot.EntryExitSettings import EntryExitSettings
 from Bot.TradeEnums import Side
@@ -65,21 +66,25 @@ class Trade(CustomSerializable):
         return None
 
     def serializable_dict(self):
-        d = dict(self.__dict__)
+        d = OrderedDict()
+
+        d['asset'] = self.asset
+        d['symbol'] = self.symbol
+        d['side'] = self.side
+        d['status'] = self.status
+
+        if self.cap:
+            d['cap'] = self.format_float(self.cap)
+
+        if self.entry:
+            d['entry'] = self.entry
+
+        if self.exit:
+            d['exit'] = self.exit
+
         if self.sl_settings:
             d['stoploss'] = self.sl_settings
-            d.pop('sl_settings', None)
 
-        if not self.sl_settings:
-            d.pop('sl_settings', None)
-            d.pop('stoploss', None)
-
-        if not self.entry:
-            d.pop('entry', None)
-        if not self.exit:
-            d.pop('exit', None)
-        if not self.cap:
-            d.pop('cap', None)
         return d
 
     def get_all_active_placed_targets(self) -> List[Target]:

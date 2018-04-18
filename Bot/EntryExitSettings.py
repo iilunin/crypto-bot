@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List
 
 from Bot.CustomSerializable import CustomSerializable
@@ -20,18 +21,11 @@ class EntryExitSettings(CustomSerializable):
         if 'threshold' in kvargs:
             sl_threshold = kvargs.get('threshold')
 
-        self.sl_threshold = Value(sl_threshold) if sl_threshold else None
-
-        if not self.sl_threshold:
-            if smart:
-                self.sl_threshold = EntryExitSettings.DEFAULT_THRESHOLD
-            else:
-                self.sl_threshold = Value("0")
+        self.sl_threshold = Value(sl_threshold) if sl_threshold else EntryExitSettings.DEFAULT_THRESHOLD
 
         self.side = Side(side.lower()) if side else None
         self.smart = smart
         self.is_entry = is_entry
-        # self.best_price = float(best_price)
 
         self.targets: [Target] = []
 
@@ -62,22 +56,20 @@ class EntryExitSettings(CustomSerializable):
         return EntryTarget(**t, parent_smart=self.smart) if is_entry else ExitTarget(**t, parent_smart=self.smart)
 
     def serializable_dict(self):
-        d = dict(self.__dict__)
+        # d = dict(self.__dict__)
+        d = OrderedDict()
 
-        if not self.sl_threshold:
-            d.pop('sl_threshold', None)
-            d.pop('threshold', None)
-        else:
+        if self.side:
+            d['side'] = self.side
+
+        if self.smart is not None:
+            d['smart'] = self.smart
+
+        if self.sl_threshold and (self.sl_threshold != EntryExitSettings.DEFAULT_THRESHOLD):
             d['threshold'] = self.sl_threshold
-            d.pop('sl_threshold', None)
 
-        if not self.side:
-            d.pop('side', None)
-
-        if self.is_entry:
-            d.pop('last_target_smart', None)
-
-        d.pop('is_entry', None)
+        if self.targets:
+            d['targets'] = self.targets
 
         return d
 
