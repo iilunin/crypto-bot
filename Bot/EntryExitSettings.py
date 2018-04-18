@@ -54,7 +54,7 @@ class EntryExitSettings(CustomSerializable):
         return [t for t in self.targets if t.is_smart()]
 
     def get_all_incomplete_smart_targets(self) -> List[Target]:
-        return [t for t in self.targets if t.is_smart()]
+        return [t for t in self.targets if t.is_smart() and not t.is_completed()]
 
     def is_completed(self):
         return all(t.is_completed() for t in self.targets)

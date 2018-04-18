@@ -26,6 +26,7 @@ class EntryStrategy(TradingStrategy):
 
         if self.current_target != smart_target:
             self.current_target = smart_target
+            self.logInfo('Current target is {}. Initiating Smart Order'.format(self.current_target))
 
             self.smart_order = SmartOrder(is_buy=self.trade_side().is_buy(),
                                       price=smart_target.price,
@@ -71,7 +72,7 @@ class EntryStrategy(TradingStrategy):
             trigger_order_price = self.smart_order.price_update(price)
             self.handle_smart_target(trigger_order_price, price)
         except BinanceAPIException as bae:
-            self.logError(str(bae))
+            self.logError(traceback.format_exc())
 
     def get_trade_volume(self, exchange_rate):
         #if buying asset using % value of the volume

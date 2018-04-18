@@ -44,7 +44,7 @@ class StopLossSettings(CustomSerializable):
         if self.zone_entry.get_val(1) == Value(StopLossSettings.DEFAULT_ZONE_ENTRY).get_val(1):
             d.pop('zone_entry', None)
 
-        if self.val.get_val(1) == Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE).get_val(1):
+        if self.is_fixed() and self.val.get_val(1) == Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE).get_val(1):
             d.pop('val', None)
 
         else:
