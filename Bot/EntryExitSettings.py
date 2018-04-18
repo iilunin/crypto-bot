@@ -15,7 +15,6 @@ class EntryExitSettings(CustomSerializable):
                  sl_threshold=None,
                  is_entry=True,
                  smart=False,
-                 best_price=0,
                  **kvargs):
 
         if 'threshold' in kvargs:
@@ -32,7 +31,7 @@ class EntryExitSettings(CustomSerializable):
         self.side = Side(side.lower()) if side else None
         self.smart = smart
         self.is_entry = is_entry
-        self.best_price = float(best_price)
+        # self.best_price = float(best_price)
 
         self.targets: [Target] = []
 
@@ -74,10 +73,6 @@ class EntryExitSettings(CustomSerializable):
 
         if not self.side:
             d.pop('side', None)
-        if self.best_price == 0:
-            d.pop('best_price', None)
-        else:
-            d['best_price'] = '{:.08f}'.format(self.best_price)
 
         if self.is_entry:
             d.pop('last_target_smart', None)

@@ -16,6 +16,7 @@ class Target(CustomSerializable):
         self.sl = float(kvargs.get('sl', 0))
         self.smart = self.s2b(kvargs.get('smart', None))
         self.parent_smart = kvargs.get('parent_smart', None)
+        self.best_price = float(kvargs.get('best_price', 0))
 
     def s2b(self, s):
         if isinstance(s, bool):
@@ -81,7 +82,6 @@ class Target(CustomSerializable):
 
 
     def serializable_dict(self):
-        fmt = '{:.8f}'
         d = {}
 
         if self.date:
@@ -91,18 +91,21 @@ class Target(CustomSerializable):
             d['id'] = self.id
 
         if self.sl != 0:
-            d['sl'] = fmt.format(self.sl)
+            d['sl'] = self.format_float(self.sl)
 
         if not self.status.is_new():
             d['status'] = self.status
 
         if PriceHelper.is_float_price(self.price):
-            d['price'] = fmt.format(self.price)
+            d['price'] = self.format_float(self.price)
         else:
             d['price'] = self.price
 
         if self.smart is not None:
             d['smart'] = self.smart
+
+        if self.best_price > 0:
+            d['best_price'] = self.format_float(self.best_price)
 
         d['vol'] = self.vol
 

@@ -32,7 +32,7 @@ class EntryStrategy(TradingStrategy):
                                       price=smart_target.price,
                                       sl_threshold=self.get_trade_section().sl_threshold,
                                       logger=self.logger,
-                                      best_price=self.get_trade_section().best_price)
+                                      best_price=self.current_target.best_price)
 
 
     def update_trade(self, trade: Trade):
@@ -171,7 +171,9 @@ class EntryStrategy(TradingStrategy):
 
     def update_last_smart_price(self, trigger_price):
         if self.need_update_last_trigger_price(trigger_price):
-            self.get_trade_section().best_price = trigger_price
+            if self.current_target:
+                self.current_target.best_price = trigger_price
+
             self.last_smart_price = trigger_price
             return True
         return False
