@@ -6,13 +6,16 @@ from Bot.Value import Value
 
 
 class Target(CustomSerializable):
-    def __init__(self, price, vol=Value('100%'), status=OrderStatus.NEW.value, date=None, id=None, sl=0):
-        self.date = date
-        self.id = id
-        self.status = OrderStatus(status.lower())
+    def __init__(self, price, vol=Value('100%'), **kvargs):
         self.vol = Value(vol)
         self.price = PriceHelper.parse_price(price)
-        self.sl = float(sl)
+
+        self.id = kvargs.get('id')
+        self.date = kvargs.get('date')
+        self.status = OrderStatus(kvargs.get('status', OrderStatus.NEW.name).lower())
+        self.sl = float(kvargs.get('sl', 0))
+        self.smart = kvargs.get('smart', None)
+        self.partent_smart = kvargs.get('partent_smart', None)
 
     def is_completed(self):
         return self.status.is_completed()
@@ -54,11 +57,19 @@ class Target(CustomSerializable):
     def is_entry_target(self):
         return False
 
+    def is_smart(self):
+        if self.partent_smart is not None:
+            if self.smart is not None:
+                return self.smart
+            return self.partent_smart
+
+        return False if self.smart is None else self.smart
+
     def __str__(self):
         if PriceHelper.is_float_price(self.price):
-            return '{}:{:.08f}@{}'.format(self.__class__.__name__, self.price, self.vol)
+            return '{}:{:.08f}@{}{}'.format(self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.smart else '')
         else:
-            return '{}:{}@{}'.format(self.__class__.__name__, self.price, self.vol)
+            return '{}:{}@{}{}'.format(self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.smart else '')
 
 
     def serializable_dict(self):
@@ -81,6 +92,9 @@ class Target(CustomSerializable):
             d['price'] = fmt.format(self.price)
         else:
             d['price'] = self.price
+
+        if self.smart is not None:
+            d['smart'] = self.smart
 
         d['vol'] = self.vol
 
@@ -150,23 +164,23 @@ class PriceHelper:
 
 
 class ExitTarget(Target):
-    def __init__(self, params):
-        super().__init__(**params)
+    def __init__(self, **kvargs):
+        super().__init__(**kvargs)
 
     def is_exit_target(self):
         return True
 
 class StopLossTarget(Target):
-    def __init__(self, params):
-        super().__init__(**params)
+    def __init__(self, **kvargs):
+        super().__init__(**kvargs)
 
     def is_stoploss_target(self):
         return True
 
 
 class EntryTarget(Target):
-    def __init__(self, params):
-        super().__init__(**params)
+    def __init__(self, **kvargs):
+        super().__init__(**kvargs)
 
     def is_entry_target(self):
         return True

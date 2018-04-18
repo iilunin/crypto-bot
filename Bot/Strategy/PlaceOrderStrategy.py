@@ -12,13 +12,16 @@ class PlaceOrderStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.strategy_exit = None
-        # self.init_smart_exit()
+        self.init_smart_exit()
 
-    def last_target_smart(self):
-        return self.trade.exit.last_target_smart
+    def get_trade_section(self):
+        return self.trade.exit # can be interface for entry at some point too
+
+    def has_smart_target(self):
+        return len(self.get_trade_section().get_all_incomplete_smart_targets()) > 0
 
     def init_smart_exit(self):
-        if self.last_target_smart():
+        if self.has_smart_target():
             self.strategy_exit = ExitStrategy(self.trade, self.fx, self.trade_updated, True, self.exchange_info,
                                               self.balance)
 
@@ -34,15 +37,9 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.set_trade_completed()
                 return
 
-            if self.last_target_smart():
-                not_completed_targets = self.not_completed_targets()
-                if len(not_completed_targets) == 1:
-
-                    if not self.strategy_exit: # LAZY LOAD
-                        self.init_smart_exit()
-
-                    self.strategy_exit.execute(new_price)
-                    return
+            # execute strategy for smart orders
+            if self.strategy_exit:
+                self.strategy_exit.execute(new_price)
 
             if self.validate_all_orders(targets):
                 return
@@ -58,7 +55,7 @@ class PlaceOrderStrategy(TradingStrategy):
     def update_trade(self, trade: Trade):
         self.trade = trade
 
-        if self.trade.exit.last_target_smart:
+        if self.has_smart_target():
             self.init_smart_exit()
         else:
             self.strategy_exit = None
@@ -70,10 +67,7 @@ class PlaceOrderStrategy(TradingStrategy):
         return [t for t in self.trade_targets() if not t.is_completed()]
 
     def validate_all_orders(self, targets):
-        if self.last_target_smart():
-            if len(targets) > 1:
-                targets = targets[:-1]
-        return all(t.status.is_completed() or (t.status.is_active() and t.has_id()) for t in targets)
+        return all(t.status.is_completed() or (t.status.is_active() and t.has_id()) for t in targets if not t.is_smart())
 
     def validate_all_completed(self, targets):
         return all(t.status.is_completed() for t in targets)
@@ -86,7 +80,7 @@ class PlaceOrderStrategy(TradingStrategy):
             return
 
         orders = []
-        last_target = targets[-1] if self.last_target_smart() else None
+        # last_target = targets[-1] if self.last_target_smart() else None
 
         for t in targets:
             if t.is_completed():
@@ -104,11 +98,10 @@ class PlaceOrderStrategy(TradingStrategy):
                 self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
                 return
 
-
-            if t.is_new():
-                if self.last_target_smart() and t == last_target:
-                    continue
-
+            # place only new and not smart targets
+            if t.is_new() and not t.is_smart():
+                # if self.last_target_smart() and t == last_target:
+                #     continue
                 orders.append({
                     'price': self.exchange_info.adjust_price(price),
                     'volume': self.exchange_info.adjust_quanity(vol),

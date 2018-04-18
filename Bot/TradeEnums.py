@@ -28,13 +28,13 @@ class Side(Enum):
         if self == Side.BUY:
             return Side.SELL
         return Side.BUY
-
-class Entry(Enum):
-    SMART = 'smart'
-    TARGET = 'target'
-
-    def is_smart(self):
-        return self == Entry.SMART
-
-    def is_target(self):
-        return self == Entry.TARGET
+#
+# class Entry(Enum):
+#     SMART = 'smart'
+#     TARGET = 'target'
+#
+#     def is_smart(self):
+#         return self == Entry.SMART
+#
+#     def is_target(self):
+#         return self == Entry.TARGET

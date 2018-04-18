@@ -49,9 +49,8 @@ class TradeValidator:
         if not (trade.has_exit() or trade.has_entry()):
             self.warnings["NO_TARG"] = 'no targets set'
 
-        if trade.exit.type.is_target():
             for t in trade.exit.targets:
-                if t.status.is_completed():
+                if t.is_completed() or t.is_smart():
                     continue
 
                 if (trade.side.is_sell() and trade.get_initial_stop().price >= t.price) or \

@@ -16,7 +16,7 @@ class StopLossSettings(CustomSerializable):
         self.val = Value(val)
         self.limit_price_threshold = Value(limit_price_threshold)
         self.threshold = Value(threshold)
-        self.initial_target = StopLossTarget(initial_target)
+        self.initial_target = StopLossTarget(**initial_target)
         self.last_stoploss = float(last_stoploss)
 
     def is_trailing(self):
