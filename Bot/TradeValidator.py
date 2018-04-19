@@ -39,12 +39,10 @@ class TradeValidator:
 
         if not trade.has_stoploss():
             if not trade.has_entry(): #in case it is entry only order
-                self.errors["NO_SL"] = 'no stop loss set'
-            return False
+                self.warnings["NO_SL"] = 'no stop loss set'
+        elif trade.get_initial_stop().is_completed():
+            self.warnings["NO_SL"] = 'no active stop loss set'
 
-        if trade.get_initial_stop().is_completed():
-            self.errors["NO_SL"] = 'no active stop loss set'
-            return False
 
         if not (trade.has_exit() or trade.has_entry()):
             self.warnings["NO_TARG"] = 'no targets set'

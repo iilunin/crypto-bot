@@ -66,9 +66,9 @@ class StopLossStrategy(TradingStrategy):
 
     def adjust_stoploss_price(self, current_price=None):
         completed_targets = [o for o in self.trade.exit.get_completed_targets()]
-        has_closed_orders = len(completed_targets) > 0
+        has_clopleted_targets = len(completed_targets) > 0
 
-        if has_closed_orders and completed_targets[-1].has_custom_stop():
+        if has_clopleted_targets and completed_targets[-1].has_custom_stop():
             # sort by order value
             self.current_stop_loss = completed_targets[-1].sl
             return
@@ -78,7 +78,7 @@ class StopLossStrategy(TradingStrategy):
                 else self.initial_sl().price
             return
 
-        if not has_closed_orders:
+        if not has_clopleted_targets:
             return
 
         # expected_stop_loss = 0
