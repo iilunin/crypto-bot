@@ -46,7 +46,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         self.last_execution_price = 0
 
         # [s.update_trade(trade) for s in self.all_strategies()]
-        if trade.has_exit():
+        if trade.has_stoploss():
             if self.strategy_sl:
                 self.strategy_sl.update_trade(trade)
             else:
@@ -62,18 +62,6 @@ class TargetsAndStopLossStrategy(TradingStrategy):
                 self.create_exit_strategy(trade)
         else:
             self.strategy_exit = None
-
-        # #new trade has exit
-        # if trade.has_exit():
-        #     if self.strategy_exit: # update exit strategy
-        #         if trade.exit.type.is_smart() and isinstance(self.strategy_exit, ExitStrategy): # if the type hasn't changed
-        #             self.strategy_exit.update_trade(trade)
-        #         else: #if type changed
-        #             self.create_exit_strategy(trade)
-        #     else:                   # create exit strategy
-        #         self.create_exit_strategy(trade)
-        # else:
-        #     self.strategy_exit = None
 
         if self.strategy_entry and trade.is_new():
             self.strategy_entry.update_trade(trade)

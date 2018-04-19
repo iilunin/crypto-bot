@@ -43,9 +43,7 @@ class ConsoleLauncher(Logger):
             self.s3pers: S3Persistence = S3Persistence(os.getenv('TRADE_BUCKET'), {trades_path: 'Portfolio/', completed_trades_path: 'Completed/'})
 
     def start_bot(self):
-        if self.enable_cloud:
-            self.s3pers.sync(False, True)
-            self.s3pers.await()
+        self.sync_down()
 
         trade_loader = self.config_loader.advanced_loader(self.trades_path)
         trades = self.config_loader.load_trade_list(trade_loader)
@@ -83,6 +81,11 @@ class ConsoleLauncher(Logger):
         self.init_file_watch_list()
         self.start_timer()
         self.trade_handler.start_listening()
+
+    def sync_down(self):
+        if self.enable_cloud:
+            self.s3pers.sync(False, True)
+            self.s3pers.await()
 
     def init_file_watch_list(self):
         target_path_list = [f for f in listdir(self.trades_path) if
