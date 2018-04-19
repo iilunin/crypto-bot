@@ -41,7 +41,7 @@ class StopLossSettings(CustomSerializable):
             d['val'] = self.val
 
         if self.last_stoploss:
-            d['last_stoploss'] = self.last_stoploss
+            d['last_stoploss'] = self.format_float(self.last_stoploss)
 
         if self.limit_price_threshold != Value(StopLossSettings.DEFAULT_LIMIT_PRICE):
             d['limit_price_threshold'] = self.limit_price_threshold

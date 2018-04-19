@@ -112,9 +112,17 @@ class TradingStrategy(Logger):
                 else:
                     s = exchange_orders[active_trade_target.id]['status']
                     if s in NEW_STATUSES:
-                        if not PriceHelper.is_float_price(active_trade_target.price) or (
-                                self.exchange_info.adjust_price(active_trade_target.price) not in(float(exchange_orders[active_trade_target.id]['price']),
-                                                                           float(exchange_orders[active_trade_target.id]['stop_price']))):
+
+                        # check if price in file is the same as on the exchange
+                        trade_prices = {self.exchange_info.adjust_price(active_trade_target.price)}
+                        if active_trade_target.is_smart():
+                            trade_prices.add(self.exchange_info.adjust_price(active_trade_target.best_price))
+
+                        exchange_prices = {float(exchange_orders[active_trade_target.id]['price']),
+                                           float(exchange_orders[active_trade_target.id]['stop_price'])}
+
+                        if not PriceHelper.is_float_price(active_trade_target.price) or len(
+                                trade_prices & exchange_prices) == 0:
                             self.logInfo('Target price changed: {}'.format(active_trade_target))
                             self.fx.cancel_order(self.symbol(), active_trade_target.id)
                             active_trade_target.set_canceled()
@@ -176,3 +184,6 @@ class TradingStrategy(Logger):
             side = self.trade_side()
 
         return 'b' if side.is_sell() else 'a'
+
+    def __str__(self):
+        return self.logger.name

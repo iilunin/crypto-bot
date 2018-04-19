@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class Balance:
     def __init__(self, getter):
         self.__getter = getter
@@ -26,9 +29,14 @@ class AccountBalances:
         self.__dict__ = self.__shared_state
         if not self.__dict__:
             self.bal_dict = {}
+            self.last_updated = None
 
     def update_balances(self, new_balances):
         self.bal_dict.update(new_balances)
+        self.last_updated = datetime.now()
+
+    def update_required(self, dt):
+        return self.last_updated < dt
 
     def get_balance(self, asset):
         return Balance(lambda: self.bal_dict[asset])

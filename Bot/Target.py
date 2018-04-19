@@ -42,17 +42,20 @@ class Target(CustomSerializable):
         return self.id is not None
 
     # def set_completed(self, date_str=datetime.now().replace(microsecond=0).isoformat(' ')):
-    def set_completed(self, date=datetime.now()):
+    def set_completed(self, id=None, date=datetime.now()):
         self.status = OrderStatus.COMPLETED
         self.date = date
+        if id:
+            self.id = id
 
     def set_canceled(self):
         self.status = OrderStatus.NEW
         self.id = None
 
-    def set_active(self, id):
+    def set_active(self, id=None):
         self.status = OrderStatus.ACTIVE
-        self.id = id
+        if id:
+            self.id = id
 
     def has_custom_stop(self):
         return self.sl != 0

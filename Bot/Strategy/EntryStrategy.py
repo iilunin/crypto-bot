@@ -1,7 +1,9 @@
 import traceback
 
 from binance.exceptions import BinanceAPIException
+from datetime import datetime
 
+from Bot.AccountBalances import AccountBalances
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.SmartOrder import SmartOrder
 from Bot.Strategy.TradingStrategy import TradingStrategy
@@ -14,8 +16,9 @@ class EntryStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.smart_order = None
-        self.current_target = None
+        self.current_target: Target = None
         self.last_smart_price = 0
+        # self.simulate = True
 
     def ensure_smart_order(self):
         smart_target = self.current_smart_target()
@@ -37,7 +40,7 @@ class EntryStrategy(TradingStrategy):
 
     def update_trade(self, trade: Trade):
         self.trade = trade
-        self.current_target = None
+        # self.current_target = None
         # self.init_smart_order()
 
     def place_market_orders(self):
@@ -97,44 +100,43 @@ class EntryStrategy(TradingStrategy):
             self.logInfo(
                 'Trigger Order Price {:.08f}; Current Price {:.08f}'.format(trigger_order_price, current_price))
 
-            # t = self.current_smart_target()
+            self.cancel_current_limit_order()
 
-            # vol = t.vol.get_val(self.balance.avail)
             vol = self.get_trade_volume(current_price)
 
-            order = self.fx.create_makret_order(
-                self.symbol(),
-                self.trade_side().name,
-                self.exchange_info.adjust_quanity(
-                    self.exchange_info.adjust_quanity(vol))
-            )
-
-            self.current_target.set_active(order['orderId'])
-            self.current_target.set_completed()
-            self.trigger_target_updated()
-            return
-
-        if self.update_last_smart_price(trigger_order_price):
-            self.trigger_target_updated()
-
-    def handle_stoploss_order(self, trigger_order_price, current_price):
-        if self.need_update_last_trigger_price(trigger_order_price):
-            self.logInfo('Setting StopLoss-{} for {:.08f} - {} of current Price: {:.08f}'.format(self.trade_side().name,
-                                                                                                 trigger_order_price,
-                                                                                                 self.get_trade_section().sl_threshold,
-                                                                                                 current_price))
-
-            if self.current_target.is_active():
+            if self.simulate:
+                order = {'orderId': 12345}
+            else:
                 try:
-                    status = self.fx.get_order_status(self.symbol(), self.current_target.id)
+                    order = self.fx.create_makret_order(
+                        self.symbol(),
+                        self.trade_side().name,
+                        self.exchange_info.adjust_quanity(
+                            self.exchange_info.adjust_quanity(vol))
+                    )
+                    self.balance.avail -= self.exchange_info.adjust_quanity(vol)
 
-                    if self.fx.cancel_order(self.symbol(), self.current_target.id):
-                        self.current_target.set_canceled()
-                        self.trigger_target_updated()
-                        self.balance.avail = self.balance.avail + (float(status["origQty"]) - float(status["executedQty"]))
-                except BinanceAPIException:
+                    # self.current_target.set_active()
+                    self.current_target.set_completed(id=order['orderId'])
+                    self.trigger_target_updated()
+
+                except BinanceAPIException as bae:
                     self.logError(traceback.format_exc())
 
+        # if self.update_last_smart_price(trigger_order_price):
+        #     self.trigger_target_updated()
+
+    def handle_stoploss_order(self, trigger_order_price, current_price):
+
+        if self.need_update_last_trigger_price(trigger_order_price):
+
+            fmt_str = 'Setting StopLoss-{} for {:.08f} - {} of current Price: {:.08f}'
+            self.logInfo(fmt_str.format(self.trade_side().name,
+                                        trigger_order_price,
+                                        self.get_trade_section().sl_threshold,
+                                        current_price))
+
+            self.cancel_current_limit_order()
 
             th_sl_price = self.smart_order.sl_threshold.get_val(self.current_target.price)
 
@@ -154,6 +156,9 @@ class EntryStrategy(TradingStrategy):
                     price=self.exchange_info.adjust_price(limit),
                     volume=self.exchange_info.adjust_quanity(vol)
                 )
+                # just update cash while balance is not updated through API
+                self.balance.avail -= self.exchange_info.adjust_quanity(vol)
+
             except BinanceAPIException as sl_exception:
                 if sl_exception.message.lower().find('order would trigger immediately') > -1:
                     order = self.fx.create_makret_order(
@@ -168,6 +173,22 @@ class EntryStrategy(TradingStrategy):
             self.update_last_smart_price(trigger_order_price)
             self.current_target.set_active(order['orderId'])
             self.trigger_target_updated()
+
+    def cancel_current_limit_order(self):
+        if self.current_target.is_active():
+            try:
+                status = self.fx.get_order_status(self.symbol(), self.current_target.id)
+
+                if self.fx.cancel_order(self.symbol(), self.current_target.id):
+                    canceled_time = datetime.now()
+                    self.current_target.set_canceled()
+                    self.trigger_target_updated()
+
+                    # if balance hasn't been updated since order was cancelled
+                    if AccountBalances().update_required(canceled_time):
+                        self.balance.avail += (float(status["origQty"]) - float(status["executedQty"]))
+            except BinanceAPIException:
+                self.logError(traceback.format_exc())
 
     def update_last_smart_price(self, trigger_price):
         if self.need_update_last_trigger_price(trigger_price):
