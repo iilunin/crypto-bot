@@ -17,6 +17,9 @@ class Logger:
     def logError(self, msg):
         self.logger.log(logging.ERROR, msg)
 
+    def logDebug(self, msg):
+        self.logger.log(logging.DEBUG, msg)
+
     def _get_logger_name(self):
         return self.__class__.__name__
 
