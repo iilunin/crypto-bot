@@ -14,11 +14,12 @@ class SymbolInfo:
         return s.rstrip('0')
 
     def adjust_quanity(self, q, round_down=True):
-        return float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
+        res = float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
+        return float(min(max(res, self.minQty), self.maxQty))
 
     def adjust_price(self, q, round_down=True):
-        return float(round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
-
+        res = round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
+        return float(min(max(res, self.minPrice), self.maxPrice))
 
 class ExchangeInfo:
     __shared_state = {}

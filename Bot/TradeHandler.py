@@ -53,7 +53,7 @@ class TradeHandler(Logger):
 
 
     def start_listening(self):
-        self.init_trades()
+        # self.init_trades()
         self.fx.start_listening()
         self.last_ts = dt.now()
 
@@ -143,10 +143,10 @@ class TradeHandler(Logger):
 
         with self.lock:
             self.logInfo('Removing trade [{}]'.format(strategy.symbol()))
-            # self.stop_listening()
+            self.stop_listening()
             self.strategies.remove(strategy)
             self.init_trades()
-            # self.start_listening()
+            self.start_listening()
 
     def remove_trade_by_symbol(self, sym):
         with self.lock:
@@ -160,10 +160,10 @@ class TradeHandler(Logger):
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
             else:
                 self.logInfo('Adding trade [{}]'.format(trade.symbol))
-                # self.stop_listening()
+                self.stop_listening()
                 self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
                 self.init_trades()
-                # self.start_listening()
+                self.start_listening()
 
     def confirm_socket_msg_rcvd(self):
         self.socket_message_rcvd = True

@@ -80,6 +80,8 @@ class ConsoleLauncher(Logger):
 
         self.init_file_watch_list()
         self.start_timer()
+
+        self.trade_handler.init_trades()
         self.trade_handler.start_listening()
 
     def sync_down(self):

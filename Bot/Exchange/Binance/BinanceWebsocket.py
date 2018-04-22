@@ -1,3 +1,4 @@
+import json
 import traceback
 from threading import Thread
 import time
@@ -19,6 +20,7 @@ from Utils.Logger import Logger
 class BinanceWebsocket(Thread, Logger):
     REFRESH_KEY_TIMEOUT = 30 * 60
     WS_URL = 'wss://stream.binance.com:9443/'
+    __EVENT_LOOP = None
 
     def __init__(self, client: Client):
         Thread.__init__(self)
@@ -38,11 +40,15 @@ class BinanceWebsocket(Thread, Logger):
         self.connection_key = None
         self.user_info_cb = None
 
-        self.loop = asyncio.get_event_loop()
+        if not BinanceWebsocket.__EVENT_LOOP:
+            self.loop = asyncio.get_event_loop()
+            BinanceWebsocket.__EVENT_LOOP = self.loop
+        else:
+            self.loop = BinanceWebsocket.__EVENT_LOOP
 
         self.time = None
 
-        self.name = 'Web Socket Thread'
+        self.name = 'Binance WebSocket Thread'
 
 
     @retry(
@@ -138,7 +144,7 @@ class BinanceWebsocket(Thread, Logger):
                     return
 
                 if callback:
-                    callback(message)
+                    callback(json.loads(message))
 
     def stop_sockets(self):
         self.stop = True
