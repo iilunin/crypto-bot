@@ -73,7 +73,7 @@ class BinanceWebsocket(Thread, Logger):
                 return
 
             if self.time and (time.time() - self.time) > BinanceWebsocket.REFRESH_KEY_TIMEOUT:
-                self.start_user_info()
+                self.start_user_info(self.user_info_cb)
 
             await asyncio.sleep(60)
 
