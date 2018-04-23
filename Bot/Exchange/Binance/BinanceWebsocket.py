@@ -1,4 +1,5 @@
 import json
+import threading
 import traceback
 from threading import Thread
 import time
@@ -155,5 +156,8 @@ class BinanceWebsocket(Thread, Logger):
         self.stop_user_future()
 
         self.loop.call_soon_threadsafe(self.loop.stop)
-        self.join()
+
+        if threading.current_thread().ident != self.ident:
+            self.join()
+
         self.logInfo('Stopped')
