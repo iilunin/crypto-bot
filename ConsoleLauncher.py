@@ -52,7 +52,7 @@ class ConsoleLauncher(Logger):
 
         for trade in trades[:]:
             if trade.is_completed():
-                self.move_completed_trade(trade.symbol)
+                self.move_completed_trade(trade)
             if not trade_validator.validate(trade):
                 self.logError('{}:{}'.format(trade.symbol, trade_validator.errors))
                 if len(trade_validator.warnings) > 0:
@@ -160,10 +160,9 @@ class ConsoleLauncher(Logger):
                     self.logInfo('New file detected "{}". Updating trades...'.format(file))
                     update_cloud_files = True
                     trades = self.config_loader.load_trade_list(file)
-                    base_dir = os.path.split(file)[0]
                     for t in trades:
                         #if file needs to be adjusted to the new format
-                        new_file_name = os.path.join(base_dir, Utils.get_file_name(t))
+                        new_file_name = os.path.join(self.trades_path, Utils.get_file_name(t))
                         if new_file_name != file:
                             self.file_watch_list[new_file_name] = os.stat(new_file_name).st_mtime
                             self.file_watch_list.pop(file, None)
@@ -185,24 +184,22 @@ class ConsoleLauncher(Logger):
 
     def on_trade_updated_by_handler(self, trade: Trade, needs_cloud_sync=True):
         with self.lock:
-            file = self.get_file_path(self.trades_path, trade.symbol)
+            file = self.get_file_path(self.trades_path, trade)
 
             self.config_loader.persist_updated_trade(trade, self.config_loader.json_saver(file))
 
             self.file_watch_list[file] = os.stat(file).st_mtime
 
             if trade.is_completed():
-                self.move_completed_trade(trade.symbol)
+                self.move_completed_trade(trade)
 
             if self.enable_cloud and needs_cloud_sync:
                 self.s3pers.sync(True, True)
 
-    def move_completed_trade(self, symbol):
-        shutil.move(self.get_file_path(self.trades_path, symbol),
-                  self.get_file_path(self.completed_trades_path, symbol, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
+    def move_completed_trade(self, trade):
+        shutil.move(self.get_file_path(self.trades_path, trade),
+                  self.get_file_path(self.completed_trades_path, trade, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
 
-    def get_file_path(self, path, symbol, time=''):
-        # TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
-        return os.path.join(path, '{time}{symbol}.json'.format(symbol=symbol, time=time))
-        # return ConsoleLauncher.TRADE_FILE_PATH_PATTERN.format(path=path, symbol=symbol, time=time)
+    def get_file_path(self, path, trade, time=''):
+        return os.path.join(path, '{time}{fn}'.format(fn=Utils.get_file_name(trade), time=time))

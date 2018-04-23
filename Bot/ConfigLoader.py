@@ -4,6 +4,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+import Utils
 from Bot.JsonEncoder import CustomJsonEncoder
 from Bot.Trade import Trade
 
