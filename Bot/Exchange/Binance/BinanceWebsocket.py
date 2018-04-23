@@ -105,7 +105,7 @@ class BinanceWebsocket(Thread, Logger):
     def listen_key_received(self, future):
         self.stop_user_future()
         key = future.result()
-        create_user_ws = True
+        create_user_ws = False
 
         if key != self.connection_key or not self.user_ws_future or \
                 self.user_ws_future.cancelled() or self.user_ws_future.done():
