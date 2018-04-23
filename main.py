@@ -1,4 +1,5 @@
-import atexit
+# import atexit
+import signal
 
 from os.path import isfile, join
 from os import listdir, environ
@@ -7,15 +8,22 @@ from ConsoleLauncher import ConsoleLauncher
 from Bot.ConfigLoader import ConfigLoader
 
 from Bot.Strategy.SmartOrder import SmartOrder
-from Cloud.S3Sync import S3Persistence
 
 TRADE_FILE_PATH_PATTERN = '{}{}.json'
+
+TEST_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Test/')
+
 
 TRADE_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Portfolio/')
 COMPLETED_ORDER_PATH_PORTFOLIO = environ.get('TRADE_COMPLETED_DIR', 'Trades/Completed/')
 CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
-launcher = ConsoleLauncher(TRADE_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, True)
+launcher = ConsoleLauncher(
+    TRADE_PORTFOLIO_PATH,
+    COMPLETED_ORDER_PATH_PORTFOLIO,
+    CONF_DIR,
+    environ.get('TRADE_BUCKET') is not None)
+# launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
 
 def main():
     # test_smart_order()
@@ -24,7 +32,15 @@ def main():
     # while True:
     #     pers.check_s3_events()
     # pers.sync(delete=True, resolve_conflict_using_local=False)
+
+    # save_new_order_file_structure(TEST_PORTFOLIO_PATH, TEST_PORTFOLIO_PATH)
+
     launcher.start_bot()
+    # launcher.sync_down()
+
+# def signal_handler(signal=None, frame=None):
+#     launcher.stop_bot()
+
 
 def test_change_order():
     cl = ConfigLoader()
@@ -79,14 +95,14 @@ def save_new_order_file_structure(path, new_path):
             new_trade_path = new_path + t.symbol + '.json'
             cl.save_trades(cl.json_saver(new_trade_path), [t])
 
-@atexit.register
-def on_exit():
-    # print('on exit')
-    try:
-        if launcher:
-            launcher.stop_bot()
-    except Exception as e:
-        print(e)
+# @atexit.register
+# def on_exit():
+#     # print('on exit')
+#     try:
+#         if launcher:
+#             launcher.stop_bot()
+#     except Exception as e:
+#         print(e)
 
 
 if __name__ == '__main__':

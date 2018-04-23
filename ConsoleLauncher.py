@@ -16,6 +16,7 @@ from Bot.TradeHandler import TradeHandler
 from Bot.TradeValidator import TradeValidator
 from Cloud.S3Sync import S3Persistence
 from Utils.Logger import Logger
+from Utils import Utils
 
 
 class ConsoleLauncher(Logger):
@@ -45,8 +46,8 @@ class ConsoleLauncher(Logger):
     def start_bot(self):
         self.sync_down()
 
-        trade_loader = self.config_loader.advanced_loader(self.trades_path)
-        trades = self.config_loader.load_trade_list(trade_loader)
+        # trade_loader = self.config_loader.advanced_loader(self.trades_path)
+        trades = self.config_loader.load_trade_list(self.trades_path)
         trade_validator = TradeValidator()
 
         for trade in trades[:]:
@@ -130,8 +131,13 @@ class ConsoleLauncher(Logger):
 
             if removed_files:
                 for file in removed_files:
-                    sym, _ = os.path.splitext(os.path.basename(file))
-                    self.trade_handler.remove_trade_by_symbol(sym)
+                    sym, trade_id = Utils.get_symbol_and_id_from_file_path(file)
+
+                    if trade_id:
+                        self.trade_handler.remove_trade_by_id(trade_id)
+                    else:
+                        self.trade_handler.remove_trade_by_symbol(sym)
+
                     self.file_watch_list.pop(file, None)
 
                 if file not in deleted_by_s3:
@@ -141,23 +147,33 @@ class ConsoleLauncher(Logger):
                 if file in self.file_watch_list:
                     if not self.file_watch_list[file] == current_mtime:
                         self.logInfo('File "{}" has changed. Updating trades...'.format(file))
-                        trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
+                        trades = self.config_loader.load_trade_list(file)
                         for t in trades:
                             self.trade_handler.updated_trade(t)
 
                         if file not in updated_by_s3:
                             update_cloud_files = True
+
+                    self.file_watch_list[file] = os.stat(file).st_mtime
+
                 else:
                     self.logInfo('New file detected "{}". Updating trades...'.format(file))
                     update_cloud_files = True
-                    trades = self.config_loader.load_trade_list(self.config_loader.json_loader(file))
+                    trades = self.config_loader.load_trade_list(file)
+                    base_dir = os.path.split(file)[0]
                     for t in trades:
+                        #if file needs to be adjusted to the new format
+                        new_file_name = os.path.join(base_dir, Utils.get_file_name(t))
+                        if new_file_name != file:
+                            self.file_watch_list[new_file_name] = os.stat(new_file_name).st_mtime
+                            self.file_watch_list.pop(file, None)
+                        else:
+                            self.file_watch_list[file] = os.stat(file).st_mtime
+
                         self.trade_handler.updated_trade(t)
 
                     if file not in updated_by_s3:
                         update_cloud_files = True
-
-                self.file_watch_list[file] = os.stat(file).st_mtime
 
             if update_cloud_files and self.enable_cloud:
                 self.s3pers.sync(True, True)
@@ -171,9 +187,7 @@ class ConsoleLauncher(Logger):
         with self.lock:
             file = self.get_file_path(self.trades_path, trade.symbol)
 
-            self.config_loader.persist_updated_trade(trade,
-                                                     self.config_loader.json_loader(file),
-                                                     self.config_loader.json_saver(file))
+            self.config_loader.persist_updated_trade(trade, self.config_loader.json_saver(file))
 
             self.file_watch_list[file] = os.stat(file).st_mtime
 

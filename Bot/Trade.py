@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import uuid
 from typing import List
 from Bot.EntryExitSettings import EntryExitSettings
 from Bot.TradeEnums import Side
@@ -29,6 +30,8 @@ class Trade(CustomSerializable):
             self.status = OrderStatus.ACTIVE if not kvargs.get('entry') else OrderStatus.NEW
 
         self.cap = float(kvargs.get('cap')) if kvargs.get('cap') else None
+
+        self.id = kvargs.get('id', str(uuid.uuid4()))
 
     def _init_entry_exit(self, is_entry, data, side: Side):
         if data:
@@ -68,6 +71,7 @@ class Trade(CustomSerializable):
     def serializable_dict(self):
         d = OrderedDict()
 
+        d['id'] = self.id
         d['asset'] = self.asset
         d['symbol'] = self.symbol
         d['side'] = self.side
@@ -114,5 +118,5 @@ class Trade(CustomSerializable):
         self.status = OrderStatus.COMPLETED
 
     def __str__(self):
-        return '{}: {}'.format(self.symbol, self.side)
+        return '{}({}): {}'.format(self.symbol, self.id, self.side)
 

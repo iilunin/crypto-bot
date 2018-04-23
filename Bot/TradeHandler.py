@@ -26,6 +26,7 @@ class TradeHandler(Logger):
                            for t in trades]
 
         self.strategies_dict = {}
+        self.tradeid_strategy_dict = {}
         self.trade_info_ticker_buf = {}
 
         self.process_delay = 500
@@ -59,6 +60,8 @@ class TradeHandler(Logger):
 
     def init_trades(self):
         self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        self.tradeid_strategy_dict = {s.trade.id: s for s in self.strategies}
+
         self.balances.update_balances(self.fx.get_all_balances_dict())
 
         if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
@@ -152,10 +155,16 @@ class TradeHandler(Logger):
         with self.lock:
             self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
 
+    def remove_trade_by_id(self, id):
+        with self.lock:
+            self.remove_trade_by_strategy(self.tradeid_strategy_dict.get(id, None))
+
     def updated_trade(self, trade: Trade):
         with self.lock:
             if trade.symbol in self.strategies_dict:
-                self.strategies_dict[trade.symbol].update_trade(trade)
+                # find by ID
+                # self.strategies_dict[trade.symbol].update_trade(trade)
+                self.tradeid_strategy_dict[trade.id].update_trade(trade)
                 self.balances.update_balances(self.fx.get_all_balances_dict())
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
             else:
