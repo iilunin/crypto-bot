@@ -2,3 +2,4 @@ python-binance
 numpy
 retrying
 boto3
+websockets

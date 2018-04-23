@@ -73,7 +73,7 @@ class BinanceWebsocket(Thread, Logger):
                 return
 
             if self.time and (time.time() - self.time) > BinanceWebsocket.REFRESH_KEY_TIMEOUT:
-                self.start_user_info(self.user_info_cb)
+                self.start_user_info()
 
             await asyncio.sleep(60)
 
@@ -82,9 +82,12 @@ class BinanceWebsocket(Thread, Logger):
         self.ticker_ws_future = asyncio.run_coroutine_threadsafe(self.websocket_handler(url, callback), self.loop)
         self.ticker_ws_future.add_done_callback(self.feature_finished)
 
-    def start_user_info(self, callback):
+    def start_user_info(self, callback=None):
         self.time = time.time()
-        self.user_info_cb = callback
+
+        if callback:
+            self.user_info_cb = callback
+
         get_key = asyncio.run_coroutine_threadsafe(self.refresh_listen_key(), self.loop)
         get_key.add_done_callback(self.listen_key_received)
 
@@ -99,9 +102,7 @@ class BinanceWebsocket(Thread, Logger):
         return self.client.stream_get_listen_key()
 
     def listen_key_received(self, future):
-        if self.user_ws_future:
-            self.user_ws_future.cancel()
-            self.user_ws_future = None
+        self.stop_user_future()
         key = future.result()
         create_user_ws = True
 
