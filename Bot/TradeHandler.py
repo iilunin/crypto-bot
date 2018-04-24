@@ -161,7 +161,7 @@ class TradeHandler(Logger):
 
     def updated_trade(self, trade: Trade):
         with self.lock:
-            if trade.symbol in self.strategies_dict:
+            if trade.id in self.tradeid_strategy_dict:
                 # find by ID
                 # self.strategies_dict[trade.symbol].update_trade(trade)
                 self.tradeid_strategy_dict[trade.id].update_trade(trade)
