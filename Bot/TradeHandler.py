@@ -1,16 +1,13 @@
 import traceback
-from threading import Lock, RLock
-from typing import List
-import numpy as np
 from datetime import datetime as dt
-
-import logging
+from threading import RLock
+from typing import List
 
 from Bot.AccountBalances import AccountBalances
 from Bot.ExchangeInfo import ExchangeInfo
 from Bot.FXConnector import FXConnector
-from Bot.Trade import Trade
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
+from Bot.Trade import Trade
 from Utils.Logger import Logger
 
 
@@ -48,10 +45,9 @@ class TradeHandler(Logger):
             # prices = {t['symbol']: float(t['price']) for t in tickers}
 
             prices = {t['symbol']: {'b': float(t['bidPrice']), 'a': float(t['askPrice'])} for t in tickers}
-            self.execute_strategy(prices)
-        except Exception as e:
+            self.execute_strategies(prices)
+        except Exception:
             self.logError(traceback.format_exc())
-
 
     def start_listening(self):
         # self.init_trades()
@@ -59,7 +55,15 @@ class TradeHandler(Logger):
         self.last_ts = dt.now()
 
     def init_trades(self):
-        self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        # self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        for strategy in self.strategies:
+            sym = strategy.symbol()
+
+            if sym in self.strategies_dict:
+                self.strategies_dict[sym].append(strategy)
+            else:
+                self.strategies_dict[sym] = [strategy]
+
         self.tradeid_strategy_dict = {s.trade.id: s for s in self.strategies}
 
         self.balances.update_balances(self.fx.get_all_balances_dict())
@@ -83,14 +87,23 @@ class TradeHandler(Logger):
                 sym = msg['s']
 
                 if sym in self.strategies_dict:
-                    self.strategies_dict[sym].on_execution_rpt(
-                        {'orderId': msg['i'],
-                         'status': msg['X'],
-                         'symbol': sym,
-                         'side': msg['S'],
-                         'vol': msg['q'],
-                         'price': msg['p'],
-                         'stop_price': msg['P']})
+                    for s in self.strategies_dict[sym]:
+                        s.on_execution_rpt(
+                            {'orderId': msg['i'],
+                             'status': msg['X'],
+                             'symbol': sym,
+                             'side': msg['S'],
+                             'vol': msg['q'],
+                             'price': msg['p'],
+                             'stop_price': msg['P']})
+                    # self.strategies_dict[sym].on_execution_rpt(
+                    #     {'orderId': msg['i'],
+                    #      'status': msg['X'],
+                    #      'symbol': sym,
+                    #      'side': msg['S'],
+                    #      'vol': msg['q'],
+                    #      'price': msg['p'],
+                    #      'stop_price': msg['P']})
         except Exception as e:
             self.logError(traceback.format_exc())
             # self.logger.error(str(e))
@@ -120,12 +133,12 @@ class TradeHandler(Logger):
                 self.check_strategies_status()
                 prices = dict(self.trade_info_ticker_buf)
                 self.trade_info_ticker_buf = {}
-                self.execute_strategy(prices)
+                self.execute_strategies(prices)
 
         except Exception as e:
             self.logError(traceback.print_exc())
 
-    def execute_strategy(self, prices):
+    def execute_strategies(self, prices):
         with self.lock:
             for s in self.strategies:
                 if s.symbol() in prices:
@@ -151,9 +164,9 @@ class TradeHandler(Logger):
             self.init_trades()
             self.start_listening()
 
-    def remove_trade_by_symbol(self, sym):
-        with self.lock:
-            self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
+    # def remove_trade_by_symbol(self, sym):
+    #     with self.lock:
+    #         self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
 
     def remove_trade_by_id(self, id):
         with self.lock:
@@ -170,7 +183,8 @@ class TradeHandler(Logger):
             else:
                 self.logInfo('Adding trade [{}]'.format(trade.symbol))
                 self.stop_listening()
-                self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler, self.balances.get_balance(trade.asset)))
+                self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
+                                                                  self.balances.get_balance(trade.asset)))
                 self.init_trades()
                 self.start_listening()
 

@@ -136,7 +136,9 @@ class ConsoleLauncher(Logger):
                     if trade_id:
                         self.trade_handler.remove_trade_by_id(trade_id)
                     else:
-                        self.trade_handler.remove_trade_by_symbol(sym)
+                        self.logError('Can\'t remove trade {}'.format(file))
+                    # else:
+                    #     self.trade_handler.remove_trade_by_symbol(sym)
 
                     self.file_watch_list.pop(file, None)
 
