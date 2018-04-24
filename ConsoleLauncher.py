@@ -167,7 +167,8 @@ class ConsoleLauncher(Logger):
                             self.file_watch_list[new_file_name] = os.stat(new_file_name).st_mtime
                             self.file_watch_list.pop(file, None)
                         else:
-                            self.file_watch_list[file] = os.stat(file).st_mtime
+                            if os.path.exists(file):
+                                self.file_watch_list[file] = os.stat(file).st_mtime
 
                         self.trade_handler.updated_trade(t)
 
@@ -199,7 +200,6 @@ class ConsoleLauncher(Logger):
     def move_completed_trade(self, trade):
         shutil.move(self.get_file_path(self.trades_path, trade),
                   self.get_file_path(self.completed_trades_path, trade, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
-
 
     def get_file_path(self, path, trade, time=''):
         return os.path.join(path, '{time}{fn}'.format(fn=Utils.get_file_name(trade), time=time))
