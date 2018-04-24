@@ -25,6 +25,8 @@ class Value:
     def get_val(self, rel_val):
         if self.is_abs():
             return self.v
+        if self.v == 100:
+            return rel_val
         return round(rel_val * self.v / 100, 8)
 
     def __eq__(self, other):

@@ -108,7 +108,7 @@ class PlaceOrderStrategy(TradingStrategy):
                     'side': self.trade_side().name,
                     'target': t})
 
-            bal -= vol
+            bal = round(bal - vol, 8)
 
         self.logInfo('Orders to be posted: {}'.format(orders))
         return orders
