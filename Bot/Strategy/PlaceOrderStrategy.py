@@ -113,11 +113,14 @@ class PlaceOrderStrategy(TradingStrategy):
                 #     continue
                 orders.append({
                     'price': self.exchange_info.adjust_price(price),
-                    'volume': self.exchange_info.adjust_quanity(vol),
+                    'volume': vol,
                     'side': self.trade_side().name,
                     'target': t})
 
-            bal = round(bal - t.vol.get_val(bal), 8)
+            if self.trade_side().is_sell():
+                bal = round(bal - vol, 8)
+            else:
+                bal = round(bal - t.vol.get_val(bal), 8)
 
         self.logInfo('Orders to be posted: {}'.format(orders))
         return orders
