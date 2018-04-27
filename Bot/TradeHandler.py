@@ -56,6 +56,7 @@ class TradeHandler(Logger):
 
     def init_trades(self):
         # self.strategies_dict = {s.symbol(): s for s in self.strategies}
+        self.strategies_dict = {}
         for strategy in self.strategies:
             sym = strategy.symbol()
 
