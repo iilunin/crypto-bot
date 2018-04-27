@@ -74,7 +74,7 @@ class ConfigLoader:
 
         update_file_name = False
         for trade in trades:
-            if id is None or (symbol != trade.symbol and not id != trade.id):
+            if id is None or (symbol != trade.symbol and id != trade.id):
                 self.save_trades(self.json_saver(join(path, '{}_{}.json'.format(trade.symbol, trade.id))), trade)
                 update_file_name = True
         return update_file_name
