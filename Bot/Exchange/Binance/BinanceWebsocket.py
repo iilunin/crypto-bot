@@ -103,7 +103,6 @@ class BinanceWebsocket(Thread, Logger):
         return self.client.stream_get_listen_key()
 
     def listen_key_received(self, future):
-        self.stop_user_future()
         key = future.result()
         create_user_ws = False
 
