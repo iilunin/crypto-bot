@@ -60,16 +60,7 @@ class ConsoleLauncher(Logger):
                 trades.remove(trade)
 
         api_path = os.path.join(self.config_path, 'api.json')
-        if os.path.exists(api_path):
-            api = self.config_loader.json_loader(os.path.join(self.config_path, 'api.json'))()
-            key = api['key']
-            secret = api['secret']
-        else:
-            key = os.environ.get('KEY')
-            secret = os.environ.get('SECRET')
-
-        if not key or not secret:
-            raise ValueError('API Key and Secret are not provided')
+        key, secret = self.get_exchange_creds(api_path)
 
         self.fx = FXConnector(key, secret)
 
@@ -84,6 +75,24 @@ class ConsoleLauncher(Logger):
 
         self.trade_handler.init_trades()
         self.trade_handler.start_listening()
+
+    def get_exchange_creds(self, api_path):
+        if os.environ.get('KEY') and os.environ.get('SECRET'):
+            key = os.environ.get('KEY')
+            secret = os.environ.get('SECRET')
+        elif os.path.exists(api_path):
+            api = self.config_loader.json_loader(os.path.join(self.config_path, 'api.json'))()
+            exchanges = [ex for ex in api['exchanges'] if ex['name'].lower() == 'binance']
+
+            if len(exchanges) > 0:
+                api = exchanges[0]
+
+            key = api['key']
+            secret = api['secret']
+
+        if not key or not secret:
+            raise ValueError('API Key and Secret are not provided')
+        return key, secret
 
     def sync_down(self):
         if self.enable_cloud:
