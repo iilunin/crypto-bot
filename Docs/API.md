@@ -1,1 +1,1 @@
-# API to control bot is comming soon
+# API to control bot is coming soon

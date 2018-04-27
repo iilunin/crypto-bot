@@ -6,7 +6,7 @@ This bot is not supposed to earn money by itself, it requires targets and stop-l
 This project is based on [sammchardy/python-binance](https://github.com/sammchardy/python-binance) 
 Binance API wrapper
 
-**Use it at your own risk**
+**Use at your own risk**
 
 ## Features
 - Manage an unlimited number of trading pairs
@@ -28,3 +28,6 @@ Binance API wrapper
 
 ## Trade File
 [Trade File Description](./Docs/TRADE_FILE.md)
+
+## Management API (Coming soon)
+[API](./Docs/API.md)
