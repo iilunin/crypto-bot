@@ -146,6 +146,11 @@ class TradingStrategy(Logger):
 
         return False
 
+    def get_balance_for_side(self, is_sell=None):
+        if not is_sell:
+            is_sell = self.trade_side().is_sell()
+
+        return self.balance if is_sell else self.secondary_asset_balance()
 
     def execute(self, new_price):
         pass

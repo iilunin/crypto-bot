@@ -80,7 +80,9 @@ class EntryStrategy(TradingStrategy):
     def get_trade_volume(self, exchange_rate):
         #if buying asset using % value of the volume
         if self.trade_side().is_buy() and self.current_target.vol.is_rel():
-            buying_currency_vol = self.current_target.vol.get_val(self.secondary_asset_balance().avail)
+            #TODO: Check general buy vs sell
+            buying_currency_vol = self.current_target.vol.get_val(
+                self.trade.get_cap(self.secondary_asset_balance().avail))
             # self.exchange_info.adjust_quanity(t.vol)
             return buying_currency_vol / exchange_rate
 
@@ -114,7 +116,14 @@ class EntryStrategy(TradingStrategy):
                         self.exchange_info.adjust_quanity(
                             self.exchange_info.adjust_quanity(vol))
                     )
-                    self.balance.avail -= self.exchange_info.adjust_quanity(vol)
+
+                    currency_balance = self.get_balance_for_side(self.trade_side().is_sell())
+
+                    if self.trade_side().is_sell():
+                        currency_balance.avail -= self.exchange_info.adjust_quanity(vol)
+                    else:
+                        currency_balance.avail -= round(
+                            self.current_target.vol.get_val(self.trade.get_cap(currency_balance.avail)), 8)
 
                     # self.current_target.set_active()
                     self.current_target.set_completed(id=order['orderId'])
@@ -156,8 +165,18 @@ class EntryStrategy(TradingStrategy):
                     price=self.exchange_info.adjust_price(limit),
                     volume=self.exchange_info.adjust_quanity(vol)
                 )
+
                 # just update cash while balance is not updated through API
-                self.balance.avail -= self.exchange_info.adjust_quanity(vol)
+                currency_balance = self.get_balance_for_side(self.trade_side().is_sell())
+
+                if self.trade_side().is_sell():
+                    currency_balance.avail -= self.exchange_info.adjust_quanity(vol)
+                else:
+                    currency_balance.avail -= round(
+                        self.current_target.vol.get_val(self.trade.get_cap(currency_balance.avail)), 8)
+
+
+
 
             except BinanceAPIException as sl_exception:
                 if sl_exception.message.lower().find('order would trigger immediately') > -1:
@@ -186,7 +205,13 @@ class EntryStrategy(TradingStrategy):
 
                     # if balance hasn't been updated since order was cancelled
                     if AccountBalances().update_required(canceled_time):
-                        self.balance.avail += (float(status["origQty"]) - float(status["executedQty"]))
+                        if self.trade_side().is_sell():
+                            self.balance.avail += (float(status["origQty"]) - float(status["executedQty"]))
+                        else:
+                            bal = self.get_balance_for_side()
+                            price = float(status["price"])
+                            bal.avail += round((float(status["origQty"]) * price - float(status["executedQty"]) * price),
+                                            8)
             except BinanceAPIException:
                 self.logError(traceback.format_exc())
 

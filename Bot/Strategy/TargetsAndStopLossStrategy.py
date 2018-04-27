@@ -115,7 +115,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
                 # validate balance and activate trade only if there are trading targets
                 if self.strategy_exit:
                     AccountBalances().update_balances(self.fx.get_all_balances_dict())
-                    self.trade.cap = self.balance.avail
+                    self.trade.cap = self.get_balance_for_side().avail
                     self.trade.set_active()
                     self.trigger_target_updated()
                 else:

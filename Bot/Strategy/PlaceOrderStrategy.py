@@ -73,7 +73,10 @@ class PlaceOrderStrategy(TradingStrategy):
         return all(t.status.is_completed() for t in targets)
 
     def prepare_volume_allocation(self, targets):
-        bal = self.trade.get_cap(self.balance.avail) + (self.balance.locked if any(t.is_active() for t in targets) else 0)
+        currency_balance = self.get_balance_for_side()
+
+        bal = self.trade.get_cap(currency_balance.avail) + (
+            currency_balance.locked if any(t.is_active() for t in targets) else 0)
 
         if bal <= 0:
             self.logWarning('Available balance is 0')
@@ -88,7 +91,13 @@ class PlaceOrderStrategy(TradingStrategy):
 
             price = self.exchange_info.adjust_price(t.price)
 
-            vol = self.exchange_info.adjust_quanity(t.vol.get_val(bal))
+            adjusted_balance = bal
+
+            # in case of BUY like with BTCUSDT we have balance in USDT e.g. 700, but specifying the vol in BTC e.g. 0.1
+            if self.trade_side().is_buy():
+                adjusted_balance = round(bal / price, 8)
+
+            vol = self.exchange_info.adjust_quanity(t.vol.get_val(adjusted_balance))
 
             if vol == 0:
                 self.logWarning('No volume left to process order @ price {:.0f}'.format(price))
@@ -108,7 +117,7 @@ class PlaceOrderStrategy(TradingStrategy):
                     'side': self.trade_side().name,
                     'target': t})
 
-            bal = round(bal - vol, 8)
+            bal = round(bal - t.vol.get_val(bal), 8)
 
         self.logInfo('Orders to be posted: {}'.format(orders))
         return orders

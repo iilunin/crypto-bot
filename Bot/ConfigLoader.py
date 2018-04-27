@@ -7,6 +7,7 @@ from os.path import isfile, join
 import Utils
 from Bot.JsonEncoder import CustomJsonEncoder
 from Bot.Trade import Trade
+from Utils.Utils import get_symbol_and_id_from_file_path
 
 
 class ConfigLoader:
@@ -67,13 +68,13 @@ class ConfigLoader:
         return trades
 
     def _rename_trade_file(self, path, file_name, trades):
-        path_parts = file_name.split('_')
+        symbol, id = get_symbol_and_id_from_file_path(file_name)
         if isinstance(trades, Trade):
             trades = [trades]
 
         update_file_name = False
         for trade in trades:
-            if len(path_parts) == 1 or (path_parts[0] != trade.symbol and path_parts[1] != trade.id):
+            if id is None or (symbol != trade.symbol and not id != trade.id):
                 self.save_trades(self.json_saver(join(path, '{}_{}.json'.format(trade.symbol, trade.id))), trade)
                 update_file_name = True
         return update_file_name

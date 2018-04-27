@@ -142,17 +142,19 @@ class StopLossStrategy(TradingStrategy):
                 self.cancel_all_orders()
                 AccountBalances().update_balances(self.fx.get_all_balances_dict())
 
+                price = self.exchange_info.adjust_price(self.get_sl_limit_price())
+                bal = self.trade.get_cap(self.get_balance_for_side().avail)
 
+                bal = round(bal / price, 8) if self.trade_side().is_buy() else bal
+
+                volume = self.initial_sl().vol.get_val(bal)
                 # stop_trigger
-
-                volume = self.initial_sl().vol.get_val(self.trade.get_cap(self.balance.avail))
-
                 try:
                     order = self.fx.create_stop_order(
                         sym=self.symbol(),
                         side=self.trade_side().name,
                         stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
-                        price=self.exchange_info.adjust_price(self.get_sl_limit_price()),
+                        price=price,
                         volume=self.exchange_info.adjust_quanity(volume)
                     )
                 except BinanceAPIException as sl_exception:
