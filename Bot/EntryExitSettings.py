@@ -59,8 +59,10 @@ class EntryExitSettings(CustomSerializable):
         # d = dict(self.__dict__)
         d = OrderedDict()
 
-        if self.side:
-            d['side'] = self.side
+        # it is set automatically at Trade._init_entry_exit method
+
+        # if self.side:
+        #     d['side'] = self.side
 
         if self.smart is not None:
             d['smart'] = self.smart
