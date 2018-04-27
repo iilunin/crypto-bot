@@ -5,11 +5,14 @@ This bot is not supposed to earn money by itself, it requires targets and stop-l
 
 This project is based on [sammchardy/python-binance](https://github.com/sammchardy/python-binance) 
 Binance API wrapper
-  
+
+**Use it at your own risk**
+
 ## Features
 - Manage an unlimited number of trading pairs
 - Supports smart trade entry, though I often buy coins myself. 
-- Unlimited exit targets and smart last target (will be possible to have more smart targets soon)
+- Unlimited exit targets 
+- Each exit target can be "smart" to gain max profits
 - Flexible stop loss settings: Fixed/Trialing + Custom SL after each target reached.
 - OCO 
 - FREE :)
