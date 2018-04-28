@@ -91,7 +91,7 @@ than stop loss threshold.
     },
     "stoploss": {
       "type": "TRAILING",
-      "vol": "6%",
+      "threshold": "6%",
       "initial_target": {
         "price": "0.00000650",
         "vol": "100%"
