@@ -165,7 +165,6 @@ class StopLossStrategy(TradingStrategy):
                     else:
                         raise
 
-
             self.trade.sl_settings.initial_target.set_active(order['orderId'])
             self.trigger_target_updated()
             self.logInfo('Setting stop loss order: {:.08f}:{:.08f}'.format(

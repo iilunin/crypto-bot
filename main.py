@@ -18,25 +18,18 @@ TRADE_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Portfolio/')
 COMPLETED_ORDER_PATH_PORTFOLIO = environ.get('TRADE_COMPLETED_DIR', 'Trades/Completed/')
 CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
+ENABLE_CLOUD = True
+
 launcher = ConsoleLauncher(
     TRADE_PORTFOLIO_PATH,
     COMPLETED_ORDER_PATH_PORTFOLIO,
     CONF_DIR,
-    environ.get('TRADE_BUCKET') is not None)
+    environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
 # launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
 
 def main():
-    # test_smart_order()
-    # pers = S3Persistence('bot-trades', {'Trades/Completed': 'Completed/',
-    #                                     'Trades/Portfolio': 'Portfolio/'})
-    # while True:
-    #     pers.check_s3_events()
-    # pers.sync(delete=True, resolve_conflict_using_local=False)
-
-    # save_new_order_file_structure(TEST_PORTFOLIO_PATH, TEST_PORTFOLIO_PATH)
-
-    launcher.start_bot()
     # launcher.sync_down()
+    launcher.start_bot()
 
 # def signal_handler(signal=None, frame=None):
 #     launcher.stop_bot()

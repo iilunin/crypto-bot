@@ -31,7 +31,10 @@ class Trade(CustomSerializable):
 
         self.cap = float(kvargs.get('cap')) if kvargs.get('cap') else None
 
-        self.id = kvargs.get('id', str(uuid.uuid4()))
+        self.id = kvargs.get('id', None)
+
+        if not self.id:
+            self.id = str(uuid.uuid4())
 
     def _init_entry_exit(self, is_entry, data, side: Side):
         if data:

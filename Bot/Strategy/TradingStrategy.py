@@ -18,7 +18,7 @@ class TradingStrategy(Logger):
                  nested=False,
                  exchange_info=None,
                  balance: Balance=None):
-        self.trade = trade
+        self.trade: Trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self.exchange_info = ExchangeInfo().symbol_info(self.symbol())

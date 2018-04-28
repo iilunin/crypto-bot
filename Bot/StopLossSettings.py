@@ -8,7 +8,7 @@ from Bot.Value import Value
 
 class StopLossSettings(CustomSerializable):
     DEFAULT_ZONE_ENTRY = '0.3%'
-    DEFAULT_LIMIT_PRICE = '0.1%'
+    DEFAULT_LIMIT_PRICE = '0.3%'
     DEFAULT_TRAILING_SL_VALUE = '5%'
 
     class Type(Enum):
@@ -19,7 +19,8 @@ class StopLossSettings(CustomSerializable):
                  zone_entry=DEFAULT_ZONE_ENTRY, limit_price_threshold=DEFAULT_LIMIT_PRICE, last_stoploss=0,
                  **kvargs):
         self.type = StopLossSettings.Type(type.lower())
-        self.val = Value(val)
+        self.val = Value(kvargs.get('threshold', val))
+
         self.limit_price_threshold = Value(limit_price_threshold)
         self.zone_entry = Value(zone_entry)
         self.initial_target = StopLossTarget(**initial_target)
@@ -38,7 +39,7 @@ class StopLossSettings(CustomSerializable):
         d['type'] = self.type
 
         if self.is_trailing() and self.val != Value(StopLossSettings.DEFAULT_TRAILING_SL_VALUE):
-            d['val'] = self.val
+            d['threshold'] = self.val
 
         if self.last_stoploss:
             d['last_stoploss'] = self.format_float(self.last_stoploss)
