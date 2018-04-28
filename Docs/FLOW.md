@@ -1,6 +1,7 @@
 # Cryptobot Flow
 
-The bot doesn't place any orders intentionally except of ones specified in [trade files](./TRADE_FILE.md).
+The bot doesn't place any orders intentionally except of ones specified in [trade files](./TRADE_FILE.md). Bot works only 
+with markets/sybols specified in trade files. 
 
 ## Work with trade files
 Bot automatically monitors `Active` trades folder for any changes like added, updated or removed trade files.

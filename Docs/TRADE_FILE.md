@@ -1,6 +1,8 @@
 # Trade File Structure
 Trade file is a simple JSON document describing different trade parameters and used by bot to store some additional trading
-states. 
+states. Trade files can be named `WHATEVER_NAME.json` and should be placed into `Active` folder so bot picks them up. 
+
+[More examples can be found here](./TRADE_FILE_EXAMPLES.md)
 
 Here is the example of the new trade document
 
@@ -165,9 +167,9 @@ In this case there will be the next coin allocation, assuming there are 4000 ava
 
 ## Example 2
 In this case there will be the next coin allocation, assuming there are 4000 available coins:
-2. Limit target. Price: `0.00017600`. Allocated `2000`. Volume Left 2000. Limit Order placed immediately.
-3. Limit target. Price: `0.00018700`. Allocated 0.5 *2000 = ~`1400`. Volume Left 600. Limit Order placed immediately.
-4. Smart Target. Price: `0.00020800`. Allocated 1.00*1000 = ~`600`. Volume Left 0. Trailing stop loss order will be placed only when reached the price.
+1. Limit target. Price: `0.00017600`. Allocated `2000`. Volume Left 2000. Limit Order placed immediately.
+2. Limit target. Price: `0.00018700`. Allocated 0.5 *2000 = `1400`. Volume Left 600. Limit Order placed immediately.
+3. Smart Target. Price: `0.00020800`. Allocated 1.00*1000 = `600`. Volume Left 0. Trailing stop loss order will be placed only when reached the price.
 
 ```json
 {
