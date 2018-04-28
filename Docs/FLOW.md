@@ -21,9 +21,9 @@ such as balance change, order creation or cancellation. It also uses REST API to
 about exchange rules and limits and other functionality like placing orders.
 
 In general, the trade flow comprised of up to 3 execution strategies:
-    1. Entry
-    2. Exit
-    3. Stop Loss
+1. Entry
+2. Exit
+3. Stop Loss
 
 Each strategy is optional. Each strategy has a target which is essentially price and volume and additional configuration
 parameters.

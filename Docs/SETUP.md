@@ -24,8 +24,8 @@ and `-e "SECRET=BINANCE_API_SECRET"`
 ## Running bot on Mac
 1. Pull the image `docker pull iilunin/crypto-bot:stable`.
 2. Create the folder for active and completed trades:
-    - `mkdir Active`
-    - `mkdir Completed`
+    - `mkdir Active` - where you will put all new trades
+    - `mkdir Completed` - where bot will put completed trades
 3. If you store your API keys in `api.json` file then you need to create another 
 folder `mkdir Config` and copy `api.json` there.
 4. Run the Bot. You will also need to specify timezone in the `TZ` parameter.
@@ -41,6 +41,9 @@ docker run -d --rm --name cryptobot \
 -v $(pwd)/Config:/usr/src/configs:ro \
 iilunin/crypto-bot:stable
 ```
+
+Once the bot is started, you can place your trade files into the `Active` directory, so they picked up by the bot.
+If by the start time `Active` directory has trade files they will be picked up as well.
 
 To stop the bot run `docker stop cryptobot`
 
