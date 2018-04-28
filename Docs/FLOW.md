@@ -31,7 +31,7 @@ parameters.
 Trade strategies are checked/executed each 500ms if there were bid/ask price changes during that period.
 
 _"Smart Target"_ - is a target with the trailing stop-loss or take profit approach. If you sell at a price `100` and have a smart target
-with threshold `1%` it means that once the price reaches `100` stop-loss sell order will be placed at `99`. If the price goes up, 
+with `threshold` `1%` it means that once the price reaches `100` stop-loss sell order will be placed at `99`. If the price goes up, 
 the order updates (cancels and places the new one) for the better price (for the price `105` stop-loss order will be `103.95`).
 It works in both directions - buy or sell whether it is Entry, Exit or Stop Loss strategy.
 
