@@ -7,6 +7,7 @@ from Bot.AccountBalances import AccountBalances
 from Bot.ExchangeInfo import ExchangeInfo
 from Bot.FXConnector import FXConnector
 from Bot.Strategy.TargetsAndStopLossStrategy import TargetsAndStopLossStrategy
+from Bot.Strategy.TradingStrategy import TradingStrategy
 from Bot.Trade import Trade
 from Utils.Logger import Logger
 
@@ -19,8 +20,18 @@ class TradeHandler(Logger):
 
         self.order_updated_handler = trade_updated_handler
         ExchangeInfo().update(fx.get_exchange_info())
-        self.strategies = [TargetsAndStopLossStrategy(t, fx, trade_updated_handler, self.balances.get_balance(t.asset))
-                           for t in trades]
+        self.strategies = []
+
+        for t in trades:
+            try:
+                if t.symbol not in ExchangeInfo().symbols:
+                    self.logError('Exchange doesn\'t have market "{}"'.format(t.symbol))
+                    continue
+
+                self.strategies.append(
+                    TargetsAndStopLossStrategy(t, fx, trade_updated_handler, self.balances.get_balance(t.asset)))
+            except Exception:
+                self.logError(traceback.format_exc())
 
         self.strategies_dict = {}
         self.tradeid_strategy_dict = {}
@@ -54,7 +65,43 @@ class TradeHandler(Logger):
         self.fx.start_listening()
         self.last_ts = dt.now()
 
-    def init_trades(self):
+    def remove_strategy(self, strategy: TradingStrategy):
+        if strategy in self.strategies:
+            self.strategies.remove(strategy)
+
+        sym = strategy.symbol()
+        if sym in self.strategies_dict:
+            if len(self.strategies_dict[sym]) > 1:
+                self.strategies_dict.remove(strategy)
+            else:
+                self.strategies_dict.pop(sym, None)
+
+        if strategy.trade.id in self.tradeid_strategy_dict:
+            self.tradeid_strategy_dict.pop(strategy.trade.id, None)
+
+        self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
+        self.socket_message_rcvd = False
+
+    def add_new_strategy(self, strategy: TradingStrategy):
+        self.strategies.append(strategy)
+
+        sym = strategy.symbol()
+        if sym in self.strategies_dict:
+            self.strategies_dict[sym].append(strategy)
+        else:
+            self.strategies_dict[sym] = [strategy]
+
+        self.tradeid_strategy_dict[strategy.trade.id] = strategy
+
+        # self.balances.update_balances(self.fx.get_all_balances_dict())
+
+        if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
+            ExchangeInfo().update(self.fx.get_exchange_info())
+
+        self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
+        self.socket_message_rcvd = False
+
+    def init_strategies(self):
         # self.strategies_dict = {s.symbol(): s for s in self.strategies}
         self.strategies_dict = {}
         for strategy in self.strategies:
@@ -160,10 +207,11 @@ class TradeHandler(Logger):
 
         with self.lock:
             self.logInfo('Removing trade [{}]'.format(strategy.symbol()))
-            self.stop_listening()
-            self.strategies.remove(strategy)
-            self.init_trades()
-            self.start_listening()
+            try:
+                self.stop_listening()
+                self.remove_strategy(strategy)
+            finally:
+                self.start_listening()
 
     # def remove_trade_by_symbol(self, sym):
     #     with self.lock:
@@ -183,11 +231,14 @@ class TradeHandler(Logger):
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
             else:
                 self.logInfo('Adding trade [{}]'.format(trade.symbol))
-                self.stop_listening()
-                self.strategies.append(TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
-                                                                  self.balances.get_balance(trade.asset)))
-                self.init_trades()
-                self.start_listening()
+
+                new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
+                                                      self.balances.get_balance(trade.asset))
+                try:
+                    self.stop_listening()
+                    self.add_new_strategy(new_strategy)
+                finally:
+                    self.start_listening()
 
     def confirm_socket_msg_rcvd(self):
         self.socket_message_rcvd = True

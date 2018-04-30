@@ -4,6 +4,8 @@ import signal
 from os.path import isfile, join
 from os import listdir, environ
 
+import sys
+
 from ConsoleLauncher import ConsoleLauncher
 from Bot.ConfigLoader import ConfigLoader
 
@@ -28,8 +30,10 @@ launcher = ConsoleLauncher(
 # launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
 
 def main():
-    # launcher.sync_down()
-    launcher.start_bot()
+    if len(sys.argv) > 1 and sys.argv[1] == 'sync':
+        launcher.sync_down()
+    else:
+        launcher.start_bot()
 
 # def signal_handler(signal=None, frame=None):
 #     launcher.stop_bot()

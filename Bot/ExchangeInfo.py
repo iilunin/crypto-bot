@@ -43,6 +43,9 @@ class ExchangeInfo:
                 break
 
         props = {}
+        if symbol_info is None:
+            raise KeyError('Symbol "{}" not found in the Exchnage makrets info'.format(symbol))
+
         for f in symbol_info['filters']:
             props.update(f)
 

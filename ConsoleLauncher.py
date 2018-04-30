@@ -73,7 +73,7 @@ class ConsoleLauncher(Logger):
         self.init_file_watch_list()
         self.start_timer()
 
-        self.trade_handler.init_trades()
+        self.trade_handler.init_strategies()
         self.trade_handler.start_listening()
 
     def get_exchange_creds(self, api_path):

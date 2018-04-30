@@ -62,7 +62,9 @@ class BinanceWebsocket(Thread, Logger):
             asyncio.set_event_loop(self.loop)
             self.mngmt_future = asyncio.ensure_future(self.management_loop())
             self.mngmt_future.add_done_callback(self.feature_finished)
-            asyncio.get_event_loop().run_forever()
+
+            if not asyncio.get_event_loop().is_running():
+                asyncio.get_event_loop().run_forever()
         finally:
             # self.loop.close()
             pass
@@ -150,7 +152,9 @@ class BinanceWebsocket(Thread, Logger):
     def stop_sockets(self):
         self.stop = True
 
-        self.mngmt_future.cancel()
+        if self.mngmt_future:
+            self.mngmt_future.cancel()
+            
         self.stop_ticker_future()
         self.stop_user_future()
 
