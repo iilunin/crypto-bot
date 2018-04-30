@@ -36,6 +36,7 @@ I am not taking any responsibility for the outcomes you get when using it.
 
 ## Trade File
 [Trade File Description](./Docs/TRADE_FILE.md)
+
 [Trade File Examples](./Docs/TRADE_FILE_EXAMPLES.md)
 
 ## Management API (Coming soon)
