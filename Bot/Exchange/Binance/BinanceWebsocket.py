@@ -3,6 +3,7 @@ import threading
 import traceback
 from threading import Thread
 import time
+from time import sleep
 
 from binance.client import Client
 
@@ -63,8 +64,8 @@ class BinanceWebsocket(Thread, Logger):
             self.mngmt_future = asyncio.ensure_future(self.management_loop())
             self.mngmt_future.add_done_callback(self.feature_finished)
 
-            if not asyncio.get_event_loop().is_running():
-                asyncio.get_event_loop().run_forever()
+            # if not asyncio.get_event_loop().is_running():
+            asyncio.get_event_loop().run_forever()
         finally:
             # self.loop.close()
             pass
@@ -152,15 +153,15 @@ class BinanceWebsocket(Thread, Logger):
     def stop_sockets(self):
         self.stop = True
 
-        if self.mngmt_future:
-            self.mngmt_future.cancel()
-            
         self.stop_ticker_future()
         self.stop_user_future()
+
+        if self.mngmt_future:
+            self.mngmt_future.cancel()
 
         self.loop.call_soon_threadsafe(self.loop.stop)
 
         if threading.current_thread().ident != self.ident:
-            self.join()
+            self.join(timeout=1)
 
         self.logInfo('Stopped')

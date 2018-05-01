@@ -227,6 +227,11 @@ class TradeHandler(Logger):
                 # find by ID
                 # self.strategies_dict[trade.symbol].update_trade(trade)
                 self.tradeid_strategy_dict[trade.id].update_trade(trade)
+
+                if self.handle_completed_strategy(self.tradeid_strategy_dict[trade.id]):
+                    self.logInfo('Strategy is completed [{}]'.format(trade.symbol))
+                    return
+
                 self.balances.update_balances(self.fx.get_all_balances_dict())
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
             else:
@@ -234,6 +239,11 @@ class TradeHandler(Logger):
 
                 new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
                                                       self.balances.get_balance(trade.asset))
+
+                if self.handle_completed_strategy(new_strategy):
+                    self.logInfo('Strategy is completed [{}]'.format(new_strategy.symbol()))
+                    return
+
                 try:
                     self.stop_listening()
                     self.add_new_strategy(new_strategy)
