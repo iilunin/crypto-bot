@@ -6,6 +6,7 @@ from os import listdir, environ
 
 import sys
 
+from Bot.Target import Target
 from ConsoleLauncher import ConsoleLauncher
 from Bot.ConfigLoader import ConfigLoader
 
@@ -30,13 +31,56 @@ launcher = ConsoleLauncher(
 # launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == 'sync':
-        launcher.sync_down()
-    else:
-        launcher.start_bot()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'sync':
+            launcher.sync_down()
+            return
+
+        elif sys.argv[1] == 'gen':
+            get_input_for_targets()
+            return
+
+    launcher.start_bot()
 
 # def signal_handler(signal=None, frame=None):
 #     launcher.stop_bot()
+
+def get_input_for_targets():
+    smart = 'y'
+    if len(sys.argv) > 2:
+        single_arg = sys.argv[2]
+        args = single_arg.split('/', 4)
+        price = args[0]
+        iter = args[1]
+        increment = args[2]
+        if len(args) == 4:
+            smart = args[3]
+    else:
+        price = get_input("Start price: ")
+        iter = get_input("Iterations (5): ", 5)
+        increment = get_input("Price increase in percent (2): ", 2)
+        smart = get_input("Smart (Y/n):", 'y')
+
+    smart = True if not smart or smart.lower() == 'y' else False
+
+    generate_targets(float(price), int(iter), float(increment), smart)
+
+def get_input(text, default=None):
+    inp = input(text)
+    if not inp:
+        return default
+    if not inp.strip():
+        return default
+    return inp.strip()
+
+def generate_targets(start_price, iter=4, increment=4, smart=True):
+    targets = []
+    for i in range(0, iter):
+        vol = round(100/(iter - i), 2)
+        targets.append(Target(price=start_price, vol='{}%'.format(vol), smart=smart))
+        start_price = round(start_price * (1+increment/100), 8)
+
+    print(ConfigLoader.get_json_str(targets))
 
 
 def test_change_order():

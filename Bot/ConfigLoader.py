@@ -41,6 +41,10 @@ class ConfigLoader:
 
         return save
 
+    @classmethod
+    def get_json_str(cls, obj):
+        return json.dumps(obj, cls=CustomJsonEncoder, indent=2)
+
     # def advanced_saver(self, path):
     #     def save(obj):
     #         with open(path, 'w') as f:
