@@ -50,6 +50,8 @@ class ConsoleLauncher(Logger):
         trades = self.config_loader.load_trade_list(self.trades_path)
         trade_validator = TradeValidator()
 
+        self.logInfo('Starting Bot...')
+
         for trade in trades[:]:
             if trade.is_completed():
                 self.move_completed_trade(trade)
