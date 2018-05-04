@@ -22,6 +22,8 @@ class TradeHandler(Logger):
         ExchangeInfo().update(fx.get_exchange_info())
         self.strategies = []
 
+        self.logInfo('Creating {} with {} trades.'.format(self.__class__.__name__, len(trades)))
+
         for t in trades:
             try:
                 if t.symbol not in ExchangeInfo().symbols:
