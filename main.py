@@ -59,11 +59,13 @@ def get_input_for_targets():
         price = get_input("Start price: ")
         iter = get_input("Iterations (5): ", 5)
         increment = get_input("Price increase in percent (2): ", 2)
+        sl = get_input("Sl interval (3):", 3)
         smart = get_input("Smart (Y/n):", 'y')
+
 
     smart = True if not smart or smart.lower() == 'y' else False
 
-    generate_targets(float(price), int(iter), float(increment), smart)
+    generate_targets(float(price), int(iter), float(increment), smart, int(sl))
 
 def get_input(text, default=None):
     inp = input(text)
@@ -73,11 +75,18 @@ def get_input(text, default=None):
         return default
     return inp.strip()
 
-def generate_targets(start_price, iter=4, increment=4, smart=True):
+def generate_targets(start_price, iter=4, increment=4, smart=True, sl_interval=3):
     targets = []
+    prices = []
     for i in range(0, iter):
+        prices.append(start_price)
         vol = round(100/(iter - i), 2)
-        targets.append(Target(price=start_price, vol='{}%'.format(vol), smart=smart))
+
+        target = Target(price=start_price, vol='{}%'.format(vol), smart=smart)
+        if sl_interval != 0 and len(prices) > sl_interval:
+            target.sl = prices[-sl_interval]
+
+        targets.append(target)
         start_price = round(start_price * (1+increment/100), 8)
 
     print(ConfigLoader.get_json_str(targets))
