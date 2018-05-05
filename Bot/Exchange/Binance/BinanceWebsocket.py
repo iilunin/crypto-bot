@@ -117,6 +117,9 @@ class BinanceWebsocket(Thread, Logger):
     def feature_finished(self, future: asyncio.Future, reconnect_fn=None, name=''):
         self.logInfo('Feature finished: "{}"'.format(name))
 
+        if future.cancelled():
+            return
+
         exc = future.exception()
         if exc:
             if (isinstance(exc, ConnectionClosed) and exc.code > 1002) or isinstance(exc, InvalidStatusCode):
