@@ -6,6 +6,7 @@ from os import listdir, environ
 
 import sys
 
+from API.APIServer import APIServer
 from Bot.Target import Target
 from ConsoleLauncher import ConsoleLauncher
 from Bot.ConfigLoader import ConfigLoader
@@ -21,18 +22,21 @@ TRADE_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Portfolio/')
 COMPLETED_ORDER_PATH_PORTFOLIO = environ.get('TRADE_COMPLETED_DIR', 'Trades/Completed/')
 CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
-ENABLE_CLOUD = True
+ENABLE_CLOUD = False
 
 launcher = ConsoleLauncher(
-    TRADE_PORTFOLIO_PATH,
-    COMPLETED_ORDER_PATH_PORTFOLIO,
-    CONF_DIR,
-    environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
-# launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
+        TRADE_PORTFOLIO_PATH,
+        COMPLETED_ORDER_PATH_PORTFOLIO,
+        CONF_DIR,
+        environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
 
 def main():
+    api_mode = False
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'sync':
+        if sys.argv[1] == 'api':
+            api_mode = True
+
+        elif sys.argv[1] == 'sync':
             launcher.sync_down()
             return
 
@@ -41,6 +45,10 @@ def main():
             return
 
     launcher.start_bot()
+
+    if api_mode:
+        api = APIServer(launcher.trade_handler)
+        api.run(3000)
 
 # def signal_handler(signal=None, frame=None):
 #     launcher.stop_bot()
@@ -83,7 +91,7 @@ def generate_targets(start_price, iter=4, increment=4, smart=True, sl_interval=3
         vol = round(100/(iter - i), 2)
 
         target = Target(price=start_price, vol='{}%'.format(vol), smart=smart)
-        if sl_interval != 0 and len(prices) > sl_interval:
+        if sl_interval != 0 and len(prices) >= sl_interval:
             target.sl = prices[-sl_interval]
 
         targets.append(target)
@@ -144,15 +152,6 @@ def save_new_order_file_structure(path, new_path):
 
             new_trade_path = new_path + t.symbol + '.json'
             cl.save_trades(cl.json_saver(new_trade_path), [t])
-
-# @atexit.register
-# def on_exit():
-#     # print('on exit')
-#     try:
-#         if launcher:
-#             launcher.stop_bot()
-#     except Exception as e:
-#         print(e)
 
 
 if __name__ == '__main__':
