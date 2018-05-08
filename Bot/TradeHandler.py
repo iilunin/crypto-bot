@@ -43,8 +43,17 @@ class TradeHandler(Logger):
         self.last_ts = dt.now()
         self.first_processing = True
         self.socket_message_rcvd = False
+        self.paused = False
 
         self.lock = RLock()
+
+    def pause(self):
+        self.logInfo('Pausing trade handler')
+        self.paused = True
+
+    def resume(self):
+        self.logInfo('Resuming trade handler')
+        self.paused = False
 
     def process_initial_prices(self):
         try:
@@ -160,6 +169,9 @@ class TradeHandler(Logger):
 
     def listen_handler(self, msg):
         try:
+            if self.paused:
+                return
+
             if not self.socket_message_rcvd:
                 self.confirm_socket_msg_rcvd()
 

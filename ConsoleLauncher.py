@@ -160,6 +160,7 @@ class ConsoleLauncher(Logger):
                 if file in self.file_watch_list:
                     if not self.file_watch_list[file] == current_mtime:
                         self.logInfo('File "{}" has changed. Updating trades...'.format(file))
+
                         trades = self.config_loader.load_trade_list(file)
                         for t in trades:
                             self.trade_handler.updated_trade(t)

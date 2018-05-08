@@ -7,6 +7,9 @@ from Bot.TradeHandler import TradeHandler
 
 
 class APIServer:
+    parser = reqparse.RequestParser()
+    parser.add_argument('action', type=str, help='pause|start')
+
     def __init__(self, trade_handler: TradeHandler):
         self.th = trade_handler
         self.app = Flask(__name__)
@@ -17,6 +20,9 @@ class APIServer:
 
         self.api.add_resource(TradeList, '/trades', resource_class_kwargs={'trade_handler': self.th})
         self.api.add_resource(Trade, '/reports/<id>', resource_class_kwargs={'trade_handler': self.th})
+        self.api.add_resource(Managment, '/management/<action>', resource_class_kwargs={'trade_handler': self.th})
+
+
 
     def run(self, port):
         self.app.run(debug=True, port=port)
@@ -40,3 +46,16 @@ class TradeList(BotAPIREsource):
 class Trade(BotAPIREsource):
     def get(self):
         return self.th.strategies
+
+class Managment(BotAPIREsource):
+    def post(self, action):
+        if not action:
+            return 'action should be \'pause\' or \'start\''
+
+        action = action.lower()
+        if action == 'pause':
+            self.th.pause()
+        elif action == 'start':
+            self.th.resume()
+
+        return

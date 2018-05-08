@@ -22,7 +22,7 @@ TRADE_PORTFOLIO_PATH = environ.get('TRADE_DIR', 'Trades/Portfolio/')
 COMPLETED_ORDER_PATH_PORTFOLIO = environ.get('TRADE_COMPLETED_DIR', 'Trades/Completed/')
 CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
-ENABLE_CLOUD = False
+ENABLE_CLOUD = True
 
 launcher = ConsoleLauncher(
         TRADE_PORTFOLIO_PATH,
