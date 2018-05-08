@@ -40,6 +40,11 @@ class ConsoleLauncher(Logger):
         self.enable_cloud = enable_cloud
         self.s3pers: S3Persistence = None
 
+        self.ignore_local_file_update = os.environ.get('IGNORE_FILE_UPDATE', False)
+
+        if self.ignore_local_file_update:
+            self.logInfo("IGNORE_FILE_UPDATE Enabled")
+
         if enable_cloud:
             self.s3pers: S3Persistence = S3Persistence(os.getenv('TRADE_BUCKET'), {trades_path: 'Portfolio/', completed_trades_path: 'Completed/'})
 
@@ -159,14 +164,20 @@ class ConsoleLauncher(Logger):
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
                     if not self.file_watch_list[file] == current_mtime:
-                        self.logInfo('File "{}" has changed. Updating trades...'.format(file))
 
-                        trades = self.config_loader.load_trade_list(file)
-                        for t in trades:
-                            self.trade_handler.updated_trade(t)
+                        if self.ignore_local_file_update:
+                            self.logInfo('Ignoring file "{}" update.'.format(file))
+                            self.logInfo(
+                                'Current|Last file-change time {}|{}'.format(current_mtime, self.file_watch_list[file]))
+                        else:
+                            self.logInfo('File "{}" has changed. Updating trades...'.format(file))
 
-                        if file not in updated_by_s3:
-                            update_cloud_files = True
+                            trades = self.config_loader.load_trade_list(file)
+                            for t in trades:
+                                self.trade_handler.updated_trade(t)
+
+                            if file not in updated_by_s3:
+                                update_cloud_files = True
 
                     self.file_watch_list[file] = os.stat(file).st_mtime
 
@@ -204,6 +215,8 @@ class ConsoleLauncher(Logger):
             self.config_loader.persist_updated_trade(trade, self.config_loader.json_saver(file))
 
             self.file_watch_list[file] = os.stat(file).st_mtime
+
+            self.logInfo('File "{}" updated by trade handler. Its mod time: {}'.format(file, self.file_watch_list[file]))
 
             if trade.is_completed():
                 self.move_completed_trade(trade)
