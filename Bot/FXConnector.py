@@ -52,12 +52,19 @@ class FXConnector(Logger):
         super().__init__()
         self.__key = key
         self.__secret = secret
-        self.client = Client(key, secret)
+        self._client = None #Client(key, secret)
         self.bs: BinanceWebsocket = None
 
         # self.connection = None
         self.ticker_connection = None
         self.user_data_connection = None
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = Client(self.__key, self.__secret)
+
+        return self._client
 
     def listen_symbols(self, symbols, on_ticker_received, user_data_handler):
         self.bs = BinanceWebsocket(self.client)
@@ -71,8 +78,9 @@ class FXConnector(Logger):
         self.logInfo('WS listening started')
 
     def stop_listening(self):
-        self.bs.stop_sockets()
-        self.logInfo('Socket stopped')
+        if self.bs:
+            self.bs.stop_sockets()
+            self.logInfo('Socket stopped')
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def cancel_order(self, sym, id):

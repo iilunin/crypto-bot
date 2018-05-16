@@ -3,6 +3,7 @@ from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 import json
 
+from API.APIResult import APIResult
 from Bot.TradeHandler import TradeHandler
 
 
@@ -19,13 +20,12 @@ class APIServer:
         self.app.config['SECRET_KEY'] = 'VERY_SECRET_KEY_GOES_HERE'
 
         self.api.add_resource(TradeList, '/trades', resource_class_kwargs={'trade_handler': self.th})
-        self.api.add_resource(Trade, '/reports/<id>', resource_class_kwargs={'trade_handler': self.th})
+        self.api.add_resource(Trade, '/trade/<id>', resource_class_kwargs={'trade_handler': self.th})
         self.api.add_resource(Managment, '/management/<action>', resource_class_kwargs={'trade_handler': self.th})
 
 
-
     def run(self, port):
-        self.app.run(debug=True, port=port)
+        self.app.run(debug=True, port=port, use_reloader=False)
 
 
 class BotAPIREsource(Resource):
@@ -47,15 +47,30 @@ class Trade(BotAPIREsource):
     def get(self):
         return self.th.strategies
 
+    def delete(self, id):
+        self.th.remove_trade_by_id(id, True)
+        return APIResult.OKResult()
+
+    def put(self, trade_json):
+        pass
+
+    def post(self, trade_json):
+        pass
+
 class Managment(BotAPIREsource):
     def post(self, action):
         if not action:
             return 'action should be \'pause\' or \'start\''
 
         action = action.lower()
+
         if action == 'pause':
             self.th.pause()
+
         elif action == 'start':
             self.th.resume()
 
-        return
+        elif action == 'cancel':
+            pass
+
+        return {}

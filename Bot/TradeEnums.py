@@ -4,6 +4,7 @@ class OrderStatus(Enum):
     NEW = 'new'
     COMPLETED = 'completed'
     ACTIVE = 'active'
+    REMOVED = 'removed'
 
     def is_new(self):
         return self == OrderStatus.NEW
@@ -13,6 +14,9 @@ class OrderStatus(Enum):
 
     def is_active(self):
         return self == OrderStatus.ACTIVE
+
+    def is_removed(self):
+        return self == OrderStatus.REMOVED
 
 class Side(Enum):
     BUY = 'buy'

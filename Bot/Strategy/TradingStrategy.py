@@ -21,7 +21,7 @@ class TradingStrategy(Logger):
         self.trade: Trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
-        self.exchange_info = ExchangeInfo().symbol_info(self.symbol())
+        self._exchange_info = None
         self.simulate = False
         self.trade_updated = trade_updated
         self.last_execution_price = 0
@@ -33,6 +33,13 @@ class TradingStrategy(Logger):
                 self.balance = balance
         else:
             self.init()
+
+    @property
+    def exchange_info(self):
+        if not self._exchange_info:
+            self._exchange_info = ExchangeInfo().symbol_info(self.symbol())
+
+        return self._exchange_info
 
     def _get_logger_name(self):
         return '{}({})'.format(self.__class__.__name__, self.symbol())
@@ -166,6 +173,10 @@ class TradingStrategy(Logger):
         if not self.trade.is_completed():
             self.trade.set_completed()
             self.trigger_target_updated()
+
+    def set_trade_removed(self):
+        self.trade.set_removed()
+        self.trigger_target_updated()
 
     def trigger_target_updated(self, sync_cloud=True):
         if self.trade_updated:

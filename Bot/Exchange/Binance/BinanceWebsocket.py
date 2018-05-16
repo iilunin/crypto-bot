@@ -98,8 +98,12 @@ class BinanceWebsocket(Thread, Logger):
         if callback:
             self.ticker_cb = callback
 
-        url = os.path.join(BinanceWebsocket.WS_URL,
-                           'stream?streams=' + '/'.join([s.lower() + '@ticker' for s in self.symbols]))
+        if symbols:
+            url = os.path.join(BinanceWebsocket.WS_URL,
+                               'stream?streams=' + '/'.join([s.lower() + '@ticker' for s in self.symbols]))
+        else:
+            url = os.path.join(BinanceWebsocket.WS_URL, 'ws/!ticker@arr')
+
         self.ticker_ws_future = asyncio.run_coroutine_threadsafe(self.websocket_handler(url, self.ticker_cb), self.loop)
 
         self.ticker_ws_future.add_done_callback(

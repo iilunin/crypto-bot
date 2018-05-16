@@ -114,11 +114,17 @@ class Trade(CustomSerializable):
     def is_new(self):
         return self.status.is_new()
 
+    def is_removed(self):
+        return self.status.is_removed()
+
     def set_active(self):
         self.status = OrderStatus.ACTIVE
 
     def set_completed(self):
         self.status = OrderStatus.COMPLETED
+
+    def set_removed(self):
+        self.status = OrderStatus.REMOVED
 
     def __str__(self):
         return '{}({}): {}'.format(self.symbol, self.id, self.side)

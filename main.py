@@ -24,13 +24,14 @@ CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
 ENABLE_CLOUD = True
 
-launcher = ConsoleLauncher(
+def main():
+
+    launcher = ConsoleLauncher(
         TRADE_PORTFOLIO_PATH,
         COMPLETED_ORDER_PATH_PORTFOLIO,
         CONF_DIR,
         environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
 
-def main():
     api_mode = False
     if len(sys.argv) > 1:
         if sys.argv[1] == 'api':
@@ -152,7 +153,6 @@ def save_new_order_file_structure(path, new_path):
 
             new_trade_path = new_path + t.symbol + '.json'
             cl.save_trades(cl.json_saver(new_trade_path), [t])
-
 
 if __name__ == '__main__':
     main()

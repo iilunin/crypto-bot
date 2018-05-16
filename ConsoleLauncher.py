@@ -58,7 +58,7 @@ class ConsoleLauncher(Logger):
         self.logInfo('Starting Bot...')
 
         for trade in trades[:]:
-            if trade.is_completed():
+            if trade.is_completed() or trade.is_removed():
                 self.move_completed_trade(trade)
             if not trade_validator.validate(trade):
                 self.logError('{}:{}'.format(trade.symbol, trade_validator.errors))
@@ -78,10 +78,13 @@ class ConsoleLauncher(Logger):
         )
 
         self.init_file_watch_list()
-        self.start_timer()
 
-        self.trade_handler.init_strategies()
-        self.trade_handler.start_listening()
+        self.trade_handler.add_trades(trades)
+
+        # self.trade_handler.init_strategies()
+        # self.trade_handler.start_listening()
+
+        self.start_timer()
 
     def get_exchange_creds(self, api_path):
         if os.environ.get('KEY') and os.environ.get('SECRET'):
@@ -218,7 +221,7 @@ class ConsoleLauncher(Logger):
 
             self.logInfo('File "{}" updated by trade handler. Its mod time: {}'.format(file, self.file_watch_list[file]))
 
-            if trade.is_completed():
+            if trade.is_completed() or trade.is_removed():
                 self.move_completed_trade(trade)
 
             if self.enable_cloud and needs_cloud_sync:
