@@ -1,3 +1,5 @@
+from binance.exceptions import BinanceAPIException
+
 from Bot.AccountBalances import AccountBalances
 from Bot.FXConnector import FXConnector
 from Bot.TradeEnums import OrderStatus
@@ -26,7 +28,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         else:
             self.strategy_exit = None
 
-        self.last_price = 0
+        self.last_price = {}
 
 
     def create_sl_strategy(self, trade):
@@ -71,6 +73,8 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.logInfo('Trade Complete')
             return
 
+        self.last_price = new_price
+
         if (self.strategy_sl and self.strategy_sl.is_completed()) \
                 or (self.strategy_exit and self.strategy_exit.is_completed()):
             self.set_trade_completed()
@@ -101,11 +105,6 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
             if self.strategy_exit and not sl_active:
                 self.strategy_exit.execute(new_price)
-
-    def log_price(self, new_price):
-        if self.last_price != new_price:
-            self.logInfo('Price: {:.08f}'.format(new_price))
-            self.last_price = new_price
 
     def on_order_status_changed(self, t: Target, data):
         complete_trade = False
@@ -152,4 +151,30 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             s.append(self.strategy_entry)
 
         return s
+
+    def emergent_close_position(self):
+        try:
+            self.fx.cancel_open_orders(self.symbol())
+
+            AccountBalances().update_balances(self.fx.get_all_balances_dict())
+
+            # price = self.exchange_info.adjust_price(self.get_sl_limit_price())
+            bal = self.trade.get_cap(self.get_balance_for_side().avail)
+
+            volume = round(bal / self.get_single_price(self.last_price), 8) if self.trade_side().is_buy() else bal
+            adjusted_vol = self.exchange_info.adjust_quanity(volume)
+
+            self.logInfo(
+                'Closing positions ({}): {}, v: {:.08f}'.format(self.symbol(), self.trade_side(), adjusted_vol))
+
+            if adjusted_vol > 0:
+                order = self.fx.create_makret_order(self.symbol(),
+                                                    self.trade_side().name,
+                                                    adjusted_vol)
+
+            self.logInfo('Positions [{}] Closed'.format(self.symbol()))
+            self.trade.set_completed()
+            self.trigger_target_updated()
+        except BinanceAPIException as bae:
+            self.logError(str(bae))
 

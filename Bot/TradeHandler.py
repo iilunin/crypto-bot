@@ -238,7 +238,11 @@ class TradeHandler(Logger):
     #     with self.lock:
     #         self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
 
-    def remove_trade_by_id(self, id, api_call=False):
+    def emergency_close_by_id(self, id):
+        strategy: TradingStrategy = self.tradeid_strategy_dict.get(id, None)
+        strategy.emergent_close_position()
+
+    def remove_trade_by_id(self, id, api_call=False, close_trade=False):
         with self.lock:
             self.remove_trade_by_strategy(self.tradeid_strategy_dict.get(id, None), api_call)
 

@@ -76,6 +76,9 @@ class TradingStrategy(Logger):
     def symbol(self):
         return self.trade.symbol
 
+    def emergent_close_position(self):
+        raise NotImplementedError('Strategy does not support this method')
+
     def on_execution_rpt(self, data):
         self.logInfo('Execution Rpt: {}'.format(data))
         orderId = data['orderId']

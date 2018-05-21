@@ -5,12 +5,10 @@ import json
 
 from API.APIResult import APIResult
 from Bot.TradeHandler import TradeHandler
+from Utils.Logger import Logger
 
 
 class APIServer:
-    parser = reqparse.RequestParser()
-    parser.add_argument('action', type=str, help='pause|start')
-
     def __init__(self, trade_handler: TradeHandler):
         self.th = trade_handler
         self.app = Flask(__name__)
@@ -20,6 +18,7 @@ class APIServer:
         self.app.config['SECRET_KEY'] = 'VERY_SECRET_KEY_GOES_HERE'
 
         self.api.add_resource(TradeList, '/trades', resource_class_kwargs={'trade_handler': self.th})
+        # self.api.add_resource(Trade, '/trade/<id>/<action>', resource_class_kwargs={'trade_handler': self.th})
         self.api.add_resource(Trade, '/trade/<id>', resource_class_kwargs={'trade_handler': self.th})
         self.api.add_resource(Managment, '/management/<action>', resource_class_kwargs={'trade_handler': self.th})
 
@@ -28,9 +27,10 @@ class APIServer:
         self.app.run(debug=True, port=port, use_reloader=False)
 
 
-class BotAPIREsource(Resource):
+class BotAPIREsource(Resource, Logger):
     def __init__(self, trade_handler: TradeHandler):
-        super().__init__()
+        Resource.__init__(self)
+        Logger.__init__(self)
         self.th: TradeHandler = trade_handler
 
 
@@ -44,6 +44,11 @@ class TradeList(BotAPIREsource):
 
 
 class Trade(BotAPIREsource):
+    def __init__(self, trade_handler):
+        super().__init__(trade_handler)
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('action', type=str, help='close|start|pause')
+
     def get(self):
         return self.th.strategies
 
@@ -54,8 +59,18 @@ class Trade(BotAPIREsource):
     def put(self, trade_json):
         pass
 
-    def post(self, trade_json):
-        pass
+    def post(self, id):
+        args = self.parser.parse_args()
+        action = args['action']
+
+        if not action:
+            return APIResult.OKResult()
+
+        action = action.lower()
+
+        if action == 'close':
+            self.th.emergency_close_by_id(id)
+        return APIResult.OKResult()
 
 class Managment(BotAPIREsource):
     def post(self, action):
