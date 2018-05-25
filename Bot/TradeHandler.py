@@ -22,7 +22,7 @@ class TradeHandler(Logger):
 
         self.order_updated_handler = trade_updated_handler
         # ExchangeInfo().update(fx.get_exchange_info())
-        self.strategies = []
+        self.strategies: List[TradingStrategy] = []
 
         # self.logInfo('Creating {} with {} trades.'.format(self.__class__.__name__, len(trades)))
         #
@@ -210,7 +210,7 @@ class TradeHandler(Logger):
     def execute_strategies(self, prices):
         with self.lock:
             for s in self.strategies:
-                if s.symbol() in prices:
+                if s.symbol() in prices and not s.paused:
                     s.execute(prices[s.symbol()])
 
     def check_strategies_status(self):
@@ -237,6 +237,9 @@ class TradeHandler(Logger):
     # def remove_trade_by_symbol(self, sym):
     #     with self.lock:
     #         self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
+
+    def get_strategy_by_id(self, id) -> TradingStrategy:
+        return self.tradeid_strategy_dict.get(id, None)
 
     def emergency_close_by_id(self, id):
         strategy: TradingStrategy = self.tradeid_strategy_dict.get(id, None)
