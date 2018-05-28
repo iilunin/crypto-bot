@@ -14,6 +14,9 @@ class SymbolInfo:
         return s.rstrip('0')
 
     def adjust_quanity(self, q, round_down=True):
+        if q == 0:
+            return 0
+
         res = float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
         return float(min(max(res, self.minQty), self.maxQty))
 
