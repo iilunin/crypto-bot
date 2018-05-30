@@ -1,65 +1,79 @@
-<table class="table table-striped table-dark">
-  <thead>
-  <tr>
-    <!--<th>#</th>-->
-    <th>Symbol
-      <button type="button" class="btn btn-sm btn-outline-info" tooltip="Refresh trade list" (click)="getTrades()">
-        <span class="oi oi-reload"></span>
-      </button>
-    </th>
-    <th>Balance</th>
-    <!--<th>Balance (Lo)</th>-->
-    <th>
-      <button type="button" class="btn btn-sm btn-outline-warning" [disabled]="trades.length == 0" tooltip="Pause all trades" (click)="onPauseAll()"><span class="oi oi-media-pause"></span></button>
-      &nbsp;
-      <button type="button" class="btn btn-sm btn-outline-success" [disabled]="trades.length == 0" tooltip="Resume all trades" (click)="onResumeAll()"><span class="oi oi-media-play"></span></button></th>
-    <th>
-      <span class="oi oi-dollar" tooltip="Close trade"></span>
-      <!--<button type="button" class="btn btn-sm btn-outline-danger" [disabled]="trades.length == 0" (click)="openModal(modal_template, '0', true)" tooltip="Close all trades">-->
+<div class="table-responsive rounded">
+  <table class="table table-striped table-dark rounded">
+    <thead>
+    <tr>
+      <!--<th>#</th>-->
+      <th style="width: 12%">Symbol
+        <button type="button" class="btn btn-sm btn-outline-info" tooltip="Refresh trade list" (click)="refreshTrades()">
+          <span class="oi oi-reload"></span>
+        </button>
+      </th>
+      <th style="width: 15%">BTC Val</th>
+      <th style="width: 15%">Price</th>
+      <th style="width: 15%">Balance</th>
+      <!--<th>Balance (Lo)</th>-->
+      <th style="width: 10%">
+        <button type="button" class="btn btn-sm btn-outline-warning" [disabled]="trades.length == 0" tooltip="Pause all trades" (click)="onPauseAll()"><span class="oi oi-media-pause"></span></button>
+        &nbsp;
+        <button type="button" class="btn btn-sm btn-outline-success" [disabled]="trades.length == 0" tooltip="Resume all trades" (click)="onResumeAll()"><span class="oi oi-media-play"></span></button></th>
+      <th style="width: 5%">
+        <span class="oi oi-dollar" tooltip="Close trade"></span>
+        <!--<button type="button" class="btn btn-sm btn-outline-danger" [disabled]="trades.length == 0" (click)="openModal(modal_template, '0', true)" tooltip="Close all trades">-->
         <!--<span class="oi oi-dollar"></span>-->
-      <!--</button>-->
-    </th>
-    <th>
-      <span class="oi oi-trash" tooltip="Remove trade"></span>
-      <!--<button type="button" class="btn btn-sm btn-outline-danger" [disabled]="trades.length == 0" (click)="openModal(modal_template, '0', false)" tooltip="Remove all trades">-->
+        <!--</button>-->
+      </th>
+      <th style="width: 5%">
+        <span class="oi oi-trash" tooltip="Remove trade"></span>
+        <!--<button type="button" class="btn btn-sm btn-outline-danger" [disabled]="trades.length == 0" (click)="openModal(modal_template, '0', false)" tooltip="Remove all trades">-->
         <!--<span class="oi oi-trash"></span>-->
-      <!--</button>-->
-    </th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr *ngFor="let trade of trades">
-    <!--<td>{{ trade.id | slice:0:4 }}...</td>-->
-    <td>{{ trade.sym }}</td>
-    <td>{{ trade.avail + trade.locked }}</td>
-    <!--<td>{{ trade.locked }}</td>-->
-    <td>
-      <button type="button" class="btn btn-sm btn-outline-{{ trade.paused? 'success' : 'warning' }}" (click)="onPauseResume(trade)" [disabled]="tradesDisabled.has(trade.id)" tooltip="{{ trade.paused? 'Resume': 'Pause' }} trade">
-        <span class="oi oi-media-{{ trade.paused? 'play': 'pause' }}"></span>
-      </button>
-    </td>
-    <td>
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Close trade" >
-        <span class="oi oi-dollar"></span>
-      </button>
-    </td>
-    <td>
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, false)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Remove trade" >
-        <span class="oi oi-trash"></span>
-      </button>
-    </td>
-  </tr>
-  </tbody>
-</table>
+        <!--</button>-->
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let trade of trades">
+      <!--<td>{{ trade.id | slice:0:4 }}...</td>-->
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-info" (click)="onTradeInfo(trade)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Trade Info">
+          <span class="oi oi-info"></span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" (click)="onTradeInfo(trade, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Edit Trade">
+          <span class="oi oi-wrench"></span>
+        </button>
+        <span tooltip="{{ trade.sym }}. ID:{{ trade.id }}">{{ trade.sym }}</span>
+      </td>
+      <td>{{ trade.btcVal | number:'1.6-6' }}</td>
+      <td>{{ trade.price | number:'1.8-8' }}</td>
+      <td>{{ trade.avail + trade.locked }}</td>
+      <!--<td>{{ trade.locked }}</td>-->
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-{{ trade.paused? 'success' : 'warning' }}" (click)="onPauseResume(trade)" [disabled]="tradesDisabled.has(trade.id)" tooltip="{{ trade.paused? 'Resume': 'Pause' }} trade">
+          <span class="oi oi-media-{{ trade.paused? 'play': 'pause' }}"></span>
+        </button>
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Close trade" >
+          <span class="oi oi-dollar"></span>
+        </button>
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, false)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Remove trade" >
+          <span class="oi oi-trash"></span>
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 
-<ng-template #modal_template>
-  <div class="modal-body text-center">
-    <p>If you click 'Yes' the trade will be closed!</p>
-    <button type="button" class="btn btn-danger" (click)="confirm()" >Yes</button>
-    <button type="button" class="btn btn-primary" (click)="decline()" >No</button>
+  <ng-template #modal_template>
+    <div class="modal-body text-center">
+      <p>If you click 'Yes' the trade will be closed!</p>
+      <button type="button" class="btn btn-danger" (click)="confirm()" >Yes</button>
+      <button type="button" class="btn btn-primary" (click)="decline()" >No</button>
+    </div>
+  </ng-template>
+
+  <div *ngFor="let alert of alerts">
+    <alert [type]="alert.type" [dismissOnTimeout]="alert.timeout" [dismissible]="true" (onClosed)="onClosedAlert(alert)">{{ alert.msg }}</alert>
   </div>
-</ng-template>
-
-<div *ngFor="let alert of alerts">
-  <alert [type]="alert.type" [dismissOnTimeout]="alert.timeout" [dismissible]="true" (onClosed)="onClosedAlert(alert)">{{ alert.msg }}</alert>
 </div>

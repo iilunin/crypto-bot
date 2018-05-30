@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  BINANCE_WSS_URL: 'wss://stream.binance.com:9443',
+  BINANCE_API_URL: 'https://api.binance.com'
 };
 
 /*

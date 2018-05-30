@@ -14,13 +14,22 @@ const httpOptions = {
 
 @Injectable({ providedIn: 'root' })
 export class BotApi {
+  RETRIES = 2;
   API_URL = 'http://127.0.0.1:3000/api/v1';
 
   constructor(private http: HttpClient) { }
 
+  getActiveTradeInfo(id: string): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/trade/${id}`).pipe(
+      retry(this.RETRIES),
+      tap(trades => this.log(`fetched trade ${id} info`)),
+      catchError(this.handleError('getActiveTradeInfo', ''))
+    );
+  }
+
   getActiveTrades(): Observable<TradeInfo[]> {
     return this.http.get<TradeInfo[]>(`${this.API_URL}/trades`).pipe(
-      retry(3),
+      retry(this.RETRIES),
       tap(trades => this.log(`fetched trades`)),
       catchError(this.handleError('getActiveTrades', []))
     );
