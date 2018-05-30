@@ -4,6 +4,7 @@ from flask_cors import CORS
 import json
 
 from API.APIResult import APIResult
+from Bot.ConfigLoader import ConfigLoader
 from Bot.TradeHandler import TradeHandler
 from Utils.Logger import Logger
 
@@ -46,7 +47,9 @@ class TradeList(BotAPIREsource):
             'sym': s.symbol(),
             'avail': s.balance.avail,
             'locked': s.balance.locked,
-            'paused': s.paused} for s in self.th.strategies]
+            'paused': s.paused,
+            'price': s.get_single_price(s.last_price),
+            'sell': s.trade.is_sell()} for s in self.th.strategies]
 
 
 class Trade(BotAPIREsource):
@@ -55,8 +58,8 @@ class Trade(BotAPIREsource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('action', type=str, help='close|start|pause')
 
-    def get(self):
-        return self.th.strategies
+    def get(self, id):
+        return ConfigLoader.get_json_str(self.th.get_strategy_by_id(id).trade)
 
     def delete(self, id):
         self.th.remove_trade_by_id(id, True)

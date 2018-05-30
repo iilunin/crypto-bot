@@ -12,8 +12,6 @@ from Bot.Trade import Trade
 from Utils.Logger import Logger
 
 
-USE_ALL_TICKER = True
-
 class TradeHandler(Logger):
     def __init__(self, trades: List[Trade], fx: FXConnector, trade_updated_handler=None):
         super().__init__()
@@ -251,30 +249,31 @@ class TradeHandler(Logger):
 
     def add_trades(self, trades: [Trade], start_listening=True):
         self.logInfo('Adding {} trades to the TradeHandler.'.format(len(trades)))
-        try:
-            self.stop_listening()
+        # try:
+        self.stop_listening()
 
-            # if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
-            ExchangeInfo().update(self.fx.get_exchange_info())
-            AccountBalances().update_balances(self.fx.get_all_balances_dict())
+        # if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
+        ExchangeInfo().update(self.fx.get_exchange_info())
+        AccountBalances().update_balances(self.fx.get_all_balances_dict())
 
-            for trade in trades:
-                new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
-                                                          self.balances.get_balance(trade.asset))
+        for trade in trades:
+            new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
+                                                      self.balances.get_balance(trade.asset))
 
-                if self.handle_completed_strategy(new_strategy):
-                    self.logInfo('Strategy is completed [{}]'.format(new_strategy.symbol()))
-                    continue
+            if self.handle_completed_strategy(new_strategy):
+                self.logInfo('Strategy is completed [{}]'.format(new_strategy.symbol()))
+                continue
 
-                self.add_new_strategy(new_strategy, listen_symbols=False)
+            self.add_new_strategy(new_strategy, listen_symbols=False)
 
-            self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
+        self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
 
-        except Exception:
-            self.logError(traceback.format_exc())
-        finally:
-            if start_listening:
-                self.start_listening()
+        if start_listening:
+            self.start_listening()
+        # except Exception:
+        #     self.logError(traceback.format_exc())
+        # finally:
+
 
     def updated_trade(self, trade: Trade):
         with self.lock:

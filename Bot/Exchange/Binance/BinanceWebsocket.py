@@ -1,7 +1,6 @@
 import functools
 import json
 import threading
-import traceback
 from threading import Thread
 import time
 from time import sleep
@@ -12,7 +11,6 @@ import asyncio
 import websockets
 import websockets.exceptions
 
-import signal
 import os
 import os.path
 

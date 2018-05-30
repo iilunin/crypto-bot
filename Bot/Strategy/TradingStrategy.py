@@ -26,6 +26,7 @@ class TradingStrategy(Logger):
         self.trade_updated = trade_updated
         self.last_execution_price = 0
         self.paused = False
+        self.last_price = {}
 
         super().__init__()
 

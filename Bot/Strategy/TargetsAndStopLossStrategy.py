@@ -28,7 +28,6 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         else:
             self.strategy_exit = None
 
-        self.last_price = {}
 
 
     def create_sl_strategy(self, trade):
@@ -154,7 +153,6 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def emergent_close_position(self):
         try:
-            self.paused = True
             self.fx.cancel_open_orders(self.symbol())
 
             AccountBalances().update_balances(self.fx.get_all_balances_dict())
@@ -163,7 +161,11 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             bal = self.trade.get_cap(self.get_balance_for_side().avail)
 
             volume = round(bal / self.get_single_price(self.last_price), 8) if self.trade_side().is_buy() else bal
-            adjusted_vol = self.exchange_info.adjust_quanity(volume)
+
+            if volume < self.exchange_info.minQty:
+                adjusted_vol = 0
+            else:
+                adjusted_vol = self.exchange_info.adjust_quanity(volume)
 
             self.logInfo(
                 'Closing positions ({}): {}, v: {:.08f}'.format(self.symbol(), self.trade_side(), adjusted_vol))
