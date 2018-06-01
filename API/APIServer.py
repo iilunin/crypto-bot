@@ -59,11 +59,28 @@ class Trade(BotAPIREsource):
         self.parser.add_argument('action', type=str, help='close|start|pause')
 
     def get(self, id):
-        return ConfigLoader.get_json_str(self.th.get_strategy_by_id(id).trade)
+        return Response(response=ConfigLoader.get_json_str(self.th.get_strategy_by_id(id).trade),
+                        status=200,
+                        mimetype="application/json")
 
     def delete(self, id):
-        self.th.remove_trade_by_id(id, True)
+        strategies = self.get_strategies(id)
+
+        if not strategies:
+            return APIResult.ErrorResult(101, msg='No strategies were found')
+
+        # for strategy in strategies:
+        #     self.th.remove_trade_by_strategy(strategy, True)
+
         return APIResult.OKResult()
+
+    def get_strategies(self, id):
+        if id == '0':
+            strategies = self.th.strategies
+        else:
+            strategy = self.th.get_strategy_by_id(id)
+            strategies = None if not strategy else [strategy]
+        return strategies
 
     def put(self, trade_json):
         pass
@@ -75,7 +92,7 @@ class Trade(BotAPIREsource):
         if not action:
             return APIResult.ErrorResult(100, msg='No "action" was provided')
 
-        strategies = self.th.strategies if id == '0' else [self.th.get_strategy_by_id(id)]
+        strategies = self.get_strategies(id)
 
         if not strategies:
             return APIResult.ErrorResult(101, msg='No strategies were found')

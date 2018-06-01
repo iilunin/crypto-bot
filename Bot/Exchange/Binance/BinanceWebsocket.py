@@ -1,6 +1,7 @@
 import functools
 import json
 import threading
+import traceback
 from threading import Thread
 import time
 from time import sleep
@@ -136,45 +137,42 @@ class BinanceWebsocket(Thread, Logger):
                 return
             else:
                 self.logError(exc)
-        # try:
-        #     self.logInfo('Feature finished: "{}"'.format(name))
-        #
-        #     # 2018 - 05 - 03
-        #     # 02: 14:01, 464[INFO][BinanceWebsocket | Binance
-        #     # WebSocket
-        #     # Thread]: Feature
-        #     # finished: < Task
-        #     # finished
-        #     # coro = < BinanceWebsocket.websocket_handler()
-        #     # done, defined
-        #     # at / usr / src / app / Bot / Exchange / Binance / BinanceWebsocket.py: 137 > exception = ConnectionClosed(
-        #     #     'WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason', ) >
-        # except Exception as e:
-        #     self.logError(traceback.format_exc())
 
     @asyncio.coroutine
     async def refresh_listen_key(self):
         return self.client.stream_get_listen_key()
 
-    def listen_key_received(self, future):
-        key = future.result()
-        create_user_ws = False
+    def listen_key_received(self, future: asyncio.Future):
+        try:
+            self.logInfo('Feature finished: "listen_key_received"')
 
-        if key != self.connection_key or not self.user_ws_future or \
-                self.user_ws_future.cancelled() or self.user_ws_future.done():
-            create_user_ws = True
+            if future.cancelled():
+                return
 
-        if create_user_ws:
-            self.stop_user_future()
-            self.user_ws_future = asyncio.ensure_future(
-                self.websocket_handler(os.path.join(BinanceWebsocket.WS_URL, 'ws', key), self.user_info_cb))
+            exc = future.exception()
+            if exc:
+                self.logError(exc)
+                return
 
-            # self.user_ws_future.add_done_callback(self.feature_finished)
-            self.user_ws_future.add_done_callback(
-                functools.partial(self.feature_finished, reconnect_fn=self.start_user_info, name='user websocket'))
+            key = future.result()
+            create_user_ws = False
 
+            if key != self.connection_key or not self.user_ws_future or \
+                    self.user_ws_future.cancelled() or self.user_ws_future.done():
+                create_user_ws = True
 
-        self.connection_key = key
+            if create_user_ws:
+                self.stop_user_future()
+                self.user_ws_future = asyncio.ensure_future(
+                    self.websocket_handler(os.path.join(BinanceWebsocket.WS_URL, 'ws', key), self.user_info_cb))
+
+                # self.user_ws_future.add_done_callback(self.feature_finished)
+                self.user_ws_future.add_done_callback(
+                    functools.partial(self.feature_finished, reconnect_fn=self.start_user_info, name='user websocket'))
+
+            self.connection_key = key
+        except:
+            self.logError(traceback.format_exc())
 
     async def manage_user_ws_loop(self):
         return self.refresh_listen_key()

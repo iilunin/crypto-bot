@@ -4,6 +4,7 @@ import {Observable, of, throwError} from 'rxjs';
 import {TradeInfo} from './tradeInfo';
 import {catchError, map, retry, tap} from 'rxjs/operators';
 import {ApiResult} from './apiresult';
+import {TradeDetails} from './trade-details';
 
 
 const httpOptions = {
@@ -19,11 +20,12 @@ export class BotApi {
 
   constructor(private http: HttpClient) { }
 
-  getActiveTradeInfo(id: string): Observable<any> {
-    return this.http.get<any>(`${this.API_URL}/trade/${id}`).pipe(
+  getActiveTradeInfo(id: string): Observable<TradeDetails> {
+    return this.http.get<TradeDetails>(`${this.API_URL}/trade/${id}`, httpOptions).pipe(
       retry(this.RETRIES),
-      tap(trades => this.log(`fetched trade ${id} info`)),
-      catchError(this.handleError('getActiveTradeInfo', ''))
+      tap(trade => this.log(`fetched trade ${id} info`)),
+      map(data => Object.assign(new TradeDetails(), data)),
+      catchError(this.handleError('getActiveTradeInfo', null))
     );
   }
 
@@ -73,6 +75,17 @@ export class BotApi {
     return this.http.post<ApiResult>(`${this.API_URL}/trade/${id}`, JSON.stringify({action: pauseOrResume}), httpOptions).pipe(
       tap(_ => this.log(`All treades are ` + pause ? 'paused' : 'resumed')),
       catchError(this.handleError('pauseResumeTrade'))
+    );
+  }
+
+  removeTrade(id: string ): Observable<ApiResult> {
+    if (id === undefined || id === null) {
+      id = '0';
+    }
+
+    return this.http.delete<ApiResult>(`${this.API_URL}/trade/${id}`, httpOptions).pipe(
+      tap(_ => this.log(`Trade ${id} is removed`)),
+      catchError(this.handleError('removeTrade'))
     );
   }
 

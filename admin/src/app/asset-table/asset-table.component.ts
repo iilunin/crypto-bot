@@ -20,8 +20,8 @@ export class AssetTableComponent implements OnInit {
   tradesDisabled: Set<string> = new Set<string>();
   alerts: any[] = [];
   private modalRef: BsModalRef;
-  private closeTradeId: string;
-  private closeTrade?: boolean;
+  private selectedTradeId: string;
+  private isCloseTradeAction?: boolean;
   private symbolObserver?: any;
 
   constructor(private modalService: BsModalService,
@@ -83,12 +83,12 @@ export class AssetTableComponent implements OnInit {
 
     // TODO: should depend on buy or sell side
 
-    // ti.currPriceA = tick.data.a;
+    // ti.currPriceA = tick.trade$.a;
     ti.price = tick.data.a;
     ti.btcVal = ti.price * (ti.avail + ti.locked);
-    // ti.setCurrPrice(tick.data.b, tick.data.a);
-    // ti.currPriceA = tick.data.a;
-    // ti.currPriceB = tick.data.b;
+    // ti.setCurrPrice(tick.trade$.b, tick.trade$.a);
+    // ti.currPriceA = tick.trade$.a;
+    // ti.currPriceB = tick.trade$.b;
     // // float(d['b']), 'a': float(d['a'])
     // console.log(ti);
   }
@@ -114,7 +114,13 @@ export class AssetTableComponent implements OnInit {
   }
 
   onTradeInfo(tradeInfo: TradeInfo, edit = false) {
-    this.router.navigate(['trades', tradeInfo.id, {edit: edit} ]);
+    this.router.navigate(['/trades',
+        { outlets: { trade: [tradeInfo.id, {edit: edit} ]} }
+      ]);
+    // this.router.navigate([
+    //       { outlets: { tradeDetails: ['trades', tradeInfo.id, {edit: edit} ]} }
+    //   ]);
+    // this.router.navigate(['trades', tradeInfo.id, {edit: edit} ]);
   }
 
   onPauseResume(tradeInfo: TradeInfo) {
@@ -127,6 +133,9 @@ export class AssetTableComponent implements OnInit {
 
       if (result.status === 0) {
         tradeInfo.paused = shouldPause;
+        this.showAlert(`Trade ${tradeInfo.sym} was ${shouldPause ? 'paused' : 'resumed'}`);
+      } else {
+        this.showAlert(`Error ${shouldPause ? 'pausing' : 'resuming'} trade ${tradeInfo.sym}. ${result.msg}`, 'danger');
       }
 
       // this.validateAllTradesPaused();
@@ -145,35 +154,55 @@ export class AssetTableComponent implements OnInit {
   // }
 
   openModal(template: TemplateRef<any>, tradeId: string, closeTrade: boolean) {
-    this.closeTradeId = tradeId;
-    this.closeTrade = closeTrade;
+    this.selectedTradeId = tradeId;
+    this.isCloseTradeAction = closeTrade;
     this.modalRef = this.modalService.show(template, {class: 'modal-md'});
   }
 
   confirm(): void {
-    if (this.closeTrade === true) {
-      this.api.closeTrade(this.closeTradeId).subscribe(this.handleCloseTradeRsp.bind(this));
-    } else if (this.closeTrade === false) {
-      console.log('remove trade');
+    if (this.isCloseTradeAction === true) {
+      this.api.closeTrade(this.selectedTradeId).subscribe(
+        res => {
+          this.handleCloseTradeRsp(res, this.isCloseTradeAction === true);
+        }
+      );
+    } else if (this.isCloseTradeAction === false) {
+      this.api.removeTrade(this.selectedTradeId).subscribe(
+        res => {
+          this.handleCloseTradeRsp(res, this.isCloseTradeAction === true);
+        }
+      );
+      console.log('Remove trade');
     }
-    this.closeTradeId = null;
-    this.closeTrade = null;
+    this.selectedTradeId = null;
+    this.isCloseTradeAction = null;
     this.modalRef.hide();
   }
 
-  handleCloseTradeRsp(result) {
+  handleCloseTradeRsp(result, close) {
     if (result.status === 0) {
       this.refreshTrades();
+      this.showAlert(`Trade successfully ${close ? 'closed' : 'removed'}`);
+    } else {
+      this.showAlert(`Trade ${close ? 'close' : 'remove'} failed. "${result.msg}"`, 'danger');
     }
   }
 
   decline(): void {
-    this.closeTradeId = null;
-    this.closeTrade = null;
+    this.selectedTradeId = null;
+    this.isCloseTradeAction = null;
     this.modalRef.hide();
   }
 
   onClosedAlert(dismissedAlert: AlertComponent): void {
     this.alerts = this.alerts.filter(alert => alert !== dismissedAlert);
+  }
+
+  showAlert(msg: string, type = 'success', timeout = 3000) {
+    this.alerts.push({
+      type: type,
+      msg: msg,
+      timeout: timeout
+    });
   }
 }
