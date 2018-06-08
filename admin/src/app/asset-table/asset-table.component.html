@@ -5,6 +5,9 @@
       <th style="width: 14%"><span>Symbol</span><button type="button" class="btn btn-sm btn-outline-info" tooltip="Refresh trade list" (click)="refreshTrades()">
           <span class="oi oi-reload"></span>
         </button>
+        <button type="button" class="btn btn-sm btn-outline-success" tooltip="Create new trade" (click)="onTradeInfo(null, TradeDetailMode.Create)">
+          <span class="oi oi-plus"></span>
+        </button>
       </th>
       <th style="width: 15%">BTC Val</th>
       <th style="width: 15%">Price</th>
@@ -23,10 +26,10 @@
     <tbody>
     <tr *ngFor="let trade of trades">
       <td>
-        <button type="button" class="btn btn-sm btn-outline-info"  (click)="onTradeInfo(trade)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Trade Info">
-          <span class="oi oi-info"></span>
+        <button type="button" class="btn btn-sm btn-outline-info"  (click)="onTradeInfo(trade, TradeDetailMode.View)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Trade Info">
+          <span class="oi oi-eye"></span>
         </button>
-        <button type="button" class="btn btn-sm btn-outline-warning" (click)="onTradeInfo(trade, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Edit Trade">
+        <button type="button" class="btn btn-sm btn-outline-warning" (click)="onTradeInfo(trade, TradeDetailMode.Edit)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Edit Trade">
           <span class="oi oi-wrench"></span>
         </button>
         <span tooltip="{{ trade.sym }}. ID:{{ trade.id }}">{{ trade.sym }}</span>

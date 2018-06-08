@@ -1,19 +1,27 @@
 import {AlertModule, ModalModule, TooltipModule} from 'ngx-bootstrap';
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 
-import { AppComponent } from './app.component';
-import { AssetTableComponent } from './asset-table/asset-table.component';
+import {AppComponent} from './app.component';
+import {AssetTableComponent} from './asset-table/asset-table.component';
 import {HttpClientModule} from '@angular/common/http';
 import {WebsocketService} from './websocket.service';
-import { TradeDetailsComponent } from './trade-details/trade-details.component';
+import {TradeDetailsComponent} from './trade-details/trade-details.component';
 import {TradesRoutingModule} from './trades-routing.module';
+import {FormsModule} from '@angular/forms';
+import {ExitDetailsComponent} from './trade-details/exit-details.component';
+import {SLDetailsComponent} from './trade-details/sl-details.component';
+
+// const schemas: any[] = [];
+// schemas.push(CUSTOM_ELEMENTS_SCHEMA);
 
 @NgModule({
   declarations: [
     AppComponent,
     AssetTableComponent,
-    TradeDetailsComponent
+    TradeDetailsComponent,
+    ExitDetailsComponent,
+    SLDetailsComponent
   ],
   imports: [
     ModalModule.forRoot(),
@@ -21,9 +29,12 @@ import {TradesRoutingModule} from './trades-routing.module';
     TooltipModule.forRoot(),
     BrowserModule,
     HttpClientModule,
-    TradesRoutingModule
+    TradesRoutingModule,
+    FormsModule
   ],
   providers: [WebsocketService],
   bootstrap: [AppComponent]
+  // schemas: schemas
 })
-export class AppModule { }
+export class AppModule {
+}

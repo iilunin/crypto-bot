@@ -7,6 +7,7 @@ import {BotApi} from '../botapi';
 import {AlertComponent} from 'ngx-bootstrap';
 import {BinanceService} from '../binance.service';
 import {Router, RouterModule} from '@angular/router';
+import {TradeDetailMode} from '../trade-details';
 
 @Component({
   selector: 'app-asset-table',
@@ -14,7 +15,7 @@ import {Router, RouterModule} from '@angular/router';
   styleUrls: ['./asset-table.component.css']
 })
 export class AssetTableComponent implements OnInit {
-  // allTradesPaused: boolean
+  private TradeDetailMode = TradeDetailMode;
   trades: TradeInfo[] = [];
   symTrade: { [symbol: string ]: TradeInfo} = {};
   tradesDisabled: Set<string> = new Set<string>();
@@ -113,9 +114,10 @@ export class AssetTableComponent implements OnInit {
     });
   }
 
-  onTradeInfo(tradeInfo: TradeInfo, edit = false) {
+  onTradeInfo(tradeInfo: TradeInfo, mode: TradeDetailMode = TradeDetailMode.View) {
+
     this.router.navigate(['/trades',
-        { outlets: { trade: [tradeInfo.id, {edit: edit} ]} }
+        { outlets: { trade: [tradeInfo ? tradeInfo.id: '0', {mode: mode} ]} }
       ]);
     // this.router.navigate([
     //       { outlets: { tradeDetails: ['trades', tradeInfo.id, {edit: edit} ]} }

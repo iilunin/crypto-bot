@@ -5,9 +5,9 @@ export class TradeInfo {
   locked: number;
   price: number;
 //  currPriceB?: number;
-  btcVal?: number;
-  paused?: boolean;
-  buy?: boolean;
+  btcVal: number;
+  paused: boolean;
+  buy: boolean;
 
   // public setCurrPrice(bid, ask) {
   //   this.currPriceA = ask;
@@ -15,3 +15,5 @@ export class TradeInfo {
   //   this.btcVal = this.currPriceA * (this.locked + this.avail);
   // }
 }
+
+
