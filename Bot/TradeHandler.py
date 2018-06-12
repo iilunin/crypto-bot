@@ -307,3 +307,7 @@ class TradeHandler(Logger):
     def confirm_socket_msg_rcvd(self):
         self.socket_message_rcvd = True
         self.logInfo('WebSocket message received')
+
+    def fire_trade_updated(self, trade, need_cloud_sync):
+        if self.order_updated_handler:
+            self.order_updated_handler(trade, need_cloud_sync)

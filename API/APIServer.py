@@ -57,6 +57,7 @@ class Trade(BotAPIREsource):
         super().__init__(trade_handler)
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('action', type=str, help='close|start|pause')
+        self.parser.add_argument('data', type=dict)
 
     def get(self, id):
         return Response(response=ConfigLoader.get_json_str(self.th.get_strategy_by_id(id).trade),
@@ -67,7 +68,7 @@ class Trade(BotAPIREsource):
         strategies = self.get_strategies(id)
 
         if not strategies:
-            return APIResult.ErrorResult(101, msg='No strategies were found')
+            return APIResult.ErrorResult(101, msg='No strategies were found'), 404
 
         # for strategy in strategies:
         #     self.th.remove_trade_by_strategy(strategy, True)
@@ -90,12 +91,12 @@ class Trade(BotAPIREsource):
         action = args['action']
 
         if not action:
-            return APIResult.ErrorResult(100, msg='No "action" was provided')
+            return APIResult.ErrorResult(100, msg='No "action" was provided'), 403
 
         strategies = self.get_strategies(id)
 
         if not strategies:
-            return APIResult.ErrorResult(101, msg='No strategies were found')
+            return APIResult.ErrorResult(101, msg='No strategies were found'), 404
 
         action = action.lower()
 
@@ -108,6 +109,20 @@ class Trade(BotAPIREsource):
 
             for strategy in strategies:
                 strategy.paused = paused
+        elif action == 'add':
+            ids = []
+            try:
+                trade_json = args['data']
+                trades = ConfigLoader.load_trade_list_from_obj(trade_json)
+                for trade in trades:
+                    ids.append(trade.id)
+                    self.th.updated_trade(trade)
+                    self.th.fire_trade_updated(trade, True)
+            except Exception as e:
+                # return Response(APIResult.ErrorResult(100, e), 500, mimetype='application/json')
+                return json.dumps(APIResult.ErrorResult(100, str(e))), 500
+
+            return APIResult.OKResult(ids), 201
 
         return APIResult.OKResult()
 

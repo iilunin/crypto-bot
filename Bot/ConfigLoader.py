@@ -86,10 +86,20 @@ class ConfigLoader:
     def load_trade_list_fromfile(self, file_path):
         with open(file_path, 'r') as f:
             trade_obj = json.load(f)
-            if ConfigLoader.PARENT_ELEMENT in trade_obj:
-                return [Trade(**to) for to in trade_obj[ConfigLoader.PARENT_ELEMENT]]
-            if ConfigLoader.ALT_PARENT_ELEMENT in trade_obj:
-                return [Trade(**trade_obj[ConfigLoader.ALT_PARENT_ELEMENT])]
+            return ConfigLoader.load_trade_list_from_obj(trade_obj)
+
+    @classmethod
+    def load_trade_list_from_json(cls, s):
+        trade_obj = json.loads(s)
+        return cls.load_trade_list_from_obj(trade_obj)
+
+    @classmethod
+    def load_trade_list_from_obj(cls, trade_obj):
+        if ConfigLoader.PARENT_ELEMENT in trade_obj:
+            return [Trade(**to) for to in trade_obj[ConfigLoader.PARENT_ELEMENT]]
+        if ConfigLoader.ALT_PARENT_ELEMENT in trade_obj:
+            return [Trade(**trade_obj[ConfigLoader.ALT_PARENT_ELEMENT])]
+
 
     def save_trades(self, saver, trades):
         if isinstance(trades, list):
