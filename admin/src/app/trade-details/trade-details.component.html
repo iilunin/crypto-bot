@@ -35,10 +35,10 @@
           <label for="buysellBtn" class="col-sm-2 col-form-label">Side</label>
           <div class="col-sm-10">
             <div class="btn-group btn-group-toggle" data-toggle="buttons" id="buysellBtn">
-              <label class="btn btn-outline-danger {{trade.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">
+              <label class="btn btn-sm btn-outline-danger {{trade.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">
                 <input type="radio" name="options" id="sideSell" value="SELL" autocomplete="off" [(ngModel)]="trade.side"> Sell
               </label>
-              <label class="btn btn-outline-success {{trade.isBuy() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">
+              <label class="btn btn-sm btn-outline-success {{trade.isBuy() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">
                 <input type="radio" name="options" id="sideBuy"  value="BUY" autocomplete="off" [(ngModel)]="trade.side"> Buy
               </label>
             </div>
@@ -49,7 +49,7 @@
     <app-sl-details [trade]="trade" [mode]="mode"></app-sl-details>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-danger" (click)="confirm()" >Yes</button>
-    <button type="button" class="btn btn-primary" (click)="decline()" >No</button>
+    <button type="button" class="btn btn-success" (click)="confirm()" *ngIf="!mode.isView()" >{{ mode.str() }}</button>
+    <button type="button" class="btn btn-primary" (click)="decline()" >Cancel</button>
   </div>
 </ng-template>

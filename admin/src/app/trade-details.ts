@@ -1,4 +1,28 @@
 export class TradeDetails {
+
+  private _stoploss: StopLoss;
+
+  id: string;
+  asset: string;
+  symbol: string = '';
+  side: 'BUY' | 'SELL';
+  status: 'NEW' | 'ACTIVE' | 'COMPLETED';
+  exit: ExitInfo;
+
+  get stoploss(): StopLoss {
+    return this._stoploss;
+  }
+
+  set stoploss(stoploss: StopLoss) {
+    if (!stoploss) {
+      this._stoploss = null;
+    } else if (stoploss instanceof StopLoss) {
+      this._stoploss = stoploss;
+    } else {
+      this._stoploss = Object.assign(new StopLoss(), stoploss);
+    }
+  }
+
   constructor(create_new: boolean = false) {
     if (create_new) {
       this.exit = new ExitInfo();
@@ -6,15 +30,18 @@ export class TradeDetails {
     }
   }
 
-  id: string;
-  asset: string;
-  symbol: string = '';
-  side: 'BUY' | 'SELL';
+  // getInstance<T>(obj: T, c: new () => T): T {
+  //   if (!obj) {
+  //     return null;
+  //   } else if (obj instanceof T) {
+  //     return obj;
+  //   } else {
+  //     Object.assign(c(), obj);
+  //   }
+  // }
+
   isBuy(): boolean { return this.side === 'BUY'; }
   isSell(): boolean { return !this.isBuy(); }
-  status: 'NEW' | 'ACTIVE' | 'COMPLETED';
-  exit: ExitInfo;
-  stoploss: StopLoss;
 
   generateGuid(): string {
     let result = '';
@@ -53,12 +80,21 @@ export class Target {
   smart: boolean;
   sl: string;
   best_price: string;
+
+  isCompleted(): boolean { return this.status === TradeStatus.COMPLETED; }
 }
 
 export class StopLoss {
   type: SLType = SLType.FIXED;
   threshold: string = '5%';
   initial_target: Target;
+
+  constructor() {
+    this.initial_target = new Target();
+    this.initial_target.vol = '100%';
+  }
+  isFixed(): boolean { return this.type === SLType.FIXED; }
+  isTrailing(): boolean { return this.type === SLType.TRAILING; }
 }
 
 export enum SLType {

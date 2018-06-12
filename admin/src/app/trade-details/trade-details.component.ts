@@ -71,7 +71,12 @@ export class TradeDetailsComponent implements OnInit {
   }
 
   confirm() {
-    this.closeModal();
+    this.api.addTrade(this.trade).subscribe(res => console.log(res),
+      err => console.log(err),
+      () => this.closeModal.bind(this)
+    );
+    // console.log(this.trade);
+    // this.closeModal();
   }
 
   decline() {

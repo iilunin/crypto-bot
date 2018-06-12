@@ -162,16 +162,18 @@ export class AssetTableComponent implements OnInit {
   }
 
   confirm(): void {
+    const isClose = this.isCloseTradeAction;
+
     if (this.isCloseTradeAction === true) {
       this.api.closeTrade(this.selectedTradeId).subscribe(
         res => {
-          this.handleCloseTradeRsp(res, this.isCloseTradeAction === true);
+          this.handleCloseTradeRsp(res, isClose === true);
         }
       );
     } else if (this.isCloseTradeAction === false) {
       this.api.removeTrade(this.selectedTradeId).subscribe(
         res => {
-          this.handleCloseTradeRsp(res, this.isCloseTradeAction === true);
+          this.handleCloseTradeRsp(res, isClose === true);
         }
       );
       console.log('Remove trade');

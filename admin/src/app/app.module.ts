@@ -1,4 +1,4 @@
-import {AlertModule, ModalModule, TooltipModule} from 'ngx-bootstrap';
+import {AlertModule, ButtonsModule, CollapseModule, ModalModule, TooltipModule} from 'ngx-bootstrap';
 import {BrowserModule} from '@angular/platform-browser';
 import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 
@@ -24,6 +24,8 @@ import {SLDetailsComponent} from './trade-details/sl-details.component';
     SLDetailsComponent
   ],
   imports: [
+    // CollapseModule.forRoot(),
+    ButtonsModule.forRoot(),
     ModalModule.forRoot(),
     AlertModule.forRoot(),
     TooltipModule.forRoot(),

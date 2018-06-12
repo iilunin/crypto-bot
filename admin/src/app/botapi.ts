@@ -5,6 +5,7 @@ import {TradeInfo} from './tradeInfo';
 import {catchError, map, retry, tap} from 'rxjs/operators';
 import {ApiResult} from './apiresult';
 import {TradeDetails} from './trade-details';
+import deleteProperty = Reflect.deleteProperty;
 
 
 const httpOptions = {
@@ -19,6 +20,17 @@ export class BotApi {
   API_URL = 'http://127.0.0.1:3000/api/v1';
 
   constructor(private http: HttpClient) { }
+
+  addTrade(trade: TradeDetails ): Observable<ApiResult> {
+    const sanitizedTrade: any = Object.assign({}, trade, {stoploss: trade.stoploss});
+    deleteProperty(sanitizedTrade, '_stoploss');
+
+    // console.log(o);
+    return this.http.post<ApiResult>(`${this.API_URL}/trade/0`, JSON.stringify({action: 'add', data: {trade: sanitizedTrade} }), httpOptions).pipe(
+      // tap(_ => this.log(`Trade ${id} is closed`)),
+      catchError(this.handleError('closeTrade'))
+    );
+  }
 
   getActiveTradeInfo(id: string): Observable<TradeDetails> {
     return this.http.get<TradeDetails>(`${this.API_URL}/trade/${id}`, httpOptions).pipe(

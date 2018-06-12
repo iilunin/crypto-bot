@@ -25,6 +25,9 @@ export class ExitDetailsComponent implements OnInit {
   }
 
   deleteTarget(exitTarget: Target) {
+    if (exitTarget === this.lastAddedTarget) {
+      this.lastAddedTarget = null;
+    }
     this.trade.exit.targets = this.trade.exit.targets.filter(et => et !== exitTarget);
   }
 

@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {Mode, StopLoss, Target, TradeDetailMode, TradeDetails} from '../trade-details';
+import {Mode, SLType, StopLoss, Target, TradeDetailMode, TradeDetails} from '../trade-details';
 
 
 @Component({
@@ -8,6 +8,9 @@ import {Mode, StopLoss, Target, TradeDetailMode, TradeDetails} from '../trade-de
   styleUrls: ['./trade-details.component.css']
 })
 export class SLDetailsComponent implements OnInit {
+  private SLType = SLType;
+  // private _trade: TradeDetails;
+
   @Input()
   trade: TradeDetails;
 
@@ -29,7 +32,7 @@ export class SLDetailsComponent implements OnInit {
 
   deleteStopLoss() {
     if (this.trade.stoploss) {
-      delete this.trade.stoploss;
+      this.trade.stoploss = null;
     }
   }
 
