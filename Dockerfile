@@ -39,7 +39,9 @@ RUN npm run build
 FROM python:jessie
 MAINTAINER Igor Ilunin <ilunin.igor@gmail.com>
 
-RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app && \
+    mkdir -p /usr/src/app/api/templates
+
 WORKDIR /usr/src/app
 
 ENV \
@@ -58,11 +60,10 @@ RUN \
 VOLUME ["/usr/src/trades", "/usr/src/configs"]
 
 COPY . /usr/src/app
+COPY --from=builder /usr/src/app/dist /usr/src/app/api/templates
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-COPY --from=builder /usr/src/app/dist /usr/src/app/api/templates
 
 EXPOSE 3000
 CMD ["python3", "main.py", "api"]
