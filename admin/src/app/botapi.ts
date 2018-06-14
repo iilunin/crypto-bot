@@ -26,7 +26,9 @@ export class BotApi {
     deleteProperty(sanitizedTrade, '_stoploss');
 
     // console.log(o);
-    return this.http.post<ApiResult>(`${this.API_URL}/trade/0`, JSON.stringify({action: 'add', data: {trade: sanitizedTrade} }), httpOptions).pipe(
+    return this.http.post<ApiResult>(`${this.API_URL}/trade/0`,
+                                          JSON.stringify({action: 'add', data: {trade: sanitizedTrade} }),
+                                          httpOptions).pipe(
       // tap(_ => this.log(`Trade ${id} is closed`)),
       catchError(this.handleError('closeTrade'))
     );
@@ -46,6 +48,14 @@ export class BotApi {
       retry(this.RETRIES),
       tap(trades => this.log(`fetched trades`)),
       catchError(this.handleError('getActiveTrades', []))
+    );
+  }
+
+  getExchangeInfo(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/info`).pipe(
+      retry(this.RETRIES),
+      // tap(trades => this.log(`fetched trades`)),
+      catchError(this.handleError('getExchangeInfo', []))
     );
   }
 
@@ -123,7 +133,7 @@ export class BotApi {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T> (operation = 'operation', result?: T) {
+  private handleError<T> (operation, result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure

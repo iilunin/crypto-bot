@@ -1,4 +1,4 @@
 export class ApiResult {
-  status: number;
-  msg: string;
+  status?: number;
+  msg?: string;
 }

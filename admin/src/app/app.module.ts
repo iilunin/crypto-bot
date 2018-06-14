@@ -1,4 +1,4 @@
-import {AlertModule, ButtonsModule, CollapseModule, ModalModule, TooltipModule} from 'ngx-bootstrap';
+import {AlertModule, ButtonsModule, CollapseModule, ModalModule, TooltipModule, TypeaheadModule} from 'ngx-bootstrap';
 import {BrowserModule} from '@angular/platform-browser';
 import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 
@@ -11,6 +11,7 @@ import {TradesRoutingModule} from './trades-routing.module';
 import {FormsModule} from '@angular/forms';
 import {ExitDetailsComponent} from './trade-details/exit-details.component';
 import {SLDetailsComponent} from './trade-details/sl-details.component';
+import {SymbolValidatorDirective} from './trade-details/symbol-validator';
 
 // const schemas: any[] = [];
 // schemas.push(CUSTOM_ELEMENTS_SCHEMA);
@@ -21,10 +22,12 @@ import {SLDetailsComponent} from './trade-details/sl-details.component';
     AssetTableComponent,
     TradeDetailsComponent,
     ExitDetailsComponent,
-    SLDetailsComponent
+    SLDetailsComponent,
+    SymbolValidatorDirective
   ],
   imports: [
     // CollapseModule.forRoot(),
+    TypeaheadModule.forRoot(),
     ButtonsModule.forRoot(),
     ModalModule.forRoot(),
     AlertModule.forRoot(),

@@ -1,11 +1,14 @@
+import {st} from '@angular/core/src/render3';
+
 export class TradeDetails {
 
   private _stoploss: StopLoss;
 
   id: string;
   asset: string;
+  cap: string;
   symbol: string = '';
-  side: 'BUY' | 'SELL';
+  side: 'BUY' | 'SELL' = 'SELL';
   status: 'NEW' | 'ACTIVE' | 'COMPLETED';
   exit: ExitInfo;
 

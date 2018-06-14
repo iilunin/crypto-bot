@@ -101,6 +101,8 @@ class BinanceWebsocket(Thread, Logger):
                     self.start_ticker()
 
                 await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                pass
             except:
                 self.logError(traceback.format_exc())
 

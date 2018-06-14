@@ -60,4 +60,7 @@ class ExchangeInfo:
         return symbol in self.symbols
 
     def has_all_symbol(self, symbols):
-        return set(self.symbols) <= self.symbols
+        return set(symbols) <= self.symbols
+
+    def get_all_symbols(self):
+        return [{'s': s['symbol'], 'b': s['baseAsset']} for s in self.exchnage_info['symbols']]

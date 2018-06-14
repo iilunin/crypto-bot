@@ -23,6 +23,9 @@ export class TradeDetailsComponent implements OnInit {
   mode: Mode;
   // trade: TradeDetails;
 
+  exchangeInfo: any[];
+  symbols: Set<string>;
+
   private modalRef: BsModalRef;
 
   private config = {
@@ -60,7 +63,15 @@ export class TradeDetailsComponent implements OnInit {
 
     if (this.mode.isCreate()) {
       this.trade = new TradeDetails(true);
+      this.api.getExchangeInfo().subscribe(
+        res => {
+          this.exchangeInfo = res;
+          this.symbols = new Set<string>();
+          this.exchangeInfo.forEach(si => this.symbols.add(<string>si.s));
+        }
+      );
     } else {
+      this.exchangeInfo = [];
       this.route.paramMap.pipe(
         switchMap(params => {
           return this.api.getActiveTradeInfo(params.get('id'));
@@ -71,12 +82,10 @@ export class TradeDetailsComponent implements OnInit {
   }
 
   confirm() {
-    this.api.addTrade(this.trade).subscribe(res => console.log(res),
-      err => console.log(err),
-      () => this.closeModal.bind(this)
+    this.api.addTrade(this.trade).subscribe(
+      res => this.closeModal(),
+      err => console.log(err)
     );
-    // console.log(this.trade);
-    // this.closeModal();
   }
 
   decline() {
@@ -86,5 +95,11 @@ export class TradeDetailsComponent implements OnInit {
   closeModal() {
     this.modalRef.hide();
     this.router.navigate(['/trades']);
+  }
+
+  onSymbolSelected(event) {
+    if (this.mode.isCreate()) {
+      this.trade.asset = event.item.b;
+    }
   }
 }

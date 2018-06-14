@@ -232,9 +232,11 @@ class TradeHandler(Logger):
             finally:
                 self.start_listening()
 
-    # def remove_trade_by_symbol(self, sym):
-    #     with self.lock:
-    #         self.remove_trade_by_strategy(self.strategies_dict.get(sym, None))
+    def force_reconnect_sockets(self):
+        with self.lock:
+            self.stop_listening()
+            self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
+            self.start_listening()
 
     def get_strategy_by_id(self, id) -> TradingStrategy:
         return self.tradeid_strategy_dict.get(id, None)
