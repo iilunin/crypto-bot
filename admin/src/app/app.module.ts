@@ -4,7 +4,7 @@ import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 
 import {AppComponent} from './app.component';
 import {AssetTableComponent} from './asset-table/asset-table.component';
-import {HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule, HttpInterceptor} from '@angular/common/http';
 import {WebsocketService} from './websocket.service';
 import {TradeDetailsComponent} from './trade-details/trade-details.component';
 import {TradesRoutingModule} from './trades-routing.module';
@@ -12,6 +12,7 @@ import {FormsModule} from '@angular/forms';
 import {ExitDetailsComponent} from './trade-details/exit-details.component';
 import {SLDetailsComponent} from './trade-details/sl-details.component';
 import {SymbolValidatorDirective} from './trade-details/symbol-validator';
+import {AuthInterceptor} from './auth.interceptor';
 
 // const schemas: any[] = [];
 // schemas.push(CUSTOM_ELEMENTS_SCHEMA);
@@ -36,8 +37,14 @@ import {SymbolValidatorDirective} from './trade-details/symbol-validator';
     HttpClientModule,
     TradesRoutingModule,
     FormsModule
+
   ],
-  providers: [WebsocketService],
+  providers: [WebsocketService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }],
   bootstrap: [AppComponent]
   // schemas: schemas
 })

@@ -8,6 +8,7 @@ import {AlertComponent} from 'ngx-bootstrap';
 import {BinanceService} from '../binance.service';
 import {Router, RouterModule} from '@angular/router';
 import {TradeDetailMode} from '../trade-details';
+import {AuthService} from '../auth.service';
 
 @Component({
   selector: 'app-asset-table',
@@ -28,16 +29,28 @@ export class AssetTableComponent implements OnInit {
   constructor(private modalService: BsModalService,
               private api: BotApi,
               private binance: BinanceService,
-              private router: Router) {}
+              private router: Router,
+              private auth: AuthService) {}
 
   ngOnInit() {
     // this.validateAllTradesPaused();
-    this.refreshTrades();
+    // this.refreshTrades();
+    this.checkAuth();
   }
 
+  checkAuth() {
+    if (!this.auth.isLoggedIn()) {
+      this.auth.login('test', 'test').subscribe(
+        res =>  { if (res.jwt) {
+          this.refreshTrades();
+        }}
+      );
+    } else {
+      this.refreshTrades();
+    }
+  }
 
   refreshTrades() {
-
     this.api.getActiveTrades().subscribe(
       trades => {
         trades.forEach(t => t.btcVal = t.price * (t.avail + t.locked));

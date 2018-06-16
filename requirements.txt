@@ -6,3 +6,4 @@ websockets
 Flask
 flask-restful
 flask-cors
+flask-jwt-simple
