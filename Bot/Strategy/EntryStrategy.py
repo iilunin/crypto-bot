@@ -165,6 +165,15 @@ class EntryStrategy(TradingStrategy):
                 # vol = t.vol.get_val(self.balance.avail)
             vol = self.get_trade_volume(current_price)
 
+            # if was sold externaly
+            if not self.exchange_info.is_quanity_above_min(vol):
+                self.logInfo(
+                    'Volume {} is less than min allowed by pair rules {}. Marking target as completed.'.format(vol,
+                                                                                                               self.exchange_info.minQty))
+                self.current_target.set_completed()
+                self.trigger_target_updated()
+                return
+
             try:
                 order = self.fx.create_stop_order(
                     sym=self.symbol(),

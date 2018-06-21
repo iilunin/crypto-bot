@@ -24,6 +24,9 @@ class SymbolInfo:
         res = round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
         return float(min(max(res, self.minPrice), self.maxPrice))
 
+    def is_quanity_above_min(self, q):
+        return q > self.minQty
+
 class ExchangeInfo:
     __shared_state = {}
 
