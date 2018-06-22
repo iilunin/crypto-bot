@@ -2,7 +2,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {tap} from 'rxjs/operators';
 import {moment} from 'ngx-bootstrap/chronos/test/chain';
-import {Observable} from 'rxjs';
+import {Observable, Subject} from 'rxjs';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -13,6 +13,9 @@ const httpOptions = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   API_URL = 'http://127.0.0.1:3000/api/v1';
+
+  private loginAnouceSource = new Subject<boolean>();
+  loginEventAnounced$ =  this.loginAnouceSource.asObservable();
 
   constructor(private http: HttpClient) {
 
@@ -29,11 +32,13 @@ export class AuthService {
 
     localStorage.setItem('token', authResult.jwt);
     localStorage.setItem('exp', JSON.stringify(expiresAt.valueOf()) );
+    this.loginAnouceSource.next(true);
   }
 
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('exp');
+    this.loginAnouceSource.next(false);
   }
 
   public isLoggedIn() {

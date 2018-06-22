@@ -13,6 +13,7 @@ import {ExitDetailsComponent} from './trade-details/exit-details.component';
 import {SLDetailsComponent} from './trade-details/sl-details.component';
 import {SymbolValidatorDirective} from './trade-details/symbol-validator';
 import {AuthInterceptor} from './auth.interceptor';
+import { LogInComponent } from './log-in/log-in.component';
 
 // const schemas: any[] = [];
 // schemas.push(CUSTOM_ELEMENTS_SCHEMA);
@@ -24,7 +25,8 @@ import {AuthInterceptor} from './auth.interceptor';
     TradeDetailsComponent,
     ExitDetailsComponent,
     SLDetailsComponent,
-    SymbolValidatorDirective
+    SymbolValidatorDirective,
+    LogInComponent
   ],
   imports: [
     // CollapseModule.forRoot(),
@@ -37,7 +39,6 @@ import {AuthInterceptor} from './auth.interceptor';
     HttpClientModule,
     TradesRoutingModule,
     FormsModule
-
   ],
   providers: [WebsocketService,
     {

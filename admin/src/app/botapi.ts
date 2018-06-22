@@ -19,7 +19,8 @@ export class BotApi {
   RETRIES = 2;
   API_URL = 'http://127.0.0.1:3000/api/v1';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+  }
 
   addTrade(trade: TradeDetails ): Observable<ApiResult> {
     const sanitizedTrade: any = Object.assign({}, trade, {stoploss: trade.stoploss});

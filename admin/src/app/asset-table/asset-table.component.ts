@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
+import {Component, OnDestroy, OnInit, TemplateRef} from '@angular/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 
@@ -9,13 +9,14 @@ import {BinanceService} from '../binance.service';
 import {Router, RouterModule} from '@angular/router';
 import {TradeDetailMode} from '../trade-details';
 import {AuthService} from '../auth.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-asset-table',
   templateUrl: './asset-table.component.html',
   styleUrls: ['./asset-table.component.css']
 })
-export class AssetTableComponent implements OnInit {
+export class AssetTableComponent implements OnInit, OnDestroy {
   private TradeDetailMode = TradeDetailMode;
   trades: TradeInfo[] = [];
   symTrade: { [symbol: string ]: TradeInfo} = {};
@@ -25,30 +26,47 @@ export class AssetTableComponent implements OnInit {
   private selectedTradeId: string;
   private isCloseTradeAction?: boolean;
   private symbolObserver?: any;
+  private loginSubscrition: Subscription;
 
   constructor(private modalService: BsModalService,
               private api: BotApi,
               private binance: BinanceService,
               private router: Router,
-              private auth: AuthService) {}
+              private auth: AuthService) {
 
-  ngOnInit() {
-    // this.validateAllTradesPaused();
-    // this.refreshTrades();
-    this.checkAuth();
+
   }
 
-  checkAuth() {
-    if (!this.auth.isLoggedIn()) {
-      this.auth.login('test', 'test').subscribe(
-        res =>  { if (res.jwt) {
+  ngOnInit() {
+    this.loginSubscrition = this.auth.loginEventAnounced$.subscribe(res => {
+        if (res === true) {
           this.refreshTrades();
-        }}
-      );
-    } else {
+        }
+      }
+    );
+    // this.validateAllTradesPaused();
+    // this.refreshTrades();
+    // this.checkAuth();
+    if (this.auth.isLoggedIn()) {
       this.refreshTrades();
     }
   }
+
+  ngOnDestroy() {
+    this.loginSubscrition.unsubscribe();
+  }
+
+  // checkAuth() {
+  //   if (!this.auth.isLoggedIn()) {
+  //     this.auth.login('test', 'test').subscribe(
+  //       res =>  { if (res.jwt) {
+  //         this.refreshTrades();
+  //       }}
+  //     );
+  //   } else {
+  //     this.refreshTrades();
+  //   }
+  // }
 
   refreshTrades() {
     this.api.getActiveTrades().subscribe(
