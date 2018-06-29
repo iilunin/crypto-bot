@@ -1,5 +1,6 @@
+import os
 from calendar import timegm
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import flask
 from flask import request
@@ -10,6 +11,9 @@ from API.Endpoints.BotAPIResource import BotAPIResource
 
 
 class JWTEndpoint(BotAPIResource):
+    user: str = os.getenv('API_USER', 'bot')
+    pwd: str = os.getenv('API_PASS', 'botpwd')
+
     def __init__(self, trade_handler):
         super().__init__(trade_handler)
 
@@ -28,7 +32,7 @@ class JWTEndpoint(BotAPIResource):
         if not password:
             return APIResult.ErrorResult(status=101, msg="Missing password parameter"), 400
 
-        if username != 'test' or password != 'test':
+        if username != JWTEndpoint.user or password != JWTEndpoint.pwd:
             return APIResult.ErrorResult(status=101, msg="Bad username or password"), 401
 
         # Identity can be any data that is json serializable
