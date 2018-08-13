@@ -5,7 +5,8 @@
 export const environment = {
   production: false,
   BINANCE_WSS_URL: 'wss://stream.binance.com:9443',
-  BINANCE_API_URL: 'https://api.binance.com'
+  BINANCE_API_URL: 'https://api.binance.com',
+  BOT_API_URL: 'http://127.0.0.1:3000'
 };
 
 /*

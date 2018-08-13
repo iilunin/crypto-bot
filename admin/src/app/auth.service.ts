@@ -3,6 +3,7 @@ import {Injectable} from '@angular/core';
 import {tap} from 'rxjs/operators';
 import {moment} from 'ngx-bootstrap/chronos/test/chain';
 import {Observable, Subject} from 'rxjs';
+import {environment} from '../environments/environment';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -12,13 +13,13 @@ const httpOptions = {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  API_URL = 'http://127.0.0.1:3000/api/v1';
+  API_URL = `${environment.BOT_API_URL}/api/v1`;
 
   private loginAnouceSource = new Subject<boolean>();
   loginEventAnounced$ =  this.loginAnouceSource.asObservable();
 
   constructor(private http: HttpClient) {
-
+    console.log(this.API_URL);
   }
 
   login(user: string, password: string): Observable<any> {
