@@ -29,7 +29,7 @@ COPY ./admin /usr/src/app
 #RUN ng test --watch=false
 
 # generate build
-RUN npm run build
+RUN npm run build-prod
 
 
 ##################

@@ -6,6 +6,7 @@ import {catchError, map, retry, tap} from 'rxjs/operators';
 import {ApiResult} from './apiresult';
 import {TradeDetails} from './trade-details';
 import deleteProperty = Reflect.deleteProperty;
+import {environment} from '../environments/environment';
 
 
 const httpOptions = {
@@ -17,7 +18,7 @@ const httpOptions = {
 @Injectable({ providedIn: 'root' })
 export class BotApi {
   RETRIES = 2;
-  API_URL = 'http://127.0.0.1:3000/api/v1';
+  API_URL = `${environment.BOT_API_URL}/api/v1`;
 
   constructor(private http: HttpClient) {
   }
