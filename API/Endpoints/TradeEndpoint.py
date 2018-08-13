@@ -56,7 +56,7 @@ class TradeEndpoint(BotAPIResource):
 
         strategies = self.get_strategies(id)
 
-        if not strategies:
+        if not strategies and id != '0':
             return APIResult.ErrorResult(101, msg='No strategies were found'), 404
 
         action = action.lower()
