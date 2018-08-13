@@ -32,7 +32,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
               private api: BotApi,
               private binance: BinanceService,
               private router: Router,
-              private auth: AuthService) {
+              public auth: AuthService) {
 
 
   }
