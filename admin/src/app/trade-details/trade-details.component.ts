@@ -7,6 +7,7 @@ import {Mode, TradeDetailMode, TradeDetails} from '../trade-details';
 import {Observable} from 'rxjs';
 import {BsModalService} from 'ngx-bootstrap/modal';
 import {BsModalRef} from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import {TradeEvent, TradeService} from '../trade.service';
 
 @Component({
   selector: 'app-trade-details',
@@ -32,14 +33,15 @@ export class TradeDetailsComponent implements OnInit {
     class: 'modal-lg',
     keyboard: false,
     ignoreBackdropClick: true
-  }
+  };
 
-  constructor( private modalService: BsModalService,
-               private route: ActivatedRoute,
-               private changeDetector: ChangeDetectorRef,
-               private router: Router,
-               private location: Location,
-               private api: BotApi) {
+  constructor(private modalService: BsModalService,
+              private route: ActivatedRoute,
+              private changeDetector: ChangeDetectorRef,
+              private router: Router,
+              private location: Location,
+              private api: BotApi,
+              private tradeService: TradeService) {
 
     this.route.paramMap.subscribe(params => this.mode = new Mode(<TradeDetailMode>params.get('mode')));
   }
@@ -83,7 +85,13 @@ export class TradeDetailsComponent implements OnInit {
 
   confirm() {
     this.api.addTrade(this.trade).subscribe(
-      res => this.closeModal(),
+      res => {
+        this.closeModal();
+
+        if (this.mode.isCreate()) {
+          this.tradeService.anounce(new TradeEvent('TradeDeatails', 'created'));
+        }
+      },
       err => console.log(err)
     );
   }

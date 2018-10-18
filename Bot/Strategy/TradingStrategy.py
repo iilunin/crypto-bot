@@ -194,7 +194,7 @@ class TradingStrategy(Logger):
         if not selector:
             selector = self.price_selector()
 
-        return price[selector]
+        return price.get(selector, 0)
 
     def get_info(self):
         # return TradeInfo(self)

@@ -10,6 +10,7 @@ import {Router, RouterModule} from '@angular/router';
 import {TradeDetailMode} from '../trade-details';
 import {AuthService} from '../auth.service';
 import {Subscription} from 'rxjs';
+import {TradeService} from '../trade.service';
 
 @Component({
   selector: 'app-asset-table',
@@ -27,12 +28,14 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   private isCloseTradeAction?: boolean;
   private symbolObserver?: any;
   private loginSubscrition: Subscription;
+  private tradeNotificationSubscription: Subscription;
 
   constructor(private modalService: BsModalService,
               private api: BotApi,
               private binance: BinanceService,
               private router: Router,
-              public auth: AuthService) {
+              public auth: AuthService,
+              private tradeService: TradeService) {
 
 
   }
@@ -50,10 +53,19 @@ export class AssetTableComponent implements OnInit, OnDestroy {
     if (this.auth.isLoggedIn()) {
       this.refreshTrades();
     }
+
+    this.tradeNotificationSubscription = this.tradeService.eventAnounces$.subscribe(res => {
+      console.log(res);
+      if (res.type === 'created') {
+        this.refreshTrades();
+        // setTimeout(this.refreshTrades.bind(this), 0);
+      }
+    });
   }
 
   ngOnDestroy() {
     this.loginSubscrition.unsubscribe();
+    this.tradeNotificationSubscription.unsubscribe();
   }
 
   // checkAuth() {
@@ -68,7 +80,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   //   }
   // }
 
-  refreshTrades() {
+    refreshTrades() {
     this.api.getActiveTrades().subscribe(
       trades => {
         trades.forEach(t => t.btcVal = t.price * (t.avail + t.locked));
