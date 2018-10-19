@@ -25,7 +25,7 @@ class EntryStrategy(TradingStrategy):
 
         # no smart targets available
         if not smart_target:
-            return
+            return False
 
         if self.current_target != smart_target:
             self.current_target = smart_target
@@ -36,7 +36,9 @@ class EntryStrategy(TradingStrategy):
                                       sl_threshold=self.get_trade_section().sl_threshold,
                                       logger=self.logger,
                                       best_price=self.current_target.best_price)
+            return True
 
+        return False
 
     def update_trade(self, trade: Trade):
         self.trade = trade
@@ -55,7 +57,7 @@ class EntryStrategy(TradingStrategy):
                 self.logInfo('All Orders are Completed')
                 return
 
-            self.ensure_smart_order()
+            first_init = self.ensure_smart_order()
 
             if not self.current_target:
                 return
@@ -63,6 +65,7 @@ class EntryStrategy(TradingStrategy):
             price = self.get_single_price(new_price, self.price_selector(self.trade_side()))
 
             if not self.smart_order.is_init():
+                first_init = True
                 ph = PriceHelper.create_price_helper(self.current_target.price)
                 actual_price = ph.get_value(price)
                 self.smart_order.init_price(actual_price)
@@ -73,7 +76,12 @@ class EntryStrategy(TradingStrategy):
 
             # TODO: add automatic order placement if it was canceled by someone
             trigger_order_price = self.smart_order.price_update(price)
+
+            if first_init:
+                self.logInfo('Trigger order price is {:.08f}. Market price is {:.08f}'.format(trigger_order_price, price))
+
             self.handle_smart_target(trigger_order_price, price)
+
         except BinanceAPIException as bae:
             self.logError(traceback.format_exc())
 
@@ -156,6 +164,15 @@ class EntryStrategy(TradingStrategy):
 
                 # vol = t.vol.get_val(self.balance.avail)
             vol = self.get_trade_volume(current_price)
+
+            # if was sold externaly
+            if not self.exchange_info.is_quanity_above_min(vol):
+                self.logInfo(
+                    'Volume {} is less than min allowed by pair rules {}. Marking target as completed.'.format(vol,
+                                                                                                               self.exchange_info.minQty))
+                self.current_target.set_completed()
+                self.trigger_target_updated()
+                return
 
             try:
                 order = self.fx.create_stop_order(

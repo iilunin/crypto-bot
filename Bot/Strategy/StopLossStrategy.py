@@ -181,7 +181,6 @@ class StopLossStrategy(TradingStrategy):
             -1 if self.trade.is_sell() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
             self.current_stop_loss)
 
-
     def cancel_all_orders(self):
         self.logInfo('canceling all orders...')
 

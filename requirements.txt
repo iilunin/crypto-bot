@@ -3,3 +3,7 @@ numpy
 retrying
 boto3
 websockets
+Flask
+flask-restful
+flask-cors
+flask-jwt-simple

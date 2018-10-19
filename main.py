@@ -6,6 +6,8 @@ from os import listdir, environ
 
 import sys
 
+from API.APIServer import APIServer
+from Bot.Target import Target
 from ConsoleLauncher import ConsoleLauncher
 from Bot.ConfigLoader import ConfigLoader
 
@@ -22,21 +24,81 @@ CONF_DIR = environ.get('CONF_DIR', 'Conf/')
 
 ENABLE_CLOUD = True
 
-launcher = ConsoleLauncher(
-    TRADE_PORTFOLIO_PATH,
-    COMPLETED_ORDER_PATH_PORTFOLIO,
-    CONF_DIR,
-    environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
-# launcher = ConsoleLauncher(TEST_PORTFOLIO_PATH, COMPLETED_ORDER_PATH_PORTFOLIO, CONF_DIR, False)
-
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == 'sync':
-        launcher.sync_down()
-    else:
-        launcher.start_bot()
+
+    launcher = ConsoleLauncher(
+        TRADE_PORTFOLIO_PATH,
+        COMPLETED_ORDER_PATH_PORTFOLIO,
+        CONF_DIR,
+        environ.get('TRADE_BUCKET') is not None and ENABLE_CLOUD)
+
+    api_mode = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'api':
+            api_mode = True
+
+        elif sys.argv[1] == 'sync':
+            launcher.sync_down()
+            return
+
+        elif sys.argv[1] == 'gen':
+            get_input_for_targets()
+            return
+
+    launcher.start_bot()
+
+    if api_mode:
+        api = APIServer(launcher.trade_handler)
+        api.run(3000)
 
 # def signal_handler(signal=None, frame=None):
 #     launcher.stop_bot()
+
+def get_input_for_targets():
+    smart = 'y'
+    if len(sys.argv) > 2:
+        single_arg = sys.argv[2]
+        args = single_arg.split('/', 4)
+        price = args[0]
+        iter = args[1]
+        increment = args[2]
+        if len(args) == 4:
+            smart = args[3]
+    else:
+        price = get_input("Start price: ")
+        iter = get_input("Iterations (5): ", 5)
+        increment = get_input("Price increase in percent (2): ", 2)
+        sl = get_input("Sl interval (3):", 3)
+        smart = get_input("Smart (Y/n):", 'y')
+
+
+    smart = True if not smart or smart.lower() == 'y' else False
+
+    generate_targets(float(price), int(iter), float(increment), smart, int(sl))
+
+def get_input(text, default=None):
+    inp = input(text)
+    if not inp:
+        return default
+    if not inp.strip():
+        return default
+    return inp.strip()
+
+def generate_targets(start_price, iter=4, increment=4, smart=True, sl_interval=3):
+    targets = []
+    prices = []
+    for i in range(0, iter):
+        prices.append(start_price)
+        vol = round(100/(iter - i), 2)
+
+        target = Target(price=start_price, vol='{}%'.format(vol), smart=smart)
+        if sl_interval != 0 and len(prices) >= sl_interval:
+            target.sl = prices[-sl_interval]
+
+        targets.append(target)
+        start_price = round(start_price * (1+increment/100), 8)
+
+    print(ConfigLoader.get_json_str(targets))
 
 
 def test_change_order():
@@ -91,16 +153,6 @@ def save_new_order_file_structure(path, new_path):
 
             new_trade_path = new_path + t.symbol + '.json'
             cl.save_trades(cl.json_saver(new_trade_path), [t])
-
-# @atexit.register
-# def on_exit():
-#     # print('on exit')
-#     try:
-#         if launcher:
-#             launcher.stop_bot()
-#     except Exception as e:
-#         print(e)
-
 
 if __name__ == '__main__':
     main()

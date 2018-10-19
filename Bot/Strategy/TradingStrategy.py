@@ -21,10 +21,12 @@ class TradingStrategy(Logger):
         self.trade: Trade = trade
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
-        self.exchange_info = ExchangeInfo().symbol_info(self.symbol())
+        self._exchange_info = None
         self.simulate = False
         self.trade_updated = trade_updated
         self.last_execution_price = 0
+        self.paused = False
+        self.last_price = {}
 
         super().__init__()
 
@@ -33,6 +35,13 @@ class TradingStrategy(Logger):
                 self.balance = balance
         else:
             self.init()
+
+    @property
+    def exchange_info(self):
+        if not self._exchange_info:
+            self._exchange_info = ExchangeInfo().symbol_info(self.symbol())
+
+        return self._exchange_info
 
     def _get_logger_name(self):
         return '{}({})'.format(self.__class__.__name__, self.symbol())
@@ -68,6 +77,9 @@ class TradingStrategy(Logger):
 
     def symbol(self):
         return self.trade.symbol
+
+    def emergent_close_position(self):
+        raise NotImplementedError('Strategy does not support this method')
 
     def on_execution_rpt(self, data):
         self.logInfo('Execution Rpt: {}'.format(data))
@@ -167,6 +179,10 @@ class TradingStrategy(Logger):
             self.trade.set_completed()
             self.trigger_target_updated()
 
+    def set_trade_removed(self):
+        self.trade.set_removed()
+        self.trigger_target_updated()
+
     def trigger_target_updated(self, sync_cloud=True):
         if self.trade_updated:
             self.trade_updated(self.trade, sync_cloud)
@@ -178,7 +194,7 @@ class TradingStrategy(Logger):
         if not selector:
             selector = self.price_selector()
 
-        return price[selector]
+        return price.get(selector, 0)
 
     def get_info(self):
         # return TradeInfo(self)

@@ -14,12 +14,18 @@ class SymbolInfo:
         return s.rstrip('0')
 
     def adjust_quanity(self, q, round_down=True):
+        if q == 0:
+            return 0
+
         res = float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
         return float(min(max(res, self.minQty), self.maxQty))
 
     def adjust_price(self, q, round_down=True):
         res = round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
         return float(min(max(res, self.minPrice), self.maxPrice))
+
+    def is_quanity_above_min(self, q):
+        return q > self.minQty
 
 class ExchangeInfo:
     __shared_state = {}
@@ -57,4 +63,7 @@ class ExchangeInfo:
         return symbol in self.symbols
 
     def has_all_symbol(self, symbols):
-        return set(self.symbols) <= self.symbols
+        return set(symbols) <= self.symbols
+
+    def get_all_symbols(self):
+        return [{'s': s['symbol'], 'b': s['baseAsset']} for s in self.exchnage_info['symbols']]

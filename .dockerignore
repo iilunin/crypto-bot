@@ -8,3 +8,4 @@ api.json
 /Trades/Completed/*
 /Trades/Potential
 /Trades/Potential/*
+/admin/node_modules

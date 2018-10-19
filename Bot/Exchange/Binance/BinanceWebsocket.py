@@ -12,12 +12,13 @@ import asyncio
 import websockets
 import websockets.exceptions
 
-import signal
 import os
 import os.path
 
+from requests import ConnectionError
 from retrying import retry
-from websockets import ConnectionClosed, InvalidStatusCode
+from websockets import ConnectionClosed, InvalidStatusCode, WebSocketClientProtocol
+from websockets.protocol import State
 
 from Utils.Logger import Logger
 
@@ -35,8 +36,8 @@ class BinanceWebsocket(Thread, Logger):
         self.client = client
         self.stop = False
 
-        self.ticker_websocket = None
-        self.user_webscoket = None
+        self.ticker_websocket: WebSocketClientProtocol = None
+        self.user_webscoket: WebSocketClientProtocol = None
 
         self.ticker_ws_future = None
         self.user_ws_future = None
@@ -83,125 +84,163 @@ class BinanceWebsocket(Thread, Logger):
     @asyncio.coroutine
     async def management_loop(self):
         while True:
-            if self.stop:
-                return
+            try:
+                if self.stop:
+                    return
 
-            if self.time and (time.time() - self.time) > BinanceWebsocket.REFRESH_KEY_TIMEOUT:
-                self.start_user_info()
+                if self.time and (time.time() - self.time) > BinanceWebsocket.REFRESH_KEY_TIMEOUT:
+                    self.start_user_info()
 
-            await asyncio.sleep(60)
+                if self.user_webscoket:
+                    if self.user_webscoket.state == State.OPEN:
+                        self.user_webscoket.ping()
+                    elif self.user_webscoket.state == State.CLOSED:
+                        self.start_user_info(force_reconnect=True)
+
+                if self.ticker_websocket and self.ticker_websocket.state == State.CLOSED:
+                    self.start_ticker()
+
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                pass
+            except:
+                self.logError(traceback.format_exc())
 
     def start_ticker(self, symbols=None, callback=None):
         if symbols:
             self.symbols = symbols
+        else:
+            symbols = self.symbols
 
         if callback:
             self.ticker_cb = callback
 
-        url = os.path.join(BinanceWebsocket.WS_URL,
-                           'stream?streams=' + '/'.join([s.lower() + '@ticker' for s in self.symbols]))
-        self.ticker_ws_future = asyncio.run_coroutine_threadsafe(self.websocket_handler(url, self.ticker_cb), self.loop)
+        if symbols:
+            url = os.path.join(BinanceWebsocket.WS_URL,
+                               'stream?streams=' + '/'.join([s.lower() + '@ticker' for s in symbols]))
+        else:
+            url = os.path.join(BinanceWebsocket.WS_URL, 'ws/!ticker@arr')
+
+        self.ticker_ws_future = asyncio.run_coroutine_threadsafe(self.websocket_handler(url, self.ticker_cb, True), self.loop)
 
         self.ticker_ws_future.add_done_callback(
             functools.partial(self.feature_finished, reconnect_fn=self.start_ticker, name='ticker websocket'))
 
-    def start_user_info(self, callback=None):
+    def start_user_info(self, callback=None, force_reconnect=False):
         self.time = time.time()
 
         if callback:
             self.user_info_cb = callback
 
-        get_key = asyncio.run_coroutine_threadsafe(self.refresh_listen_key(), self.loop)
+        get_key = asyncio.run_coroutine_threadsafe(self.refresh_listen_key(force_reconnect), self.loop)
         get_key.add_done_callback(self.listen_key_received)
 
-    def feature_finished(self, future: asyncio.Future, reconnect_fn=None, name=''):
-        self.logInfo('Feature finished: "{}"'.format(name))
+    @asyncio.coroutine
+    async def refresh_listen_key(self, force_reconnect: bool):
+        return (self.client.stream_get_listen_key(), force_reconnect)
 
-        if future.cancelled():
-            return
+    def listen_key_received(self, future: asyncio.Future):
+        try:
+            self.logInfo('Feature finished: "listen_key_received"')
 
-        exc = future.exception()
-        if exc:
-            if (isinstance(exc, ConnectionClosed) and exc.code > 1002) or isinstance(exc, InvalidStatusCode):
+            if future.cancelled():
+                return
+
+            exc = future.exception()
+            if exc:
                 self.logError(exc)
 
-                if reconnect_fn and not self.stop:
+                if isinstance(exc, ConnectionError):
                     self.logInfo('Trying to reconnect...')
                     sleep(1)
-                    reconnect_fn()
-                else:
-                    self.logInfo('No reconnection function...')
+                    self.start_user_info(force_reconnect=True)
+
                 return
+
+            key, force_reconnect = future.result()
+            create_user_ws = force_reconnect
+
+            if key != self.connection_key or not self.user_ws_future or \
+                    self.user_ws_future.cancelled() or self.user_ws_future.done():
+                create_user_ws = True
+
+            if create_user_ws:
+                self.stop_user_future()
+                self.user_ws_future = asyncio.ensure_future(
+                    self.websocket_handler(os.path.join(BinanceWebsocket.WS_URL, 'ws', key), self.user_info_cb))
+
+                self.user_ws_future.add_done_callback(
+                    functools.partial(self.feature_finished, reconnect_fn=functools.partial(self.start_user_info, force_reconnect=True), name='user websocket'))
+
+            self.connection_key = key
+        except:
+            self.logError(traceback.format_exc())
+
+
+    def feature_finished(self, future: asyncio.Future, reconnect_fn=None, name=''):
+        try:
+            self.logInfo('Feature finished: "{}"'.format(name))
+
+            if future.cancelled():
+                return
+
+            exc = future.exception()
+            if exc:
+                if (isinstance(exc, ConnectionClosed) and exc.code > 1002) \
+                        or isinstance(exc, InvalidStatusCode, TypeError):
+                    self.logError(exc)
+
+                    if reconnect_fn and not self.stop:
+                        self.logInfo('Trying to reconnect...')
+                        sleep(1)
+                        reconnect_fn()
+                    else:
+                        self.logInfo('No reconnection function...')
+                    return
+                else:
+                    self.logError(exc)
             else:
-                self.logError(exc)
-        # try:
-        #     self.logInfo('Feature finished: "{}"'.format(name))
-        #
-        #     # 2018 - 05 - 03
-        #     # 02: 14:01, 464[INFO][BinanceWebsocket | Binance
-        #     # WebSocket
-        #     # Thread]: Feature
-        #     # finished: < Task
-        #     # finished
-        #     # coro = < BinanceWebsocket.websocket_handler()
-        #     # done, defined
-        #     # at / usr / src / app / Bot / Exchange / Binance / BinanceWebsocket.py: 137 > exception = ConnectionClosed(
-        #     #     'WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason', ) >
-        # except Exception as e:
-        #     self.logError(traceback.format_exc())
+                ws: WebSocketClientProtocol = future.result()
 
-    @asyncio.coroutine
-    async def refresh_listen_key(self):
-        return self.client.stream_get_listen_key()
+                if ws and ws.state == State.CLOSED:
+                    self.logInfo('WS Closed: {} - {}'.format(ws.close_code, ws.close_reason))
+        except:
+            self.logError(traceback.format_exc())
 
-    def listen_key_received(self, future):
-        key = future.result()
-        create_user_ws = False
-
-        if key != self.connection_key or not self.user_ws_future or \
-                self.user_ws_future.cancelled() or self.user_ws_future.done():
-            create_user_ws = True
-
-        if create_user_ws:
-            self.stop_user_future()
-            self.user_ws_future = asyncio.ensure_future(
-                self.websocket_handler(os.path.join(BinanceWebsocket.WS_URL, 'ws', key), self.user_info_cb))
-
-            # self.user_ws_future.add_done_callback(self.feature_finished)
-            self.user_ws_future.add_done_callback(
-                functools.partial(self.feature_finished, reconnect_fn=self.start_user_info, name='user websocket'))
-
-
-        self.connection_key = key
-
-    async def manage_user_ws_loop(self):
-        return self.refresh_listen_key()
 
     def stop_user_future(self):
         if self.user_ws_future:
+            self.logInfo('Canceling User WebSocket')
             self.user_ws_future.cancel()
             self.user_ws_future = None
 
     def stop_ticker_future(self):
         if self.ticker_ws_future:
+            self.logInfo('Canceling Ticker WebSocket')
             self.ticker_ws_future.cancel()
             self.ticker_ws_future = None
 
     @asyncio.coroutine
-    async def websocket_handler(self, url, callback):
+    async def websocket_handler(self, url, callback, is_ticker = False):
         if self.stop:
-            return
+            return None
 
         async with websockets.connect(url, timeout=1) as websocket:
-            self.ticker_websocket = websocket
+            if is_ticker:
+                self.ticker_websocket = websocket
+            else:
+                self.user_webscoket = websocket
+
             self.logInfo('Websocket Connected to "{}"'.format(url))
 
             async for message in websocket:
                 if self.stop:
-                    return
+                    return websocket
 
                 if callback:
                     callback(json.loads(message))
+
+        return websocket
 
     def stop_sockets(self):
         self.stop = True
