@@ -18,7 +18,7 @@ from Cloud.S3Sync import S3Persistence
 from Utils.Logger import Logger
 from Utils import Utils
 
-
+BOT_VERSION = 'v0.0.4'
 class ConsoleLauncher(Logger):
     TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
 
@@ -55,7 +55,7 @@ class ConsoleLauncher(Logger):
         trades = self.config_loader.load_trade_list(self.trades_path)
         trade_validator = TradeValidator()
 
-        self.logInfo('Starting Bot...')
+        self.logInfo('Starting Bot... Version: {}'.format(BOT_VERSION))
 
         for trade in trades[:]:
             if trade.is_completed() or trade.is_removed():

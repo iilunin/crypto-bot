@@ -21,7 +21,7 @@ After you get API Key and Secret from Binance there are 2 options how to proceed
 2. Pass Key and Secret as parameters to the Docker `-e "KEY=BINANCE_API_KEY"` 
 and `-e "SECRET=BINANCE_API_SECRET"`
 
-## Running bot on Mac
+## Running bot on Mac / Linux
 1. Pull the image `docker pull iilunin/crypto-bot:stable`.
 2. Create the folder for active and completed trades:
     - `mkdir Active` - where you will put all new trades
@@ -46,6 +46,25 @@ Once the bot is started, you can place your trade files into the `Active` direct
 If by the start time `Active` directory has trade files they will be picked up as well.
 
 To stop the bot run `docker stop cryptobot`
+
+Running Bot with UI enabled:
+```shell
+docker run -d --rm -p 3000:3000 --name cryptobot \
+-e "TZ=America/New_York" \
+-e "KEY=BINANCE_API_KEY" \
+-e "SECRET=BINANCE_API_SECRET" \
+-e "API_USER=ANY_USER_NAME" \
+-e "API_PASS=ANY_PASSWORD" \
+-v $(pwd)/Active:/usr/src/trades \
+-v $(pwd)/Completed:/usr/src/complete_trades \
+-v $(pwd)/Config:/usr/src/configs:ro \
+iilunin/crypto-bot:stable
+```
+
+You need to specify `API_USER` and `API_PASS`. With this credentials you'll be able to authenticate 
+to the web interface. Web interface is accessible via this url [http://localhost:3000](http://localhost:3000)
+
+Grid View: ![Grid View](./grid_view.png "Grid View")
 
 ### Known Issues
 On Mac, sometimes Docker VM is getting out of sync with local time, 

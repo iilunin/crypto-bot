@@ -16,6 +16,7 @@ I am not taking any responsibility for the outcomes you get when using it.
 
 
 ## Features
+- Simple Web User Interface 
 - Manage an unlimited number of trading pairs
 - Supports "smart" trade entry 
 - Unlimited exit targets 
@@ -23,6 +24,8 @@ I am not taking any responsibility for the outcomes you get when using it.
 - Flexible stop loss settings: Fixed/Trialing + Custom SL after each target reached
 - One Cancels the Other functionality (OCO) 
 - FREE :)
+
+Edit View: ![Edit View](./Docs/edit_view.png "Edit View")
 
 ## Limitations
 - Can't have multiple trades for one trading pair
