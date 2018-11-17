@@ -107,7 +107,7 @@ class ConsoleLauncher(Logger):
     def sync_down(self):
         if self.enable_cloud:
             self.s3pers.sync(False, True)
-            self.s3pers.await()
+            self.s3pers.finish()
 
     def init_file_watch_list(self):
         target_path_list = [f for f in listdir(self.trades_path) if
