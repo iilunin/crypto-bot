@@ -38,14 +38,14 @@ class S3Persistence(Logger):
         self.uploaded_requests = {}
 
     def sync(self, resolve_conflict_using_local=True, delete=False):
-        self.await()
+        self.finish()
 
         self.thread = BotThread(self.__sync_thread, resolve_conflict_using_local, delete)
         self.thread.name = 'S3 Sync'
 
         self.thread.start()
 
-    def await(self):
+    def finish(self):
         if self.thread and self.thread.is_alive():
             self.thread.join()
 
