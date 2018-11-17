@@ -87,6 +87,9 @@ class ConsoleLauncher(Logger):
         self.start_timer()
 
     def get_exchange_creds(self, api_path):
+        key = None
+        secret = None
+
         if os.environ.get('KEY') and os.environ.get('SECRET'):
             key = os.environ.get('KEY')
             secret = os.environ.get('SECRET')
