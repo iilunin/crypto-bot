@@ -11,6 +11,7 @@ export class TradeDetails {
   side: 'BUY' | 'SELL' = 'SELL';
   status: 'NEW' | 'ACTIVE' | 'COMPLETED';
   exit: ExitInfo;
+  entry?: Entry;
 
   get stoploss(): StopLoss {
     return this._stoploss;
@@ -71,7 +72,24 @@ export class ExitInfo {
   smart: boolean;
   threshold: string;
   targets: Target[];
+}
 
+export class EntryTarget {
+  price: string;
+  vol: string;
+}
+
+export class Entry {
+  constructor() {
+    this.targets = [new EntryTarget()];
+  }
+
+  side: 'BUY' | 'SELL' = 'BUY';
+  targets: [EntryTarget];
+  smart: boolean;
+
+  isBuy(): boolean { return this.side === 'BUY'; }
+  isSell(): boolean { return !this.isBuy(); }
 }
 
 export class Target {
