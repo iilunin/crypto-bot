@@ -2,6 +2,7 @@ import {AfterContentInit, ChangeDetectorRef, Component, ElementRef, OnInit, View
 import {Location} from '@angular/common';
 import {ActivatedRoute, ParamMap, Router} from '@angular/router';
 import {BotApi} from '../botapi';
+import {BinanceService, BinancePriceResult} from '../binance.service';
 import {switchMap} from 'rxjs/operators';
 import {Mode, TradeDetailMode, TradeDetails} from '../trade-details';
 import {Observable} from 'rxjs';
@@ -23,6 +24,7 @@ export class TradeDetailsComponent implements OnInit {
   // editMode: boolean;
   mode: Mode;
   // trade: TradeDetails;
+  priceInfo: BinancePriceResult;
 
   exchangeInfo: any[];
   symbols: Set<string>;
@@ -41,6 +43,7 @@ export class TradeDetailsComponent implements OnInit {
               private router: Router,
               private location: Location,
               private api: BotApi,
+              private binance: BinanceService,
               private tradeService: TradeService) {
 
     this.route.paramMap.subscribe(params => this.mode = new Mode(<TradeDetailMode>params.get('mode')));
@@ -105,8 +108,17 @@ export class TradeDetailsComponent implements OnInit {
     this.router.navigate(['/trades']);
   }
 
+  onPriceUpdate(price: BinancePriceResult): void {
+    this.priceInfo = price;
+  }
+
   onSymbolSelected(event) {
     if (this.mode.isCreate()) {
+      if (this.trade.asset !== event.item.b) {
+        // query binance prices
+        this.binance.getPrice(event.item.s).subscribe(this.onPriceUpdate.bind(this));
+      }
+
       this.trade.asset = event.item.b;
     }
   }

@@ -6,16 +6,11 @@ import {environment} from '../environments/environment';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {TradeInfo} from './tradeInfo';
 
-
-// const binHttpOptions = {
-//   headers: new HttpHeaders({
-//     'Content-Type':  'application/json',
-//     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token',
-//     'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-//     'Access-Control-Allow-Origin': '*'
-//   })
-// };
-
+export class BinancePriceResult {
+  symbol: string;
+  bestAsk: string;
+  bestBid: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -23,17 +18,22 @@ import {TradeInfo} from './tradeInfo';
 export class BinanceService {
 
   symbols: Subject<string>;
-  /*constructor(private wss: WebsocketService, private http: HttpClient) {
-  }*/
 
-  // getOrderBookTickers(): Observable<any> {
-  //   return this.http.get<any>(`${environment.BINANCE_API_URL}/api/v3/ticker/bookTicker`, binHttpOptions).pipe(
-  //     retry(3),
-  //     tap(orderbook => console.log(`fetched Binance getOrderBookTickers`)),
-  //     catchError(this.handleError('getOrderBookTickers', [])),
-  //     map(orderbook => JSON.parse(orderbook))
-  //   );
-  // }
+  getPrice(symbol: string): Subject<BinancePriceResult> {
+    const listener = this.listenSymbols([symbol]);
+
+    return <Subject<BinancePriceResult>>listener.pipe(
+      map(data => JSON.parse(data).data),
+      map(function(data) {
+        setTimeout(() => this.complete());
+        return Object.assign(new BinancePriceResult(), {
+          symbol: data.s,
+          bestAsk: data.a,
+          bestBid: data.b,
+        });
+      })
+    );
+  }
 
   listenSymbols(symbols: string[]): Subject<string> {
     if (this.symbols != null && this.symbols !== undefined) {
