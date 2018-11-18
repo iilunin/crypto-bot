@@ -4,7 +4,7 @@ import {Observable, of, throwError} from 'rxjs';
 import {TradeInfo} from './tradeInfo';
 import {catchError, map, retry, tap} from 'rxjs/operators';
 import {ApiResult} from './apiresult';
-import {TradeDetails} from './trade-details';
+import {TradeDetails, Entry} from './trade-details';
 import deleteProperty = Reflect.deleteProperty;
 import {environment} from '../environments/environment';
 
@@ -40,7 +40,13 @@ export class BotApi {
     return this.http.get<TradeDetails>(`${this.API_URL}/trade/${id}`, httpOptions).pipe(
       retry(this.RETRIES),
       tap(trade => this.log(`fetched trade ${id} info`)),
-      map(data => Object.assign(new TradeDetails(), data)),
+      map(data => {
+        const trade = Object.assign(new TradeDetails(), data);
+        if (data.entry) {
+          trade.entry = Object.assign(new Entry(), data.entry); // restore nested class Entry
+        }
+        return trade;
+      }),
       catchError(this.handleError('getActiveTradeInfo', null))
     );
   }
