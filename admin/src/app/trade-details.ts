@@ -80,8 +80,9 @@ export class EntryTarget {
 }
 
 export class Entry {
-  constructor() {
+  constructor(sell: boolean = true) {
     this.targets = [new EntryTarget()];
+    this.setIsSell(sell);
   }
 
   side: 'BUY' | 'SELL' = 'BUY';
@@ -90,6 +91,9 @@ export class Entry {
 
   isBuy(): boolean { return this.side === 'BUY'; }
   isSell(): boolean { return !this.isBuy(); }
+  setIsSell(sell: boolean): void {
+    if (sell) { this.side = 'SELL'; } else { this.side = 'BUY'; }
+  }
 }
 
 export class Target {
@@ -107,7 +111,7 @@ export class Target {
 
 export class StopLoss {
   type: SLType = SLType.FIXED;
-  threshold: string = '5%';
+  threshold = '5%';
   initial_target: Target;
 
   constructor() {
