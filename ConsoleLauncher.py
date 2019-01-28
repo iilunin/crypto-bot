@@ -14,11 +14,11 @@ from Bot.ConfigLoader import ConfigLoader
 from Bot.FXConnector import FXConnector
 from Bot.TradeHandler import TradeHandler
 from Bot.TradeValidator import TradeValidator
+from BotVersion import BOT_VERSION
 from Cloud.S3Sync import S3Persistence
 from Utils.Logger import Logger
 from Utils import Utils
 
-BOT_VERSION = 'v0.0.4'
 class ConsoleLauncher(Logger):
     TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
 
