@@ -23,6 +23,7 @@
     "@angular/router": "^6.1.10",
     "bootstrap": "^4.2.1",
     "core-js": "^2.6.3",
+    "moment": "^2.24.0",
     "ngx-bootstrap": "^3.2.0",
     "node-sass": "^4.11.0",
     "open-iconic": "^1.1.1",
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.10.6",
-    "@angular/cli": "^6.0.8",
+    "@angular/cli": "^6.2.9",
     "@angular/compiler-cli": "^6.1.10",
     "@angular/language-service": "^6.1.10",
     "@types/jasmine": "^2.8.16",
