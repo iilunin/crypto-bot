@@ -1,5 +1,6 @@
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
+
 class SymbolInfo:
     def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional, **kvargs):
         self.minNotional = Decimal(self.strip_zeros(minNotional))
@@ -36,6 +37,7 @@ class SymbolInfo:
 
     def is_quanity_above_min(self, q):
         return q > self.minQty
+
 
 class ExchangeInfo:
     __shared_state = {}

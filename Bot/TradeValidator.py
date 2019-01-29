@@ -1,5 +1,4 @@
 from Bot.Trade import Trade
-from Bot.TradeEnums import OrderStatus, Side
 
 
 class TradeValidator:

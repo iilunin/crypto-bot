@@ -12,7 +12,7 @@ export class ExitDetailsComponent implements OnInit {
   trade: TradeDetails;
 
   @Input()
-  mode: Mode
+  mode: Mode;
 
   lastAddedTarget: Target;
 
@@ -32,8 +32,8 @@ export class ExitDetailsComponent implements OnInit {
   }
 
   addNewTarget() {
-    if (this.lastAddedTarget && !this.lastAddedTarget.price)
-      return;
+    if (this.lastAddedTarget && !this.lastAddedTarget.price) { return; }
+
     this.lastAddedTarget = new Target();
     this.trade.exit.targets.push(this.lastAddedTarget);
   }

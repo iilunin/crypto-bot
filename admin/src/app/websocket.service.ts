@@ -22,7 +22,7 @@ export class WebsocketService {
       (obs: Observer<MessageEvent>) => {
         ws.onmessage = obs.next.bind(obs);
         ws.onerror = obs.error.bind(obs);
-        ws.onclose = ev => { console.log(`ws closed`); obs.complete.bind(obs);}
+        ws.onclose = ev => { console.log(`ws closed`); obs.complete.bind(obs); };
         return ws.close.bind(ws);
       });
 

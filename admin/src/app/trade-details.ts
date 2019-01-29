@@ -1,5 +1,51 @@
 import {st} from '@angular/core/src/render3';
 
+export enum TradeStatus {
+  NEW = 'NEW',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED'
+}
+
+export enum SLType {
+  FIXED = 'FIXED',
+  TRAILING = 'TRAILING'
+}
+
+export class Target {
+  status: TradeStatus;
+  id: number;
+  date: string;
+  price: string;
+  vol: string;
+  smart: boolean;
+  sl: string;
+  best_price: string;
+  isCompleted(): boolean { return this.status === TradeStatus.COMPLETED; }
+}
+
+export class ExitInfo {
+  constructor() {
+    this.targets = [];
+    this.threshold = 0.4.toLocaleString() + '%';
+  }
+  smart: boolean;
+  threshold: string;
+  targets: Target[];
+}
+
+export class StopLoss {
+  type: SLType = SLType.FIXED;
+  threshold = '5%';
+  initial_target: Target;
+
+  constructor() {
+    this.initial_target = new Target();
+    this.initial_target.vol = '100%';
+  }
+  isFixed(): boolean { return this.type === SLType.FIXED; }
+  isTrailing(): boolean { return this.type === SLType.TRAILING; }
+}
+
 export class TradeDetails {
 
   private _stoploss: StopLoss;
@@ -7,7 +53,7 @@ export class TradeDetails {
   id: string;
   asset: string;
   cap: string;
-  symbol: string = '';
+  symbol = '';
   side: 'BUY' | 'SELL' = 'SELL';
   status: 'NEW' | 'ACTIVE' | 'COMPLETED';
   exit: ExitInfo;
@@ -64,16 +110,6 @@ export class TradeDetails {
   }
 }
 
-export class ExitInfo {
-  constructor() {
-    this.targets = [];
-    this.threshold = 0.4.toLocaleString() + '%';
-  }
-  smart: boolean;
-  threshold: string;
-  targets: Target[];
-}
-
 export class EntryTarget {
   price: string;
   vol: string;
@@ -96,42 +132,7 @@ export class Entry {
   }
 }
 
-export class Target {
-  status: TradeStatus;
-  id: number;
-  date: string;
-  price: string;
-  vol: string;
-  smart: boolean;
-  sl: string;
-  best_price: string;
 
-  isCompleted(): boolean { return this.status === TradeStatus.COMPLETED; }
-}
-
-export class StopLoss {
-  type: SLType = SLType.FIXED;
-  threshold = '5%';
-  initial_target: Target;
-
-  constructor() {
-    this.initial_target = new Target();
-    this.initial_target.vol = '100%';
-  }
-  isFixed(): boolean { return this.type === SLType.FIXED; }
-  isTrailing(): boolean { return this.type === SLType.TRAILING; }
-}
-
-export enum SLType {
-  FIXED = 'FIXED',
-  TRAILING = 'TRAILING'
-}
-
-export enum TradeStatus {
-  NEW = 'NEW',
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED'
-}
 
 export enum TradeDetailMode {
   View = 'view',

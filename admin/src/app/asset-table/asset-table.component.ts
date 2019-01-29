@@ -160,7 +160,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   onTradeInfo(tradeInfo: TradeInfo, mode: TradeDetailMode = TradeDetailMode.View) {
 
     this.router.navigate(['/trades',
-        { outlets: { trade: [tradeInfo ? tradeInfo.id: '0', {mode: mode} ]} }
+        { outlets: { trade: [tradeInfo ? tradeInfo.id : '0', {mode: mode} ]} }
       ]);
     // this.router.navigate([
     //       { outlets: { tradeDetails: ['trades', tradeInfo.id, {edit: edit} ]} }
