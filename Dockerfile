@@ -55,6 +55,7 @@ RUN \
   apt-get update && \
   apt-get install -y && \
   apt-get install -y tzdata && \
+  pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt
 
 VOLUME ["/usr/src/trades", "/usr/src/configs"]
