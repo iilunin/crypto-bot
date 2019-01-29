@@ -74,7 +74,16 @@
             </div>
           </div>
         </div>
+
+        <div class="form-group row" *ngIf="priceInfo?.symbol == trade.symbol">
+          <label class="col-sm-2 col-form-label-sm">Price Info</label>
+          <div class="col-sm-10">
+            <span class="badge badge-success">Bid: {{ priceInfo.bestBid }}</span>&nbsp;
+            <span class="badge badge-danger">Ask: {{ priceInfo.bestAsk }}</span>
+          </div>
+        </div>
       </fieldset>
+    <app-entry-details [trade]="trade" [mode]="mode"></app-entry-details>
     <app-exit-details [trade]="trade" [mode]="mode"></app-exit-details>
     <app-sl-details [trade]="trade" [mode]="mode"></app-sl-details>
   </div>

@@ -1,0 +1,45 @@
+<fieldset [disabled]="mode.isView()">
+  <legend>
+    Entry
+
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-success"
+      (click)="addNewTarget()"
+      tooltip="Add Target"
+      *ngIf="!trade.entry"
+    >
+      <span class="oi oi-plus"></span>
+    </button>
+  </legend>
+
+
+  <div class="form-group row row-no-btm-margin" *ngIf="trade.entry?.targets.length > 0">
+    <div class="col-form-label-sm col-md-2"><label for="targetPrice">Price</label></div>
+    <div class="col-form-label-sm col-md-2"><label for="targetVol">Volume</label></div>
+  </div>
+
+  <div class="form-group row row-no-btm-margin" *ngFor="let entryTarget of trade.entry?.targets">
+    <div class="form-group col-md-2">
+      <input type="text" class="form-control form-control-sm" id="targetPrice" [(ngModel)]="entryTarget.price">
+    </div>
+    <div class="form-group col-md-2">
+      <input type="text" class="form-control form-control-sm" id="targetVol" [(ngModel)]="entryTarget.vol">
+    </div>
+    <div class="form-group col-md-1" *ngIf="mode.isCreate()">
+      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteTarget(entryTarget)" tooltip="Remove Target" >
+        <span class="oi oi-trash"></span>
+      </button>
+    </div>
+    <div class="form-group col-md-1">
+    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="buysellBtn">
+      <label class="btn btn-sm btn-outline-danger {{trade.entry.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.entry.isSell())">
+        <input type="radio" name="options" id="sideSell" value="SELL" autocomplete="off" [(ngModel)]="trade.entry.side"> Sell
+      </label>
+      <label class="btn btn-sm btn-outline-success {{trade.entry.isBuy() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.entry.isBuy())">
+        <input type="radio" name="options" id="sideBuy"  value="BUY" autocomplete="off" [(ngModel)]="trade.entry.side"> Buy
+      </label>
+    </div>
+    </div>
+  </div>
+</fieldset>

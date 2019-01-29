@@ -1,7 +1,7 @@
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {tap} from 'rxjs/operators';
-import {moment} from 'ngx-bootstrap/chronos/test/chain';
+import * as  moment from 'moment';
 import {Observable, Subject} from 'rxjs';
 import {environment} from '../environments/environment';
 

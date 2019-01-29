@@ -9,3 +9,4 @@ api.json
 /Trades/Potential
 /Trades/Potential/*
 sync_trades*.sh
+**/*.pyc

@@ -11,6 +11,7 @@ import {TradesRoutingModule} from './trades-routing.module';
 import {FormsModule} from '@angular/forms';
 import {ExitDetailsComponent} from './trade-details/exit-details.component';
 import {SLDetailsComponent} from './trade-details/sl-details.component';
+import {EntryDetailsComponent} from './trade-details/entry-details.component';
 import {SymbolValidatorDirective} from './trade-details/symbol-validator';
 import {AuthInterceptor} from './auth.interceptor';
 import { LogInComponent } from './log-in/log-in.component';
@@ -22,11 +23,12 @@ import { LogInComponent } from './log-in/log-in.component';
   declarations: [
     AppComponent,
     AssetTableComponent,
+    EntryDetailsComponent,
     TradeDetailsComponent,
     ExitDetailsComponent,
     SLDetailsComponent,
     SymbolValidatorDirective,
-    LogInComponent
+    LogInComponent,
   ],
   imports: [
     // CollapseModule.forRoot(),

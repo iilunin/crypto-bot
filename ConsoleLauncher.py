@@ -14,11 +14,11 @@ from Bot.ConfigLoader import ConfigLoader
 from Bot.FXConnector import FXConnector
 from Bot.TradeHandler import TradeHandler
 from Bot.TradeValidator import TradeValidator
+from BotVersion import BOT_VERSION
 from Cloud.S3Sync import S3Persistence
 from Utils.Logger import Logger
 from Utils import Utils
 
-BOT_VERSION = 'v0.0.4'
 class ConsoleLauncher(Logger):
     TRADE_FILE_PATH_PATTERN = '{path}{time}{symbol}.json'
 
@@ -87,6 +87,9 @@ class ConsoleLauncher(Logger):
         self.start_timer()
 
     def get_exchange_creds(self, api_path):
+        key = None
+        secret = None
+
         if os.environ.get('KEY') and os.environ.get('SECRET'):
             key = os.environ.get('KEY')
             secret = os.environ.get('SECRET')
@@ -107,7 +110,7 @@ class ConsoleLauncher(Logger):
     def sync_down(self):
         if self.enable_cloud:
             self.s3pers.sync(False, True)
-            self.s3pers.await()
+            self.s3pers.finish()
 
     def init_file_watch_list(self):
         target_path_list = [f for f in listdir(self.trades_path) if

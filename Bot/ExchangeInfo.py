@@ -21,8 +21,18 @@ class SymbolInfo:
         return float(min(max(res, self.minQty), self.maxQty))
 
     def adjust_price(self, q, round_down=True):
-        res = round(Decimal(q), 8).quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
-        return float(min(max(res, self.minPrice), self.maxPrice))
+        res = round(Decimal(q), 8)
+
+        if self.tickSize:  # if tickSize Enabled
+            res = res.quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
+
+        if self.minPrice:  # if minPrice Enabled
+            res = max(res, self.minPrice)
+
+        if self.maxPrice:  # if minPrice Enabled
+            res = min(res, self.maxPrice)
+
+        return float(res)
 
     def is_quanity_above_min(self, q):
         return q > self.minQty

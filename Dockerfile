@@ -18,6 +18,7 @@ WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
+RUN npm install -g npm
 COPY ./admin/package.json /usr/src/app/package.json
 COPY ./admin/package-lock.json /usr/src/app/package-lock.json
 RUN npm install
@@ -55,6 +56,7 @@ RUN \
   apt-get update && \
   apt-get install -y && \
   apt-get install -y tzdata && \
+  pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt
 
 VOLUME ["/usr/src/trades", "/usr/src/configs"]
