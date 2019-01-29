@@ -18,6 +18,7 @@ WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
+RUN npm install -g npm
 COPY ./admin/package.json /usr/src/app/package.json
 COPY ./admin/package-lock.json /usr/src/app/package-lock.json
 RUN npm install
