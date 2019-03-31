@@ -164,8 +164,8 @@ class ConsoleLauncher(Logger):
 
                     self.file_watch_list.pop(file, None)
 
-                if file not in deleted_by_s3:
-                    update_cloud_files = True
+                    if file not in deleted_by_s3:
+                        update_cloud_files = True
 
             for file, current_mtime in target_path_dict.items():
                 if file in self.file_watch_list:
