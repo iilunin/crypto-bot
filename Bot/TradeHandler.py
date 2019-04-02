@@ -83,7 +83,7 @@ class TradeHandler(Logger):
         sym = strategy.symbol()
         if sym in self.strategies_dict:
             if len(self.strategies_dict[sym]) > 1:
-                self.strategies_dict.remove(strategy)
+                self.strategies_dict[sym].remove(strategy)
             else:
                 self.strategies_dict.pop(sym, None)
 
