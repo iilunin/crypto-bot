@@ -7,7 +7,7 @@ from Bot.Value import Value
 
 
 class Target(CustomSerializable):
-    def __init__(self, price, vol=Value('100%'), **kvargs):
+    def __init__(self, price, vol='100%', **kvargs):
         self.vol = Value(vol)
         self.price = PriceHelper.parse_price(price)
 
