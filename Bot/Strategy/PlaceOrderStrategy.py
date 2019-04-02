@@ -104,7 +104,8 @@ class PlaceOrderStrategy(TradingStrategy):
                 continue
 
             if bal - vol < 0:
-                self.logWarning('Insufficient balance to place order. Bal: {}, Order: {}'.format(bal, vol))
+                self.logWarning(
+                    'Insufficient balance to place order. Bal: {}, Order: {}. Target: {}'.format(bal, vol, t.__str__()))
                 return
 
             # place only new and not smart targets

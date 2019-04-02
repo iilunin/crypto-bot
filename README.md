@@ -1,4 +1,5 @@
 # Cryptobot
+[![Build Status](https://dev.azure.com/iluninigor/CryptoBot/_apis/build/status/BuildImage?branchName=develop)](https://dev.azure.com/iluninigor/CryptoBot/_build/latest?definitionId=3&branchName=develop)
 
 The main purpose of the bot is to keep track of your Binance trades while you're away. 
 This bot is not supposed to earn money by itself, it requires targets and stop-loss inputs to follow your trades.
