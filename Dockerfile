@@ -39,7 +39,7 @@ RUN npm run lint && \
 ### production ###
 ##################
 
-FROM python:jessie
+FROM python:3-stretch
 MAINTAINER Igor Ilunin <ilunin.igor@gmail.com>
 
 RUN mkdir -p /usr/src/app
