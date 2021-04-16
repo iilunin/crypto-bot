@@ -37,9 +37,8 @@ class JWTEndpoint(BotAPIResource):
 
         # Identity can be any data that is json serializable
 
-
         ret = {'jwt': create_access_token(identity=username),
-               'exp': timegm((flask.current_app.config['JWT_EXPIRES'] + datetime.now()).utctimetuple())}
+               'exp': timegm((flask.current_app.config['JWT_ACCESS_TOKEN_EXPIRES'] + datetime.now()).utctimetuple())}
         return ret, 200
 
     # Protect a view with jwt_required, which requires a valid jwt

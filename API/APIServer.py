@@ -28,7 +28,7 @@ class APIServer:
 
         self.app.config['JWT_SECRET_KEY'] = 'mHZ!?9@DzdLrn@H!gy2FD46W--M*Fap!'  # TODO: Change this!
         self.app.config['SECRET_KEY'] = 'VS?cWpbD^CGa-M@h6+@pV#qCQRU3c4dn'  #  TODO: Change this!
-        self.app.config['JWT_EXPIRES'] = timedelta(weeks=48)
+        self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(weeks=48)
 
         self.jwt = JWTManager(app)
 

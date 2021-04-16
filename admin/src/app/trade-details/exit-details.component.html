@@ -23,7 +23,7 @@
       </button>
     </div>
   </div>
-  <div class="form-group row row-no-btm-margin" *ngIf="trade.exit?.targets.length > 0">
+  <div class="form-group row row-no-btm-margin" *ngIf="trade.exit?.targets && trade.exit?.targets.length > 0">
     <div class="col-form-label-sm col-md-2"><label for="targetPrice">Price</label></div>
     <div class="col-form-label-sm col-md-2"><label for="targetVol">Volume</label></div>
     <div class="col-form-label-sm col-md-1"><label for="inputSmart">Smart</label></div>
