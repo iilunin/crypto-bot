@@ -4,7 +4,7 @@ from datetime import datetime
 
 import flask
 from flask import request
-from flask_jwt_simple import create_jwt, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from API.Entities.APIResult import APIResult
 from API.Endpoints.BotAPIResource import BotAPIResource
@@ -38,13 +38,13 @@ class JWTEndpoint(BotAPIResource):
         # Identity can be any data that is json serializable
 
 
-        ret = {'jwt': create_jwt(identity=username),
+        ret = {'jwt': create_access_token(identity=username),
                'exp': timegm((flask.current_app.config['JWT_EXPIRES'] + datetime.now()).utctimetuple())}
         return ret, 200
 
     # Protect a view with jwt_required, which requires a valid jwt
     # to be present in the headers.
-    @jwt_required
+    @jwt_required()
     def get(self):
         # Access the identity of the current user with get_jwt_identity
         return {'hello_from': get_jwt_identity()}, 200

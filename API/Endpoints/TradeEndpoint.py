@@ -1,7 +1,7 @@
 import json
 
 from flask import Response
-from flask_jwt_simple import jwt_required
+from flask_jwt_extended import jwt_required
 from flask_restful import reqparse
 
 from API.Endpoints.BotAPIResource import BotAPIResource
@@ -21,7 +21,7 @@ class TradeEndpoint(BotAPIResource):
                         status=200,
                         mimetype="application/json")
 
-    @jwt_required
+    @jwt_required()
     def delete(self, id):
         strategies = self.get_strategies(id)
 
@@ -33,7 +33,7 @@ class TradeEndpoint(BotAPIResource):
 
         return APIResult.OKResult()
 
-    @jwt_required
+    @jwt_required()
     def get_strategies(self, id):
         if id == '0':
             strategies = self.th.strategies
@@ -42,11 +42,11 @@ class TradeEndpoint(BotAPIResource):
             strategies = None if not strategy else [strategy]
         return strategies
 
-    @jwt_required
+    @jwt_required()
     def put(self, trade_json):
         pass
 
-    @jwt_required
+    @jwt_required()
     def post(self, id=None):
         args = self.parser.parse_args()
         action = args['action']

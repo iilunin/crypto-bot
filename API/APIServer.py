@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import Flask, app, render_template
-from flask_jwt_simple import JWTManager
+from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from flask_cors import CORS
 

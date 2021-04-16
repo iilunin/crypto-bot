@@ -1,8 +1,8 @@
 from API.Endpoints.BotAPIResource import BotAPIResource
-from flask_jwt_simple import jwt_required
+from flask_jwt_extended import jwt_required
 
 class TradeListEndpoint(BotAPIResource):
-    @jwt_required
+    @jwt_required()
     def get(self):
         return [{
             'id': s.trade.id,

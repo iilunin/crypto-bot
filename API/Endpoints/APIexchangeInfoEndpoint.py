@@ -1,4 +1,4 @@
-from flask_jwt_simple import jwt_required
+from flask_jwt_extended import jwt_required
 
 from API.Endpoints.BotAPIResource import BotAPIResource
 from API.Entities.APIResult import APIResult
@@ -6,11 +6,11 @@ from Bot.ExchangeInfo import ExchangeInfo
 
 
 class APIExchangeInfoEndpoint(BotAPIResource):
-    @jwt_required
+    @jwt_required()
     def get(self):
         return list(ExchangeInfo().get_all_symbols())
 
-    @jwt_required
+    @jwt_required()
     def post(self):
         args = self.parser.parse_args()
         action = args['action']

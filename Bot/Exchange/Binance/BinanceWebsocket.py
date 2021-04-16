@@ -93,7 +93,7 @@ class BinanceWebsocket(Thread, Logger):
 
                 if self.user_webscoket:
                     if self.user_webscoket.state == State.OPEN:
-                        self.user_webscoket.ping()
+                        await self.user_webscoket.ping()
                     elif self.user_webscoket.state == State.CLOSED:
                         self.start_user_info(force_reconnect=True)
 
