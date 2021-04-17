@@ -1,9 +1,7 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div class="container">
-  <!--<h1 style="text-align:center">-->
-    <!--{{ title }}-->
-  <!--</h1>-->
-  <!--<app-asset-table></app-asset-table>-->
-  <app-log-in></app-log-in>
-  <router-outlet></router-outlet>
+<div role="main">
+  <div class="login-ctrl">
+    <app-log-in *ngIf="!auth.isLoggedIn()"></app-log-in>
+  </div>
+  <app-main-tabs *ngIf="auth.isLoggedIn()"></app-main-tabs>
 </div>

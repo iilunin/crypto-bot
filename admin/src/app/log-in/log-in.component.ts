@@ -8,9 +8,9 @@ import {NgForm} from '@angular/forms';
   styleUrls: ['./log-in.component.css']
 })
 export class LogInComponent implements OnInit {
-  private login: string;
-  private password: string;
-  private error: string;
+  public login: string;
+  public password: string;
+  public error: string;
 
   constructor(public auth: AuthService) { }
 
@@ -29,9 +29,6 @@ export class LogInComponent implements OnInit {
           this.error = e.error.msg;
         }
       }
-      // res =>  { if (res.jwt) {
-      //   this.refreshTrades();
-      // }}
     );
   }
 }

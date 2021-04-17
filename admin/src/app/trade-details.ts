@@ -1,5 +1,3 @@
-import {st} from '@angular/core/src/render3';
-
 export enum TradeStatus {
   NEW = 'NEW',
   ACTIVE = 'ACTIVE',
@@ -135,9 +133,9 @@ export class Entry {
 
 
 export enum TradeDetailMode {
-  View = 'view',
-  Edit = 'edit',
-  Create = 'new'
+  View,
+  Edit,
+  Create
 }
 
 export class Mode {

@@ -1,0 +1,39 @@
+<div class="balance-table">
+    <table mat-table [dataSource]="balances" matSort class="mat-elevation-z2">
+      
+      <ng-container matColumnDef="sym">
+        <th style="width: 10%" mat-header-cell *matHeaderCellDef mat-sort-header="sym">Symbol</th>
+        <td mat-cell *matCellDef="let balance">{{balance.sym}}</td>
+      </ng-container>
+  
+      <ng-container matColumnDef="available">
+        <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="avail">Free</th>
+        <td mat-cell *matCellDef="let balance">{{ balance.avail | number:'1.8-8' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="locked">
+        <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="locked">Locked</th>
+        <td mat-cell *matCellDef="let balance">{{ balance.locked | number:'1.8-8' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="total">
+        <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="total">Total</th>
+        <td mat-cell *matCellDef="let balance">{{ balance.total | number:'1.8-8' }}</td>
+      </ng-container>
+  
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  
+    <ng-template #modal_template>
+      <h2 mat-dialog-title>{{isCloseTradeAction ? 'Cancel' : 'Delete'}} {{'"' + selectedTrade.sym + '"'}} Trade?</h2>
+      <div mat-dialog-content>Please confirm if you want to {{isCloseTradeAction ? 'cancel' : 'delete' }} this trade</div>
+      <div mat-dialog-actions align="end">
+          <button mat-button mat-dialog-close="cancel" (click)="decline()" color="primary" cdkFocusInitial>No</button>
+          <button mat-button mat-dialog-close="ok"  (click)="confirm()" color="primary">Yes</button>
+      </div>
+    </ng-template>
+  
+  </div>
+  
+  

@@ -1,0 +1,27 @@
+.toolbar-container {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.menu-toolbar {
+    position: fixed;
+    /* Make sure the toolbar will stay on top of the content as it scrolls past. */
+    z-index: 2;
+}
+
+.side-nav-container {
+    flex: 1;
+}
+
+.side-nav-container {
+    flex: 1 0 auto;
+}
+
+h1.app-name {
+    margin-left: 16px;
+}

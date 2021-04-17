@@ -3,12 +3,15 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
+    "downlevelIteration": true,
     "sourceMap": true,
     "declaration": false,
+    "importHelpers": true,
     "moduleResolution": "node",
+    "module": "es2020",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es5",
+    "target": "es2015",
     "typeRoots": [
       "node_modules/@types"
     ],

@@ -1,36 +1,33 @@
 <fieldset [disabled]="mode.isView()">
-  <legend>
-    Entry
+  <legend>Entry
+  <button mat-icon-button class="resume-btn" *ngIf="!trade.entry" matTooltip="Add Target" (click)="addNewTarget()">
+    <mat-icon class="icon-display-sm" >add_circle_outline</mat-icon>
+  </button>
+</legend>
 
-    <button
-      type="button"
-      class="btn btn-sm btn-outline-success"
-      (click)="addNewTarget()"
-      tooltip="Add Target"
-      *ngIf="!trade.entry"
-    >
-      <span class="oi oi-plus"></span>
+<table class="full-width" cellspasing=0 *ngIf="trade.entry">
+  <tr *ngFor="let entryTarget of trade.entry.targets"><td>
+    <mat-form-field class="full-width" appearance="standard">
+      <mat-label>Entry Price</mat-label>
+      <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="entryTarget.price">
+    </mat-form-field>
+  </td>
+  <td>
+    <mat-form-field class="full-width" appearance="standard">
+      <mat-label>Volume</mat-label>
+      <input matInput type="text" id="targetVol" name="targetVol" [(ngModel)]="entryTarget.vol">
+    </mat-form-field>
+  </td>
+  <td *ngIf="mode.isCreate()">
+    <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget()">
+      <mat-icon class="icon-display-sm">remove_circle_outline</mat-icon>
     </button>
-  </legend>
-
-
-  <div class="form-group row row-no-btm-margin" *ngIf="trade.entry?.targets.length > 0">
-    <div class="col-form-label-sm col-md-2"><label for="targetPrice">Price</label></div>
-    <div class="col-form-label-sm col-md-2"><label for="targetVol">Volume</label></div>
-  </div>
+  </td>
+</tr>
+</table>
 
   <div class="form-group row row-no-btm-margin" *ngFor="let entryTarget of trade.entry?.targets">
-    <div class="form-group col-md-2">
-      <input type="text" class="form-control form-control-sm" id="targetPrice" [(ngModel)]="entryTarget.price">
-    </div>
-    <div class="form-group col-md-2">
-      <input type="text" class="form-control form-control-sm" id="targetVol" [(ngModel)]="entryTarget.vol">
-    </div>
-    <div class="form-group col-md-1" *ngIf="mode.isCreate()">
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteTarget(entryTarget)" tooltip="Remove Target" >
-        <span class="oi oi-trash"></span>
-      </button>
-    </div>
+    
     <div class="form-group col-md-1">
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="buysellBtn">
       <label class="btn btn-sm btn-outline-danger {{trade.entry.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.entry.isSell())">

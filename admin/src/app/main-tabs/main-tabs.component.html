@@ -1,0 +1,36 @@
+<div class="toolbar-container" *ngIf="auth.isLoggedIn()">
+    <mat-toolbar color="primary" class="menu-toolbar">
+      <button mat-icon-button (click)="snav.toggle()"><mat-icon>menu</mat-icon></button>
+      <h1 class="app-name">Crypto Bot</h1>
+    </mat-toolbar>
+  
+    <mat-sidenav-container class="side-nav-container" [style.marginTop.px]="56">
+      <mat-sidenav #snav [mode]="'side'" opened="true" [fixedInViewport]="false" fixedTopGap="56">
+        <mat-nav-list>
+            <a routerLink="/trades">
+                <mat-list-item>
+                    <mat-icon mat-list-icon>show_chart</mat-icon>
+                    <div mat-line>Trade</div>
+                </mat-list-item>
+            </a>
+            <a routerLink="/balances">
+                <mat-list-item>
+                    <mat-icon mat-list-icon>money</mat-icon>
+                    <div mat-line>Balances</div>
+                </mat-list-item>
+            </a>
+            <mat-divider></mat-divider>
+            <a routerLink="/" (click)="auth.logout()">
+                <mat-list-item>
+                    <mat-icon mat-list-icon>power_settings_new</mat-icon>
+                    <div mat-line>Logout</div>
+                </mat-list-item>
+            </a>
+        </mat-nav-list>
+      </mat-sidenav>
+  
+      <mat-sidenav-content [style.marginTop.px]="10">
+        <router-outlet></router-outlet>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div> 

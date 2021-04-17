@@ -7,6 +7,7 @@ import {ApiResult} from './apiresult';
 import {TradeDetails, Entry} from './trade-details';
 import deleteProperty = Reflect.deleteProperty;
 import {environment} from '../environments/environment';
+import { Balance } from './balance';
 
 
 const httpOptions = {
@@ -54,42 +55,34 @@ export class BotApi {
   getActiveTrades(): Observable<TradeInfo[]> {
     return this.http.get<TradeInfo[]>(`${this.API_URL}/trades`).pipe(
       retry(this.RETRIES),
+      map(trades => trades.map(trade => new TradeInfo(trade))),
       tap(trades => this.log(`fetched trades`)),
-      catchError(this.handleError('getActiveTrades', []))
-    );
+      catchError(this.handleError('getActiveTrades', [])));
   }
 
   getExchangeInfo(): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/info`).pipe(
       retry(this.RETRIES),
-      // tap(trades => this.log(`fetched trades`)),
       catchError(this.handleError('getExchangeInfo', []))
     );
   }
 
-  // private handleError<T>(error: HttpErrorResponse, def: T[]): Observable<T[]> {
-  //   if (error.error instanceof ErrorEvent) {
-  //     // A client-side or network error occurred. Handle it accordingly.
-  //     console.error('An error occurred:', error.error.message);
-  //   } else {
-  //     // The backend returned an unsuccessful response code.
-  //     // The response body may contain clues as to what went wrong,
-  //     console.error(
-  //       `Backend returned code ${error.status}, ` +
-  //       `body was: ${error.error}`);
-  //   }
-  //   // return an observable with a user-facing error message
-  //   return throwError(
-  //     'Something bad happened; please try again later.');
-  // }
+  getBalances(force=false): Observable<Balance[]> {
+    return this.http.get<any>(`${this.API_URL}/balance/${force?'1':'0'}`, httpOptions).pipe(
+      retry(this.RETRIES),
+      map(data => {
+        const balanceList: Balance[] = [];
+        
+        for (let key in data) {
+          balanceList.push(new Balance({sym: key, avail: data[key].f, locked: data[key].l}))
+        }
 
-  // pauseTrade(id: string ): Observable<ApiResult> {
-  //   return this.pauseResumeTrade(id, true);
-  // }
-  //
-  // resumeTrade(id: string ): Observable<ApiResult> {
-  //   return this.pauseResumeTrade(id, false);
-  // }
+        return balanceList;
+      }),
+      // tap(trades => this.log(`fetched trades`)),
+      catchError(this.handleError('getBalances', []))
+    );
+  }
 
   pauseAllTrades(): Observable<ApiResult> {
    return this.pauseResumeTrade('0', true);

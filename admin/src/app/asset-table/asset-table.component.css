@@ -1,15 +1,11 @@
-/*.oi-reload:hover {*/
-  /*color: green;*/
-/*}*/
-
-.oi-trash {
-  color: red;
-}
-.oi-dollar {
-  color: red;
+th.mat-sort-header-sorted {
+  color: black;
 }
 
-.btn-sm {
-  margin: 0px 2px;
+table {
+  width: 100%;
 }
 
+.pause-btn {
+  color: rgb(197, 150, 21)
+}

@@ -1,3 +1,59 @@
 /* You can add global styles to this file, and also import other style files */
-@import url('../node_modules/bootstrap/dist/css/bootstrap.css');
-@import url('../node_modules/open-iconic/font/css/open-iconic-bootstrap.css');
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.snackbar-primary {
+    background: #673ab7;
+    color: #fff;
+}
+
+.snackbar-warning {
+    background: #ffd740;
+    color: rgba(0,0,0,.87);
+}
+
+.snackbar-alarm {
+    background: #f44336;
+    color: #fff;
+}
+
+.buy-button-on {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.buy-button-off {
+    color: #28a745;
+    background-color: #fff;
+    border-color: #28a745;
+}
+
+.sell-button-on {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.sell-button-off {
+    color: #dc3545;
+    background-color: #fff;
+    border-color: #dc3545;
+}
+
+.resume-btn {
+    color: rgb(46, 95, 41)
+}
+
+.delete-btn {
+    color: #8f232e;
+}
+
+.icon-display-sm {
+    transform: scale(0.8);
+}
+
+.full-width {
+    width: 100%
+}
+  

@@ -1,16 +1,17 @@
-import {Component, OnDestroy, OnInit, TemplateRef} from '@angular/core';
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import {Component, OnDestroy, OnInit, TemplateRef, AfterViewInit, ViewChild} from '@angular/core';
 
 import {TradeInfo} from '../tradeInfo';
 import {BotApi} from '../botapi';
-import {AlertComponent} from 'ngx-bootstrap';
 import {BinanceService} from '../binance.service';
-import {Router, RouterModule} from '@angular/router';
-import {TradeDetailMode} from '../trade-details';
+import {Mode, TradeDetailMode} from '../trade-details';
 import {AuthService} from '../auth.service';
 import {Subscription} from 'rxjs';
 import {TradeService} from '../trade.service';
+import {MatSort} from '@angular/material/sort';
+import {MatTableDataSource} from '@angular/material/table';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { NotificationMessage, NotificationService, NotificatoinType } from '../services/notification.service';
+import { TradeDetailsComponent } from '../trade-details/trade-details.component';
 
 @Component({
   selector: 'app-asset-table',
@@ -19,30 +20,37 @@ import {TradeService} from '../trade.service';
 })
 export class AssetTableComponent implements OnInit, OnDestroy {
   private TradeDetailMode = TradeDetailMode;
+  
   trades: TradeInfo[] = [];
+  tradesDS: MatTableDataSource<TradeInfo> = null;
+  displayedColumns: string[] = ['ctrl-view-edit', 'sym', 'btc-val', 'price', 'balance', 'ctrl-pause', 'ctrl-close','ctrl-remove'];
+  
   symTrade: { [symbol: string ]: TradeInfo} = {};
   tradesDisabled: Set<string> = new Set<string>();
-  alerts: any[] = [];
-  private modalRef: BsModalRef;
-  private selectedTradeId: string;
+  private selectedTrade: TradeInfo;
   private isCloseTradeAction?: boolean;
   private symbolObserver?: any;
   private loginSubscrition: Subscription;
   private tradeNotificationSubscription: Subscription;
+  @ViewChild(MatSort) sort: MatSort;
 
-  constructor(private modalService: BsModalService,
+  constructor(
+              private notificationService: NotificationService,
+              private dialog: MatDialog,
               private api: BotApi,
               private binance: BinanceService,
-              private router: Router,
               public auth: AuthService,
               private tradeService: TradeService) {
-
-
   }
+
+  // ngAfterViewInit(): void {
+  //   this.refreshTrades();
+  // }
 
   ngOnInit() {
     this.loginSubscrition = this.auth.loginEventAnounced$.subscribe(res => {
         if (res === true) {
+          console.log("login")
           this.refreshTrades();
         }
       }
@@ -55,7 +63,6 @@ export class AssetTableComponent implements OnInit, OnDestroy {
     }
 
     this.tradeNotificationSubscription = this.tradeService.eventAnounces$.subscribe(res => {
-      console.log(res);
       if (res.type === 'created') {
         this.refreshTrades();
         // setTimeout(this.refreshTrades.bind(this), 0);
@@ -81,15 +88,19 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   // }
 
     refreshTrades() {
+    console.log("refresh trades")
     this.api.getActiveTrades().subscribe(
       trades => {
         trades.forEach(t => t.btcVal = t.price * (t.avail + t.locked));
         this.trades = trades;
+        this.tradesDS = new MatTableDataSource(this.trades);
+        this.tradesDS.sort = this.sort;
         this.symTrade = {};
         this.trades.forEach(t => this.symTrade[t.sym] = t);
         }
     , error => {
         this.trades = [];
+        this.tradesDS = null;
         this.symTrade = {};
 
         if (this.symbolObserver) {
@@ -97,11 +108,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
           this.symbolObserver = null;
         }
 
-        this.alerts.push({
-          type: 'danger',
-          msg: error,
-          timeout: 5000
-        });
+        this.showAlert(error, NotificatoinType.Alert);
     }, () => {
       if (this.trades.length > 0) {
         if (this.symbolObserver) {
@@ -158,14 +165,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   }
 
   onTradeInfo(tradeInfo: TradeInfo, mode: TradeDetailMode = TradeDetailMode.View) {
-
-    this.router.navigate(['/trades',
-        { outlets: { trade: [tradeInfo ? tradeInfo.id : '0', {mode: mode} ]} }
-      ]);
-    // this.router.navigate([
-    //       { outlets: { tradeDetails: ['trades', tradeInfo.id, {edit: edit} ]} }
-    //   ]);
-    // this.router.navigate(['trades', tradeInfo.id, {edit: edit} ]);
+    TradeDetailsComponent.openDialog(this.dialog, new Mode(mode), tradeInfo?.id)
   }
 
   onPauseResume(tradeInfo: TradeInfo) {
@@ -180,7 +180,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
         tradeInfo.paused = shouldPause;
         this.showAlert(`Trade ${tradeInfo.sym} was ${shouldPause ? 'paused' : 'resumed'}`);
       } else {
-        this.showAlert(`Error ${shouldPause ? 'pausing' : 'resuming'} trade ${tradeInfo.sym}. ${result.msg}`, 'danger');
+        this.showAlert(`Error ${shouldPause ? 'pausing' : 'resuming'} trade ${tradeInfo.sym}. ${result.msg}`, NotificatoinType.Warning);
       }
 
       // this.validateAllTradesPaused();
@@ -198,32 +198,34 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   //   this.allTradesPaused = false;
   // }
 
-  openModal(template: TemplateRef<any>, tradeId: string, closeTrade: boolean) {
-    this.selectedTradeId = tradeId;
+  openModal(template: TemplateRef<any>, trade: TradeInfo, closeTrade: boolean) {
+    this.selectedTrade = trade;
     this.isCloseTradeAction = closeTrade;
-    this.modalRef = this.modalService.show(template, {class: 'modal-md'});
+    const modalDialog = this.dialog.open(template);
+    
+    modalDialog.afterClosed().subscribe(() => {
+      this.selectedTrade = null;
+      this.isCloseTradeAction = null;
+    });
   }
 
   confirm(): void {
     const isClose = this.isCloseTradeAction;
 
     if (this.isCloseTradeAction === true) {
-      this.api.closeTrade(this.selectedTradeId).subscribe(
+      this.api.closeTrade(this.selectedTrade.id).subscribe(
         res => {
           this.handleCloseTradeRsp(res, isClose === true);
         }
       );
     } else if (this.isCloseTradeAction === false) {
-      this.api.removeTrade(this.selectedTradeId).subscribe(
+      this.api.removeTrade(this.selectedTrade.id).subscribe(
         res => {
           this.handleCloseTradeRsp(res, isClose === true);
         }
       );
       console.log('Remove trade');
-    }
-    this.selectedTradeId = null;
-    this.isCloseTradeAction = null;
-    this.modalRef.hide();
+    }    
   }
 
   handleCloseTradeRsp(result, close) {
@@ -231,25 +233,14 @@ export class AssetTableComponent implements OnInit, OnDestroy {
       this.refreshTrades();
       this.showAlert(`Trade successfully ${close ? 'closed' : 'removed'}`);
     } else {
-      this.showAlert(`Trade ${close ? 'close' : 'remove'} failed. "${result.msg}"`, 'danger');
+      this.showAlert(`Trade ${close ? 'close' : 'remove'} failed. "${result.msg}"`, NotificatoinType.Alert);
     }
   }
 
   decline(): void {
-    this.selectedTradeId = null;
-    this.isCloseTradeAction = null;
-    this.modalRef.hide();
   }
 
-  onClosedAlert(dismissedAlert: AlertComponent): void {
-    this.alerts = this.alerts.filter(alert => alert !== dismissedAlert);
-  }
-
-  showAlert(msg: string, type = 'success', timeout = 3000) {
-    this.alerts.push({
-      type: type,
-      msg: msg,
-      timeout: timeout
-    });
+  showAlert(msg: string, type?: NotificatoinType) {
+    this.notificationService.notification$.next(new NotificationMessage(msg, null, type))
   }
 }

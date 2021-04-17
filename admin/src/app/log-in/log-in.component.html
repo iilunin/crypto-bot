@@ -1,25 +1,16 @@
-<form *ngIf="!auth.isLoggedIn()" (ngSubmit)="onSubmit($event)" class="align-content-center">
-  <div class="form-row align-items-center my-1">
-    <div class="col-sm-4">
-      <label class="sr-only" for="inlineFormInputName">Login</label>
-      <input type="text" class="form-control" id="inlineFormInputName" name="login" [(ngModel)]="login" placeholder="Login">
-    </div>
-    <div class="col-sm-4">
-      <label class="sr-only" for="inlineFormInputGroupUsername">Password</label>
-      <div class="input-group">
-        <input type="text" type="password" class="factivatedRouteorm-control" id="inlineFormInputGroupUsername" name="password" [(ngModel)]="password" placeholder="Password" >
-      </div>
-    </div>
-    <div class="col-sm-4">
-      <button type="submit" class="btn btn-primary">Log in</button>
-    </div>
-    <div class="col-auto">
-      <small id="passwordHelp" class="text-danger">{{error}}</small>
-    </div>
-  </div>
+<div class="login-container">
+  <form (ngSubmit)="onSubmit($event)">
+    <mat-form-field class="full-width" appearance="standard">
+      <mat-label>Login</mat-label>
+      <input matInput placeholder="username" value="" name="login" [(ngModel)]="login">
+    </mat-form-field>
 
-</form>
+    <mat-form-field class="full-width" appearance="standard">
+      <mat-label>Password</mat-label>
+      <input matInput type="password" placeholder="password" name="password" [(ngModel)]="password">
+    </mat-form-field>
 
-<div class="form-row float-right" *ngIf="auth.isLoggedIn()">
-  <button type="button" class="btn btn-link" (click)="auth.logout()">Log Out</button>
+    <button mat-raised-button color="primary">Login</button>
+    <mat-error>{{error}}</mat-error>
+  </form>
 </div>

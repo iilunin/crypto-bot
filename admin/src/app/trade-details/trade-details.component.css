@@ -1,1 +1,45 @@
 .row-no-btm-margin { margin-bottom: 0px; }
+
+.task-header {
+    background-color: transparent;
+    padding: 0 5px;
+    height: 20px;
+}
+.fx-spacer {
+    flex: 1 1 auto;
+}
+
+.mat-grid-tile .mat-figure {
+    justify-content: flex-start !important ;
+    align-items: flex-start !important;
+ }
+
+ .figure-div {
+    width: 100%; display: flex; align-items: flex-start;
+ }
+
+ .trade-details-form {
+    min-width: 150px;
+    width: 100%;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+  
+  td {
+    padding-right: 8px;
+  }
+  
+  mat-button-toggle-group {
+    margin-left: 12px;
+    height: 32px;
+    align-items: center;
+  }
+
+  .full-width-input {
+    width: 100%;
+    display: flex; 
+    justify-content: flex-start !important ;
+    align-items: flex-start !important;
+  }

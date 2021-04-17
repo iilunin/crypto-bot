@@ -1,80 +1,89 @@
-<div class="table-responsive rounded" *ngIf="auth.isLoggedIn()">
-  <table class="table table-striped table-dark rounded">
-    <thead>
-    <tr>
-      <th style="width: 14%"><span>Symbol</span><button type="button" class="btn btn-sm btn-outline-info" tooltip="Refresh trade list" (click)="refreshTrades()">
-          <span class="oi oi-reload"></span>
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-success" tooltip="Create new trade" (click)="onTradeInfo(null, TradeDetailMode.Create)">
-          <span class="oi oi-plus"></span>
-        </button>
-      </th>
-      <th style="width: 15%">BTC Val</th>
-      <th style="width: 15%">Price</th>
-      <th style="width: 15%">Balance</th>
-      <th style="width: 10%">
-        <button type="button" class="btn btn-sm btn-outline-warning" [disabled]="trades.length == 0" tooltip="Pause all trades" (click)="onPauseAll()"><span class="oi oi-media-pause"></span></button>
-        <button type="button" class="btn btn-sm btn-outline-success" [disabled]="trades.length == 0" tooltip="Resume all trades" (click)="onResumeAll()"><span class="oi oi-media-play"></span></button></th>
-      <th style="width: 5%">
-        <span class="oi oi-dollar" tooltip="Close trade"></span>
-      </th>
-      <th style="width: 5%">
-        <span class="oi oi-trash" tooltip="Remove trade"></span>
-      </th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let trade of trades">
-      <td>
-        <button type="button" class="btn btn-sm btn-outline-info"  (click)="onTradeInfo(trade, TradeDetailMode.View)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Trade Info">
-          <span class="oi oi-eye"></span>
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-warning" (click)="onTradeInfo(trade, TradeDetailMode.Edit)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Edit Trade">
-          <span class="oi oi-wrench"></span>
-        </button>
-        <span tooltip="{{ trade.sym }}. ID:{{ trade.id }}">{{ trade.sym }}</span>
-      </td>
-      <td>{{ trade.btcVal | number:'1.6-6' }}</td>
-      <td>{{ trade.price | number:'1.8-8' }}</td>
-      <td>{{ trade.avail + trade.locked | number:'1.2-6' }}</td>
-      <td>
-        <button type="button" class="btn btn-sm btn-outline-{{ trade.paused? 'success' : 'warning' }}" (click)="onPauseResume(trade)" [disabled]="tradesDisabled.has(trade.id)" tooltip="{{ trade.paused? 'Resume': 'Pause' }} trade">
-          <span class="oi oi-media-{{ trade.paused? 'play': 'pause' }}"></span>
-        </button>
-      </td>
-      <td>
-        <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Close trade" >
-          <span class="oi oi-dollar"></span>
-        </button>
-      </td>
-      <td>
-        <button type="button" class="btn btn-sm btn-outline-danger" (click)="openModal(modal_template, trade.id, false)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Remove trade" >
-          <span class="oi oi-trash"></span>
-        </button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <router-outlet name="trade"></router-outlet>
-
-  <ng-template #modal_template >
-    <div class="modal-header">
-      <h4 class="modal-title pull-left">{{isCloseTradeAction ? 'Close' : 'Deleted' }} Trade?</h4>
-      <button type="button" class="close pull-right" aria-label="Close" (click)="decline()">
-        <span aria-hidden="true">&times;</span>
+<div>
+  <table mat-table [dataSource]="tradesDS" matSort class="mat-elevation-z2" >
+    
+    <ng-container matColumnDef="ctrl-view-edit">
+      <th style="width: 8%" mat-header-cell *matHeaderCellDef>
+      <button mat-icon-button matTooltip="Refresh trade list" (click)="refreshTrades()">
+        <mat-icon>refresh</mat-icon>
       </button>
-    </div>
-    <!--<div class="modal-body text-center">-->
-      <!--&lt;!&ndash;<p>If you click 'Yes' the trade will be <b></b></p>&ndash;&gt;-->
-      <!---->
-    <!--</div>-->
-    <div class="modal-footer">
-      <button type="button" class="btn btn-danger" (click)="confirm()" >Yes</button>
-      <button type="button" class="btn btn-primary" (click)="decline()" >No</button>
+      <button mat-icon-button class="resume-btn" matTooltip="Create new trade" (click)="onTradeInfo(null, TradeDetailMode.Create)">
+        <mat-icon>add_circle_outline</mat-icon>
+      </button>
+      <td mat-cell *matCellDef="let trade">
+        <!-- <button type="button" class="btn btn-sm btn-outline-info"  (click)="onTradeInfo(trade, TradeDetailMode.View)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Trade Info">
+          <span class="oi oi-eye"></span>
+        </button> -->
+        <button mat-icon-button class="pause-btn" matTooltip="Edit trade '{{trade.sym}}'" (click)="onTradeInfo(trade, TradeDetailMode.Edit)" [disabled]="tradesDisabled.has(trade.id)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="sym">
+      <th style="width: 14%" mat-header-cell *matHeaderCellDef mat-sort-header="sym">Symbol </th>
+      <td mat-cell *matCellDef="let trade">{{trade.sym}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="btc-val">
+      <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="btcVal">Btc Val</th>
+      <td mat-cell *matCellDef="let trade">{{ trade.btcVal | number:'1.6-6' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+      <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="price">Price</th>
+      <td mat-cell *matCellDef="let trade">{{ trade.price | number:'1.8-8' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="balance">
+      <th style="width: 15%" mat-header-cell *matHeaderCellDef mat-sort-header="balance">Balance</th>
+      <td mat-cell *matCellDef="let trade">{{ trade.balance | number:'1.2-6' }}</td>
+    </ng-container>
+    
+    <ng-container matColumnDef="ctrl-pause">
+      <th style="width: 8%" mat-header-cell *matHeaderCellDef>
+        <button mat-icon-button matTooltip="Pause All Trades" class="pause_btn" [disabled]="trades.length == 0" (click)="onPauseAll()">
+          <mat-icon>pause_circle_outline</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Resume all trades" class="resume_btn" [disabled]="trades.length == 0" (click)="onResumeAll()">
+          <mat-icon>play_circle_outline</mat-icon>
+        </button>
+      </th>
+      <td mat-cell *matCellDef="let trade">
+        <button mat-icon-button matTooltip="{{ trade.paused? 'Resume': 'Pause' }} trade" class="{{ trade.paused? 'resume_btn' : 'pause_btn' }}" (click)="onPauseResume(trade)" [disabled]="tradesDisabled.has(trade.id)" >
+          <mat-icon>{{ trade.paused? 'play_circle_outline': 'pause_circle_outline' }}</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="ctrl-close">
+      <th style="width: 5%" mat-header-cell *matHeaderCellDef>Close</th>
+      <td mat-cell *matCellDef="let trade">
+      <button mat-icon-button color="warn" aria-label="Sell Off" (click)="openModal(modal_template, trade, true)" [disabled]="tradesDisabled.has(trade.id)" tooltip="Sell Off" >
+        <mat-icon>attach_money</mat-icon>
+      </button>
+    </td>
+    </ng-container>
+
+    <ng-container matColumnDef="ctrl-remove">
+      <th style="width: 5%" mat-header-cell *matHeaderCellDef>Remove</th>
+      <td mat-cell *matCellDef="let trade">
+        <button mat-icon-button color="warn" aria-label="Remove trade" matTooltip="Remove trade" (click)="openModal(modal_template, trade, false)" [disabled]="tradesDisabled.has(trade.id)">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <ng-template #modal_template>
+    <h2 mat-dialog-title>{{isCloseTradeAction ? 'Cancel' : 'Delete'}} {{'"' + selectedTrade.sym + '"'}} Trade?</h2>
+    <div mat-dialog-content>Please confirm if you want to {{isCloseTradeAction ? 'cancel' : 'delete' }} this trade</div>
+    <div mat-dialog-actions align="end">
+        <button mat-button mat-dialog-close="cancel" (click)="decline()" color="primary" cdkFocusInitial>No</button>
+        <button mat-button mat-dialog-close="ok"  (click)="confirm()" color="primary">Yes</button>
     </div>
   </ng-template>
 
-  <div *ngFor="let alert of alerts">
-    <alert [type]="alert.type" [dismissOnTimeout]="alert.timeout" [dismissible]="true" (onClosed)="onClosedAlert(alert)">{{ alert.msg }}</alert>
-  </div>
 </div>
+

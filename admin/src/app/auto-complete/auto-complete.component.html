@@ -1,0 +1,30 @@
+<mat-form-field class="full-width" appearance="{{ appearance }}">
+	<mat-label>{{ label }}</mat-label>
+	<input #validatedInput
+    matInput
+	type="text"
+    placeholder="{{ placeHolder }}"
+    [matAutocomplete]="inputAuto"
+    [formControl]="fieldCtrl"
+	[class]="class"
+    (keyup)="onSelect($event)"
+	autocomplete="off" 
+	[appSymbolValidator]="smartList"
+	[(ngModel)]="model.symbol"
+	oninput="this.value = this.value.toUpperCase()"
+	required
+  />
+  <mat-hint>Start typing symbols</mat-hint>
+	<mat-error *ngIf="fieldCtrl.hasError('appSymbolValidator') && !fieldCtrl.hasError('required')">
+		Please enter a valid symbol
+	</mat-error>
+	<mat-error *ngIf="fieldCtrl.hasError('required')">
+		Symbol is <strong>required</strong>
+	</mat-error> 
+	<mat-autocomplete #inputAuto="matAutocomplete" showPanel="true"
+		(optionsScroll)="onScroll()" [displayWith]="displayFn">
+		<mat-option *ngFor="let element of filteredList | async" [value]="element" (click)="onSelect(element)"
+			[title]="element">{{element}}
+		</mat-option>
+	</mat-autocomplete>
+</mat-form-field>

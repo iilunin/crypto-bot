@@ -1,95 +1,64 @@
-<ng-template #modal_template >
-  <form #tradeForm="ngForm" class="needs-validation" novalidate>
-  <div class="modal-header">
-    <div class="col-sm-1">
-      <button *ngIf="mode.isView()" type="button" class="btn btn-sm btn-warning" (click)="mode.setEdit()" tooltip="Edit">
-        <span class="oi oi-wrench"></span>
-      </button>
-      <button *ngIf="mode.isEdit()" type="button" class="btn btn-sm btn-info" (click)="mode.setView()" tooltip="View">
-        <span class="oi oi-eye"></span>
-      </button>
-    </div>
-    <h4 class="modal-title pull-left">Trade ({{mode.str()}} mode)</h4>
-
-    <button type="button" class="close pull-right" aria-label="Close" (click)="closeModal()">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <!--<div class="modal-body" *ngIf="trade$ | async as trade">-->
-  <div class="modal-body" *ngIf="trade">
-    <!--<form>-->
+<form #tradeForm="ngForm" class="trade-details-form" (keydown.enter)="$event.preventDefault()">
+  <h1 mat-dialog-title>
+    <mat-toolbar role="toolbar" class="task-header">
+        <span>{{mode.str()}} Trade</span>
+        <!-- <span class="fx-spacer"></span>
+        <button mat-icon-button mat-dialog-close="cancel" aria-label="Close" matTooltip="Close">
+            <mat-icon mat-list-icon>close</mat-icon>
+        </button> -->
+    </mat-toolbar>
+  </h1>
+  <div mat-dialog-content *ngIf="trade"> 
       <fieldset [disabled]="!mode.isCreate()">
-        <legend>Info</legend>
-        <div class="form-group row">
-          <label for="tradeId" class="col-sm-2 col-form-label-sm">ID</label>
-          <div class="col-sm-10"><input type="text" id="tradeId" name="tradeId" class="form-control form-control-sm" disabled value="{{trade.id}}"></div>
-        </div>
-        <div class="form-group row">
-          <label for="symbol" class="col-sm-2 col-form-label-sm">Symbol</label>
-          <div class="col-sm-2">
-            <input type="text" id="symbol" name="symbol" class="form-control form-control-sm {{symbol.errors? 'is-invalid':''}}"
-                   required
-                   (change)="trade.symbol=trade.symbol.toUpperCase()"
-                   [appSymbolValidator]="symbols"
-                   [(ngModel)]="trade.symbol"
-                   [typeahead]="exchangeInfo"
-                   [typeaheadScrollable]="true"
-                   typeaheadOptionField="s"
-                   [typeaheadOptionsInScrollableView]="10"
-                   (typeaheadOnSelect)="onSymbolSelected($event)"
-                   autocomplete="off" #symbol="ngModel">
-          </div>
-
-          <!--<div class="col-sm-2" *ngIf="symbol.invalid && (symbol.dirty || symbol.touched)"-->
-               <!--class="alert alert-danger">-->
-
-            <!--<div *ngIf="symbol.errors.appSymbolValidator">-->
-              <!--Symbol cannot be test.-->
-            <!--</div>-->
-
-          <!--</div>-->
-          <label for="asset" class="col-sm-1 col-form-label-sm">Asset</label>
-          <div class="col-sm-2">
-            <input type="text" id="asset" name="asset" class="form-control form-control-sm" [ngModel]="trade.asset" [disabled]="true">
-          </div>
-          <label for="asset" class="col-sm-1 col-form-label-sm">Cap</label>
-          <div class="col-sm-2">
-            <input type="text" id="cap" name="cap" class="form-control form-control-sm" [ngModel]="trade.cap" autocomplete="off">
-          </div>
-        </div>
-        <!--<div class="form-group row">-->
-          <!--<label for="status" class="col-sm-2 col-form-label">Status</label>-->
-          <!--<div class="col-sm-10"><input type="text" id="status" class="form-control" [(value)]="trade.status" ></div>-->
-        <!--</div>-->
-        <div class="form-group row">
-          <label for="buysellBtn" class="col-sm-2 col-form-label-sm">Side</label>
-          <div class="col-sm-10">
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="buysellBtn">
-              <label class="btn btn-sm btn-outline-danger {{trade.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">
-                <input type="radio" name="options" id="sideSell" value="SELL" autocomplete="off" [(ngModel)]="trade.side"> Sell
-              </label>
-              <label class="btn btn-sm btn-outline-success {{trade.isBuy() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">
-                <input type="radio" name="options" id="sideBuy"  value="BUY" autocomplete="off" [(ngModel)]="trade.side"> Buy
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group row" *ngIf="priceInfo?.symbol == trade.symbol">
-          <label class="col-sm-2 col-form-label-sm">Price Info</label>
-          <div class="col-sm-10">
-            <span class="badge badge-success">Bid: {{ priceInfo.bestBid }}</span>&nbsp;
-            <span class="badge badge-danger">Ask: {{ priceInfo.bestAsk }}</span>
-          </div>
-        </div>
+        <h2>Info</h2>
+        <p><span>ID: </span><span><strong>{{trade.id}}</strong></span></p>
+        <table class="full-width" cellspacing="0"><tr>
+          <td><app-auto-complete #symAutoComplete
+            [fieldCtrl]="myControl" 
+            [smartList]="symbols" 
+            [placeHolder]="'ETHUSDC'"
+            [appearance]="'standard'"
+            [label] = "'Symbol'"
+            (optionSelected)="onSymbolSelected($event)" 
+            [(model)]="trade"
+            [class]="'full-width'"
+            >
+            </app-auto-complete></td>
+          <td><mat-form-field class="full-width" appearance="standard">
+              <mat-label>Asset</mat-label>
+              <input matInput type="text" id="asset" name="asset" [ngModel]="trade.asset" [disabled]="true">
+            </mat-form-field></td>
+          <td><mat-form-field class="full-width" appearance="standard">
+            <mat-label>Cap</mat-label>
+            <input matInput type="text" id="cap" name="cap" [ngModel]="trade.cap">
+            <mat-hint>Limit your trade</mat-hint>
+          </mat-form-field></td>
+        </tr></table>
+        <table class="full-width" cellspacing="0"><tr>
+          <td>Side
+            <mat-button-toggle-group name="side" [(ngModel)]="trade.side">
+              <mat-button-toggle value="SELL" class="sell-button-{{trade.isSell() ? 'on' : 'off'}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">Sell</mat-button-toggle>
+              <mat-button-toggle value="BUY" class="buy-button-{{trade.isBuy() ? 'on' : 'off'}}"  *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">Buy</mat-button-toggle>
+            </mat-button-toggle-group>
+          </td>
+          <td *ngIf="priceInfo?.symbol == trade.symbol">
+            Price Info
+            <span class="buy-button-on">Bid: {{ priceInfo.bestBid }}</span><button mat-icon-button matTooltip="Copy bid price">
+              <mat-icon [cdkCopyToClipboard]="priceInfo.bestBid">file_copy</mat-icon>
+            </button>&nbsp;
+            <span class="sell-button-on">Ask: {{ priceInfo.bestAsk }}</span><button mat-icon-button matTooltip="Copy ask price">
+              <mat-icon [cdkCopyToClipboard]="priceInfo.bestAsk">file_copy</mat-icon>
+            </button>
+          </td>
+        </tr>
+        </table>
       </fieldset>
     <app-entry-details [trade]="trade" [mode]="mode"></app-entry-details>
     <app-exit-details [trade]="trade" [mode]="mode"></app-exit-details>
     <app-sl-details [trade]="trade" [mode]="mode"></app-sl-details>
   </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-success" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="tradeForm.invalid" >{{ mode.str() }}</button>
-    <button type="button" class="btn btn-primary" (click)="decline()" >Cancel</button>
+  <div mat-dialog-actions align="end">
+    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors" >{{ mode.str() }}</button>
+    <button mat-button mat-dialog-close="cancel" color="primary">Cancel</button>
   </div>
-  </form>
-</ng-template>
+</form>

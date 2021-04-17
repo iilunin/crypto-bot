@@ -16,6 +16,7 @@ class TradeEndpoint(BotAPIResource):
         self.parser.add_argument('action', type=str, help='close|start|pause')
         self.parser.add_argument('data', type=dict)
 
+    @jwt_required()
     def get(self, id):
         return Response(response=ConfigLoader.get_json_str(self.th.get_strategy_by_id(id).trade),
                         status=200,

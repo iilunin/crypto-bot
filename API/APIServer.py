@@ -6,6 +6,7 @@ from flask_restful import Api
 from flask_cors import CORS
 
 from API.Endpoints.APIexchangeInfoEndpoint import APIExchangeInfoEndpoint
+from API.Endpoints.BalanceEndpoint import BalanceEndpoint
 from API.Endpoints.JWTEndpoint import JWTEndpoint
 from API.Endpoints.TradeEndpoint import TradeEndpoint
 from API.Endpoints.TradeListEndpoint import TradeListEndpoint
@@ -35,8 +36,15 @@ class APIServer:
         self.api = Api(self.app)
 
         CORS(self.app)
+        # self.api.add_resource(BalanceEndpoint, APIServer.API_PREFIX + '/balance',
+        #                       resource_class_kwargs={'trade_handler': self.th})
+
+        self.api.add_resource(BalanceEndpoint, APIServer.API_PREFIX + '/balance/<force>',
+                              resource_class_kwargs={'trade_handler': self.th})
+
         self.api.add_resource(TradeListEndpoint, APIServer.API_PREFIX + '/trades',
                               resource_class_kwargs={'trade_handler': self.th})
+
         self.api.add_resource(TradeEndpoint, APIServer.API_PREFIX + '/trade/<id>',
                               resource_class_kwargs={'trade_handler': self.th})
 
