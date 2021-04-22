@@ -15,6 +15,7 @@ import {map, startWith} from 'rxjs/operators';
 import { AutoCompleteComponent } from '../auto-complete/auto-complete.component';
 import { SymbolValidatorDirective } from './symbol-validator';
 import { reduceEachTrailingCommentRange } from 'typescript';
+import { NotificationMessage, NotificationService, NotificatoinType } from '../services/notification.service';
 
 @Component({
   selector: 'app-trade-details',
@@ -49,6 +50,7 @@ export class TradeDetailsComponent implements OnInit {
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: {mode: Mode, id: string},
               private dialogRef: MatDialogRef<TradeDetailsComponent>,
+              private notificationService: NotificationService,
               private route: ActivatedRoute,
               private changeDetector: ChangeDetectorRef,
               private router: Router,
@@ -95,17 +97,22 @@ export class TradeDetailsComponent implements OnInit {
   }
 
   confirm() {
-    console.log('confirm')
-    if(!this.myControl.errors && this.dialogRef)
-      this.dialogRef.close()
-    return;
+    console.log('confirm tradfe')
+    
     this.api.addTrade(this.trade).subscribe(
       res => {
         if (this.mode.isCreate()) {
+          
           this.tradeService.anounce(new TradeEvent('TradeDeatails', 'created'));
+          
+          if(!this.myControl.errors && this.dialogRef)
+            this.dialogRef.close()
         }
       },
-      err => console.log(err)
+      err => {
+        this.notificationService.NotifyAlert('Trade creation error');
+        console.log(err);
+      }
     );
   }
 

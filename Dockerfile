@@ -3,7 +3,7 @@
 #########################
 
 # base image
-FROM node:8 as builder
+FROM node:12 as builder
 
 # install chrome for protractor tests
 #RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
@@ -31,16 +31,15 @@ COPY ./admin /usr/src/app
 #RUN ng test --watch=false
 
 # generate build
-RUN npm run lint && \
-    npm run build-prod
-
+#RUN npm run lint && \ --depricated
+#RUN npm run build-prod
+RUN ng build --prod --output-path app_docker
 
 ##################
 ### production ###
 ##################
-
-FROM python:3-stretch
-MAINTAINER Igor Ilunin <ilunin.igor@gmail.com>
+FROM python:3.7-slim
+MAINTAINER Igor Iliunin <ilunin.igor@gmail.com>
 
 RUN mkdir -p /usr/src/app
 
@@ -63,7 +62,8 @@ RUN \
 VOLUME ["/usr/src/trades", "/usr/src/configs"]
 
 COPY . /usr/src/app
-COPY --from=builder /usr/src/app/dist/admin /usr/src/app/API/templates
+#COPY --from=builder /usr/src/app/dist/admin /usr/src/app/API/templates
+COPY --from=builder /usr/src/app/app_docker /usr/src/app/API/templates
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
