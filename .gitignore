@@ -1,6 +1,6 @@
 .idea
 .vscode
-.env
+**/.env
 api.json
 /Conf/*
 /venv

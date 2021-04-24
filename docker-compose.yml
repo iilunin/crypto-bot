@@ -1,7 +1,7 @@
 version: '2'
 services:
   bot:
-    image: "crypto-bot:0.6-slim"
+    image: .
     ports:
       - '127.0.0.1:3000:3000'
     environment:
