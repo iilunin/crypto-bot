@@ -19,7 +19,6 @@ export class AppComponent {
   ) {
     this.notificationService.notification$.subscribe(message => {
       
-      console.log(message)
       this.snackBar.open(message.contents, message.action, 
         { 
           duration: 3000,

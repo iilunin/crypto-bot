@@ -1,34 +1,40 @@
-<fieldset [disabled]="mode.isView()">
-  <div class="form-group row">
-    <div class="col-sm-2">
-      <h5>Stoploss</h5>
-    </div>
-    <div class="col-sm-2">
-      <button type="button" class="btn btn-sm btn-outline-success" (click)="addStopLoss()" tooltip="Add Stoploss" *ngIf="!trade.stoploss" >
-        <span class="oi oi-plus"></span>
-      </button>
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteStopLoss()" tooltip="Remove Stoploss" *ngIf="trade.stoploss" >
-        <span class="oi oi-trash"></span>
-      </button>
-    </div>
-  </div>
-  <div class="form-group row" *ngIf="trade.stoploss">
-    <label class="col-sm-2 col-form-label-sm">Type</label>
-    <div class="col-sm-10">
-      <div class="btn-group" btnRadioGroup [(ngModel)]="trade.stoploss.type">
-        <label class="btn btn-sm btn-outline-primary {{trade.stoploss.isFixed() ? 'active' : ''}}" btnRadio="{{SLType.FIXED}}"
-               tabindex="0" role="button" [disabled]="mode.isView()" *ngIf="!(mode.isView() && trade.stoploss.isTrailing())">{{SLType.FIXED}}</label>
-        <label class="btn btn-sm  btn-outline-secondary {{trade.stoploss.isTrailing() ? 'active' : ''}}" btnRadio="{{SLType.TRAILING}}"
-               tabindex="0" role="button" [disabled]="mode.isView()" *ngIf="!(mode.isView() && trade.stoploss.isFixed())">{{SLType.TRAILING}}</label>
-      </div>
-    </div>
-  </div>
-  <div class="form-group row" *ngIf="trade.stoploss">
-    <label for="slThreshold" class="col-sm-2 col-form-label-sm">Threshold</label>
-    <div class="col-sm-2"><input type="text" id="slThreshold" class="form-control form-control-sm" [(ngModel)]="trade.stoploss.threshold" [disabled]="trade.stoploss.isFixed()"></div>
-    <label for="slPrice" class="col-sm-1 col-form-label-sm">Price</label>
-    <div class="col-sm-2"><input type="text" id="slPrice" class="form-control form-control-sm" [(ngModel)]="trade.stoploss.initial_target.price"></div>
-    <label for="slVol" class="col-sm-1 col-form-label-sm">Volume</label>
-    <div class="col-sm-2"><input type="text" id="slVol" class="form-control form-control-sm" [(ngModel)]="trade.stoploss.initial_target.vol"></div>
-  </div>
-</fieldset>
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Stoploss
+    </mat-panel-title>
+    <mat-panel-description>
+      Configuration for the stoploss
+    </mat-panel-description>
+  </mat-expansion-panel-header>
+
+  <button mat-icon-button class="resume-btn" matTooltip="Add Stoploss" (click)="addStopLoss()" *ngIf="!trade.entry">
+    <mat-icon>add_circle_outline</mat-icon>
+  </button>
+  <table class="full-width" cellspasing=0 *ngIf="trade.stoploss" >
+    <tr>
+      <td><mat-checkbox [(ngModel)]="trade.stoploss.isTrailing">Trailing</mat-checkbox></td>
+      <td><mat-form-field class="full-width exit-target-input" appearance="standard">
+        <mat-label>Threshold</mat-label>
+          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.threshold" [disabled]="trade.stoploss.isFixed()">
+        </mat-form-field>
+      </td>
+      <td><mat-form-field class="full-width exit-target-input" appearance="standard">
+        <mat-label>Price</mat-label>
+          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.initial_target.price">
+        </mat-form-field></td>
+      <td>
+        <mat-form-field class="full-width exit-target-input" appearance="standard">
+        <mat-label>Volume</mat-label>
+          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.initial_target.vol">
+        </mat-form-field>
+      </td>
+      <td>
+        <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteStopLoss()">
+          <mat-icon>remove_circle_outline</mat-icon>
+        </button>
+      </td>
+    </tr>
+  </table>
+  
+</mat-expansion-panel>

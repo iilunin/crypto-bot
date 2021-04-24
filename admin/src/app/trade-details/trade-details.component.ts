@@ -1,8 +1,8 @@
 import {AfterContentInit, ChangeDetectorRef, Component, ElementRef, Inject, OnInit, Optional, TemplateRef, ViewChild} from '@angular/core';
 import {Location} from '@angular/common';
 import {ActivatedRoute, ParamMap, Router} from '@angular/router';
-import {BotApi} from '../botapi';
-import {BinanceService, BinancePriceResult} from '../binance.service';
+import {BinancePriceResult, BotApi} from '../botapi';
+import {BinanceService} from '../binance.service';
 import {switchMap} from 'rxjs/operators';
 import {Mode, TradeDetailMode, TradeDetails} from '../trade-details';
 import {Observable} from 'rxjs';
@@ -36,7 +36,7 @@ export class TradeDetailsComponent implements OnInit {
   // trade: TradeDetails;
   priceInfo: BinancePriceResult;
 
-  exchangeInfo: any[];
+  exchangeInfo: Map<string, string>;
   symbols: string[] = [];
 
   myControl = new FormControl('', Validators.required);
@@ -82,23 +82,26 @@ export class TradeDetailsComponent implements OnInit {
 
     if (this.mode.isCreate()) {
       this.trade = new TradeDetails(true);
+      
       this.api.getExchangeInfo().subscribe(
         res => {
-          this.exchangeInfo = res;
-          // this.symbols = [];
-          this.exchangeInfo.forEach(si => this.symbols.push(<string>si.s.toUpperCase()));
+          this.exchangeInfo = new Map<string, string>();
+
+          res.forEach(si => {
+            this.exchangeInfo.set(si.s, si.b);
+            this.symbols.push(si.s);
+          });
+
           this.autoComplete.smartList = this.symbols.sort();
         }
       );
     } else {
-      this.exchangeInfo = [];
+      this.exchangeInfo = new Map<string,string>();
       this.api.getActiveTradeInfo(this.tradeId).subscribe(trade => this.trade = trade)
     }
   }
 
-  confirm() {
-    console.log('confirm tradfe')
-    
+  confirm() {    
     this.api.addTrade(this.trade).subscribe(
       res => {
         if (this.mode.isCreate()) {
@@ -125,8 +128,16 @@ export class TradeDetailsComponent implements OnInit {
   //   // this.router.navigate(['/trades']);
   // }
 
-  onPriceUpdate(price: BinancePriceResult): void {
-    this.priceInfo = price;
+  // onPriceUpdate(price: BinancePriceResult): void {
+  //   this.priceInfo = price;
+  // }
+
+  // as entry doesn't allow to choose side now, changing side on the 
+  // parent level will set opposite side for the entry
+  onSideChanged(event): void {
+    if (this.trade.entry){
+      this.trade.entry.setIsSell(this.trade.isBuy());
+    }
   }
 
   onSymbolSelected(symbol) {
@@ -134,10 +145,18 @@ export class TradeDetailsComponent implements OnInit {
       return;
 
       if (this.mode.isCreate()) {
-      // if (this.trade.symbol !== symbol) {
-        // query binance prices
-        this.binance.getPrice(symbol).subscribe(this.onPriceUpdate.bind(this));
-      // }
+
+      let asset = this.exchangeInfo.get(symbol)
+      
+      if (this.trade.symbol !== symbol) {
+        this.trade.asset = asset;
+        this.trade.symbol = symbol;
+        
+        this.api.bookTicker(symbol).subscribe(
+          result => { this.priceInfo = result;}
+        )
+        // this.binance.getPrice(symbol).subscribe(this.onPriceUpdate.bind(this));
+      }
     }
   }
 }

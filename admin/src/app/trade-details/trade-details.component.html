@@ -8,57 +8,73 @@
         </button> -->
     </mat-toolbar>
   </h1>
-  <div mat-dialog-content *ngIf="trade"> 
-      <fieldset [disabled]="!mode.isCreate()">
-        <h2>Info</h2>
-        <p><span>ID: </span><span><strong>{{trade.id}}</strong></span></p>
-        <table class="full-width" cellspacing="0"><tr>
-          <td><app-auto-complete #symAutoComplete
-            [fieldCtrl]="myControl" 
-            [smartList]="symbols" 
-            [placeHolder]="'ETHUSDC'"
-            [appearance]="'standard'"
-            [label] = "'Symbol'"
-            (optionSelected)="onSymbolSelected($event)" 
-            [(model)]="trade"
-            [class]="'full-width'"
-            >
-            </app-auto-complete></td>
-          <td><mat-form-field class="full-width" appearance="standard">
-              <mat-label>Asset</mat-label>
-              <input matInput type="text" id="asset" name="asset" [ngModel]="trade.asset" [disabled]="true">
+
+  
+  <div mat-dialog-content *ngIf="trade" class="trade-section"> 
+    <mat-accordion class="exp-headers-align" multi>    
+      <mat-expansion-panel expanded>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Trading Pair
+          </mat-panel-title>
+          <mat-panel-description>
+            Information about trading pair
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <div [disabled]="!mode.isCreate()">
+          <p><span>ID: </span><span><strong>{{trade.id}}</strong></span></p>
+          <table class="full-width" cellspacing="0"><tr>
+            <td><app-auto-complete #symAutoComplete
+              [fieldCtrl]="myControl" 
+              [placeHolder]="'ETHUSDC'"
+              [appearance]="'standard'"
+              [smartList]="symbols"
+              [label] = "'Trading Pair'"
+              (optionSelected)="onSymbolSelected($event)" 
+              [model]="trade.symbol"
+              [class]="'full-width'"
+              [disabled]="!mode.isCreate()"
+              
+              >
+              </app-auto-complete></td>
+            <td><mat-form-field class="full-width" appearance="standard">
+                <mat-label>Asset</mat-label>
+                <input matInput type="text" id="asset" name="asset" [ngModel]="trade.asset" disabled="true">
+              </mat-form-field></td>
+            <td><mat-form-field class="full-width" appearance="standard">
+              <mat-label>Cap</mat-label>
+              <input matInput type="text" id="cap" name="cap" disabled="{{!mode.isCreate()}}" [ngModel]="trade.cap">
+              <mat-hint>Limit your trade</mat-hint>
             </mat-form-field></td>
-          <td><mat-form-field class="full-width" appearance="standard">
-            <mat-label>Cap</mat-label>
-            <input matInput type="text" id="cap" name="cap" [ngModel]="trade.cap">
-            <mat-hint>Limit your trade</mat-hint>
-          </mat-form-field></td>
-        </tr></table>
-        <table class="full-width" cellspacing="0"><tr>
-          <td>Side
-            <mat-button-toggle-group name="side" [(ngModel)]="trade.side">
-              <mat-button-toggle value="SELL" class="sell-button-{{trade.isSell() ? 'on' : 'off'}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">Sell</mat-button-toggle>
-              <mat-button-toggle value="BUY" class="buy-button-{{trade.isBuy() ? 'on' : 'off'}}"  *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">Buy</mat-button-toggle>
-            </mat-button-toggle-group>
-          </td>
-          <td *ngIf="priceInfo?.symbol == trade.symbol">
-            Price Info
-            <span class="buy-button-on">Bid: {{ priceInfo.bestBid }}</span><button mat-icon-button matTooltip="Copy bid price">
-              <mat-icon [cdkCopyToClipboard]="priceInfo.bestBid">file_copy</mat-icon>
-            </button>&nbsp;
-            <span class="sell-button-on">Ask: {{ priceInfo.bestAsk }}</span><button mat-icon-button matTooltip="Copy ask price">
-              <mat-icon [cdkCopyToClipboard]="priceInfo.bestAsk">file_copy</mat-icon>
-            </button>
-          </td>
-        </tr>
-        </table>
-      </fieldset>
+          </tr></table>
+          <table class="full-width" cellspacing="0"><tr>
+            <td>Side
+              <mat-button-toggle-group name="side" [(ngModel)]="trade.side" (change)="onSideChanged($event)" >
+                <mat-button-toggle value="SELL" class="sell-button-{{trade.isSell() ? 'on' : 'off'}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isSell())">Sell</mat-button-toggle>
+                <mat-button-toggle value="BUY" class="buy-button-{{trade.isBuy() ? 'on' : 'off'}}"  *ngIf="mode.isCreate() || (!mode.isCreate() && trade.isBuy())">Buy</mat-button-toggle>
+              </mat-button-toggle-group>
+            </td>
+            <td *ngIf="priceInfo?.symbol == trade.symbol">
+              Price Info
+              <span class="buy-button-on">Bid: {{ priceInfo.bestBid }}</span><button mat-icon-button matTooltip="Copy bid price">
+                <mat-icon [cdkCopyToClipboard]="priceInfo.bestBid">file_copy</mat-icon>
+              </button>&nbsp;
+              <span class="sell-button-on">Ask: {{ priceInfo.bestAsk }}</span><button mat-icon-button matTooltip="Copy ask price">
+                <mat-icon [cdkCopyToClipboard]="priceInfo.bestAsk">file_copy</mat-icon>
+              </button>
+            </td>
+          </tr>
+          </table>
+        </div>
+      </mat-expansion-panel>
+    
     <app-entry-details [trade]="trade" [mode]="mode"></app-entry-details>
     <app-exit-details [trade]="trade" [mode]="mode"></app-exit-details>
     <app-sl-details [trade]="trade" [mode]="mode"></app-sl-details>
+  </mat-accordion>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors" >{{ mode.str() }}</button>
+    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors && mode.isCreate()" >{{ mode.str() }}</button>
     <button mat-button mat-dialog-close="cancel" color="primary">Cancel</button>
   </div>
 </form>

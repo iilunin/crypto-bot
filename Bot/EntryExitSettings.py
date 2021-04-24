@@ -61,8 +61,8 @@ class EntryExitSettings(CustomSerializable):
 
         # it is set automatically at Trade._init_entry_exit method
 
-        # if self.side:
-        #     d['side'] = self.side
+        if self.is_entry and self.side:
+            d['side'] = self.side
 
         if self.smart is not None:
             d['smart'] = self.smart

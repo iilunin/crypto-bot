@@ -1,7 +1,8 @@
 <mat-form-field class="full-width" appearance="{{ appearance }}">
 	<mat-label>{{ label }}</mat-label>
-	<input #validatedInput
+	<input
     matInput
+	[disabled]="disabled"
 	type="text"
     placeholder="{{ placeHolder }}"
     [matAutocomplete]="inputAuto"
@@ -10,7 +11,7 @@
     (keyup)="onSelect($event)"
 	autocomplete="off" 
 	[appSymbolValidator]="smartList"
-	[(ngModel)]="model.symbol"
+	[(ngModel)]="model"
 	oninput="this.value = this.value.toUpperCase()"
 	required
   />

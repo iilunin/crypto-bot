@@ -114,7 +114,9 @@ class FXConnector(Logger):
         return self.client.get_all_tickers()
 
     @retry(**DEFAULT_RETRY_SETTINGS)
-    def get_orderbook_tickers(self):
+    def get_orderbook_tickers(self, sym):
+        if sym:
+            return self.client._get('ticker/bookTicker', version=self.client.PRIVATE_API_VERSION, data={'symbol':sym})
         return self.client.get_orderbook_tickers()
 
     @retry(**DEFAULT_RETRY_SETTINGS)

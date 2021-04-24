@@ -10,6 +10,9 @@ export enum SLType {
 }
 
 export class Target {
+  constructor(init?: Partial<Target>) {
+    Object.assign(this, init);
+  }
   status: TradeStatus;
   id: number;
   date: string;
@@ -21,27 +24,37 @@ export class Target {
   isCompleted(): boolean { return this.status === TradeStatus.COMPLETED; }
 }
 
-export class ExitInfo {
-  constructor() {
-    this.targets = [];
-    this.threshold = 0.4.toLocaleString() + '%';
-  }
+export class ExitInfo {  
   smart: boolean;
   threshold: string;
   targets: Target[];
+  constructor(init?: Partial<ExitInfo>) {
+
+    Object.assign(this, init);
+    
+    this.targets = [];
+    if(init?.targets){
+      
+      init?.targets.forEach(x => this.targets.push(new Target(x)));
+    }
+    this.threshold = 0.4.toLocaleString() + '%';
+  }
+  
 }
 
 export class StopLoss {
   type: SLType = SLType.FIXED;
   threshold = '5%';
   initial_target: Target;
-
+  isFixed(): boolean { return this.type === SLType.FIXED; }
+ 
+  get isTrailing(): boolean { return this.type === SLType.TRAILING; }
+  set isTrailing(value: boolean) { this.type = value ? SLType.TRAILING:SLType.FIXED;}
+  
   constructor() {
     this.initial_target = new Target();
     this.initial_target.vol = '100%';
   }
-  isFixed(): boolean { return this.type === SLType.FIXED; }
-  isTrailing(): boolean { return this.type === SLType.TRAILING; }
 }
 
 export class TradeDetails {
@@ -71,7 +84,15 @@ export class TradeDetails {
     }
   }
 
-  constructor(create_new: boolean = false) {
+  constructor(create_new: boolean = false, init?: Partial<TradeDetails>) {
+    Object.assign(this, init);
+    if (init?.exit){
+      this.exit = new ExitInfo(init.exit);
+    }
+    if (init?.entry){
+      this.entry = new Entry(init.entry);
+    }
+
     if (create_new) {
       this.exit = new ExitInfo();
       this.id = this.generateGuid();
@@ -109,19 +130,41 @@ export class TradeDetails {
 }
 
 export class EntryTarget {
+  
+  constructor(init?: Partial<EntryTarget>) {
+    Object.assign(this, init);
+  }
+
+  status: TradeStatus;
   price: string;
   vol: string;
+
+  isCompleted(): boolean { return this.status === TradeStatus.COMPLETED; }
 }
 
 export class Entry {
-  constructor(sell: boolean = true) {
-    this.targets = [new EntryTarget()];
+
+  side: 'BUY' | 'SELL' = 'BUY';
+  targets: EntryTarget[];
+  smart: boolean;
+
+  constructor(init?: Partial<Entry>, sell?: boolean) {
+    
+    Object.assign(this, init);
+    
+    if(init?.targets){
+      this.targets = [];
+      init?.targets.forEach(x => this.targets.push(new EntryTarget(x)));
+    }
+    
     this.setIsSell(sell);
   }
 
-  side: 'BUY' | 'SELL' = 'BUY';
-  targets: [EntryTarget];
-  smart: boolean;
+  getTarget(): EntryTarget {
+    return this.targets && this.targets.length > 0? this.targets[0] : null;
+  }
+
+  
 
   isBuy(): boolean { return this.side === 'BUY'; }
   isSell(): boolean { return !this.isBuy(); }

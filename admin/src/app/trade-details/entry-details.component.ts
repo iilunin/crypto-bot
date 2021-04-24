@@ -36,7 +36,7 @@ export class EntryDetailsComponent implements OnInit {
     this.entryTarget = new EntryTarget();
 
     if (!this.trade.entry) {
-      this.trade.entry = new Entry(!this.trade.isSell());
+      this.trade.entry = new Entry(null, !this.trade.isSell());
     }
 
     this.trade.entry.targets = [this.entryTarget];

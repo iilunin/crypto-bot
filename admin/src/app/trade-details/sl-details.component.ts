@@ -35,5 +35,4 @@ export class SLDetailsComponent implements OnInit {
       this.trade.stoploss = null;
     }
   }
-
 }

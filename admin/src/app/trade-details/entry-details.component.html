@@ -1,42 +1,44 @@
-<fieldset [disabled]="mode.isView()">
-  <legend>Entry
-  <button mat-icon-button class="resume-btn" *ngIf="!trade.entry" matTooltip="Add Target" (click)="addNewTarget()">
-    <mat-icon class="icon-display-sm" >add_circle_outline</mat-icon>
-  </button>
-</legend>
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Entry Target
+    </mat-panel-title>
+    <mat-panel-description>
+      Aquire asset before selling it as a part of one trade
+    </mat-panel-description>
+  </mat-expansion-panel-header>
 
-<table class="full-width" cellspasing=0 *ngIf="trade.entry">
-  <tr *ngFor="let entryTarget of trade.entry.targets"><td>
-    <mat-form-field class="full-width" appearance="standard">
-      <mat-label>Entry Price</mat-label>
-      <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="entryTarget.price">
-    </mat-form-field>
-  </td>
-  <td>
-    <mat-form-field class="full-width" appearance="standard">
-      <mat-label>Volume</mat-label>
-      <input matInput type="text" id="targetVol" name="targetVol" [(ngModel)]="entryTarget.vol">
-    </mat-form-field>
-  </td>
-  <td *ngIf="mode.isCreate()">
-    <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget()">
-      <mat-icon class="icon-display-sm">remove_circle_outline</mat-icon>
-    </button>
-  </td>
-</tr>
-</table>
-
-  <div class="form-group row row-no-btm-margin" *ngFor="let entryTarget of trade.entry?.targets">
-    
-    <div class="form-group col-md-1">
-    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="buysellBtn">
-      <label class="btn btn-sm btn-outline-danger {{trade.entry.isSell() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.entry.isSell())">
-        <input type="radio" name="options" id="sideSell" value="SELL" autocomplete="off" [(ngModel)]="trade.entry.side"> Sell
-      </label>
-      <label class="btn btn-sm btn-outline-success {{trade.entry.isBuy() ? 'active' : ''}}" *ngIf="mode.isCreate() || (!mode.isCreate() && trade.entry.isBuy())">
-        <input type="radio" name="options" id="sideBuy"  value="BUY" autocomplete="off" [(ngModel)]="trade.entry.side"> Buy
-      </label>
-    </div>
-    </div>
-  </div>
-</fieldset>
+  <!-- <button mat-raised-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()" *ngIf="!trade.entry">
+    Add Entry Target
+</button> -->
+<button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()" *ngIf="!trade.entry">
+  <mat-icon>add_circle_outline</mat-icon>
+</button>
+<div class="trade-section" *ngIf="trade.entry">
+  
+  Operation: <span class="{{trade.entry.isSell()?'sell': 'buy'}}-button-on" style="padding: 2px;">{{trade.entry.isSell()?'Sell': 'Buy'}}</span>
+  <div *ngIf="!mode.isCreate()" style="display: inline;">&nbsp;Status: <span><strong>{{trade.entry.getTarget()?.status}}</strong></span></div>
+  <table class="full-width" cellspasing=0>
+    <tr *ngFor="let entryTarget of trade.entry.targets"><td>
+      <mat-form-field class="full-width" appearance="standard">
+        <mat-label>Entry Price</mat-label>
+        <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="entryTarget.price" disabled="{{entryTarget.isCompleted()}}" >
+      </mat-form-field>
+    </td>
+    <td>
+      <mat-form-field class="full-width" appearance="standard">
+        <mat-label>Volume</mat-label>
+        <input matInput type="text" id="targetVol" name="targetVol" [(ngModel)]="entryTarget.vol" disabled="{{entryTarget.isCompleted()}}">
+      </mat-form-field>
+    </td>
+    <td>
+    </td>
+    <td *ngIf="mode.isCreate()">
+      <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget()" disabled="{{entryTarget.isCompleted()}}" >
+        <mat-icon>remove_circle_outline</mat-icon>
+      </button>
+    </td>
+  </tr>
+  </table>
+</div>
+</mat-expansion-panel>

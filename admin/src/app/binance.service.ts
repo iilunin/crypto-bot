@@ -6,34 +6,54 @@ import {environment} from '../environments/environment';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {TradeInfo} from './tradeInfo';
 
-export class BinancePriceResult {
-  symbol: string;
-  bestAsk: string;
-  bestBid: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class BinanceService {
+  API_URL = 'https://api1.binance.com/api/v3';
+  RETRIES = 3;
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type':  'application/json'
+    })
+  };
+
+  constructor(private http: HttpClient){
+
+  }
+
+  // bookTicker(symbol: string): Observable<BinancePriceResult> {
+  //   return this.http.get<any>(`${this.API_URL}/ticker/bookTicker?symbol=${symbol}`, this.httpOptions).pipe(
+  //     retry(this.RETRIES),
+  //     map(data => {
+  //       const result = new BinancePriceResult();
+  //       result.symbol = data.symbol;
+  //       result.bestAsk = data.askPrice;
+  //       result.bestBid = data.askPrice;
+  //       return result;
+  //     }),
+  //     catchError(this.handleError('getActiveTradeInfo', null))
+  //   );
+  // }
 
   symbols: Subject<string>;
 
-  getPrice(symbol: string): Subject<BinancePriceResult> {
-    const listener = this.listenSymbols([symbol]);
+  // getPrice(symbol: string): Subject<BinancePriceResult> {
+  //   const listener = this.listenSymbols([symbol]);
 
-    return <Subject<BinancePriceResult>>listener.pipe(
-      map(data => JSON.parse(data).data),
-      map(function(data) {
-        setTimeout(() => this.complete());
-        return Object.assign(new BinancePriceResult(), {
-          symbol: data.s,
-          bestAsk: data.a,
-          bestBid: data.b,
-        });
-      })
-    );
-  }
+  //   return <Subject<BinancePriceResult>>listener.pipe(
+  //     map(data => JSON.parse(data).data),
+  //     map(function(data) {
+  //       setTimeout(() => this.complete());
+  //       return Object.assign(new BinancePriceResult(), {
+  //         symbol: data.s,
+  //         bestAsk: data.a,
+  //         bestBid: data.b,
+  //       });
+  //     })
+  //   );
+  // }
 
   listenSymbols(symbols: string[]): Subject<string> {
     if (this.symbols != null && this.symbols !== undefined) {

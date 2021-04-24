@@ -46,7 +46,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 }
 
 .delete-btn {
-    color: #8f232e;
+    color: #b41e2dcc;
 }
 
 .icon-display-sm {
@@ -55,5 +55,9 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .full-width {
     width: 100%
+}
+
+.trade-section {
+    margin: 6px 0 12px;
 }
   

@@ -21,7 +21,6 @@ export class ExitDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // console.log(this.trade.exit.targets[0]);
   }
 
   deleteTarget(exitTarget: Target) {
@@ -35,6 +34,10 @@ export class ExitDetailsComponent implements OnInit {
     if (this.lastAddedTarget && !this.lastAddedTarget.price) { return; }
 
     this.lastAddedTarget = new Target();
+
+    if (!this.trade.exit.targets){
+      this.trade.exit.targets = [];
+    }
     this.trade.exit.targets.push(this.lastAddedTarget);
   }
 }

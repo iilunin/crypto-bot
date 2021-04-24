@@ -1,69 +1,77 @@
-<fieldset [disabled]="mode.isView()">
-  <legend>Exit</legend>
-  <div class="form-group row">
-    <label for="exitSmart" class="col-sm-2 col-form-label-sm">Smart</label>
-    <div class="col-sm-10">
-      <div class="form-check">
-        <input type="checkbox" id="exitSmart" class="form-check-input position-static" [(ngModel)]="trade.exit.smart">
+
+  <mat-expansion-panel expanded>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Exit Targets
+      </mat-panel-title>
+      <mat-panel-description>
+        Configuration for exit targets
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Default Settings
+        </mat-panel-title>
+        <mat-panel-description>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <table class="full-width" cellspasing=0>
+        <tr><td>
+          <mat-checkbox [(ngModel)]="trade.exit.smart" color="primary">Smart (can be overrwritten by individual target)</mat-checkbox>
+        </td><td>
+          <mat-form-field class="full-width" appearance="standard">
+            <mat-label>Threshold</mat-label>
+            <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.exit.threshold">
+          </mat-form-field>
+        </td></tr>
+      </table>
+    </mat-expansion-panel>
+      <div class="trade-section">
+        <table class="full-width" cellspasing=0>
+          <tr *ngFor="let exitTarget of trade.exit.targets">
+            <td>
+              <mat-form-field class="full-width exit-target-input" appearance="standard">
+                <mat-label>Target Price</mat-label>
+                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.price">
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field class="full-width exit-target-input" appearance="standard">
+                <mat-label>Volume</mat-label>
+                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.vol">
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-checkbox [(ngModel)]="exitTarget.smart" color="primary">Smart</mat-checkbox>
+            </td>
+            <td>
+              <mat-form-field class="full-width exit-target-input" appearance="standard">
+                <mat-label>Stop Loss</mat-label>
+                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.sl">
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field class="full-width exit-target-input" appearance="standard">
+                <mat-label>Status</mat-label>
+                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.status" disabled>
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field class="full-width exit-target-input" appearance="standard">
+              <mat-label>Order ID</mat-label>
+              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.id" disabled>
+            </mat-form-field></td>
+            <td>
+              <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget(exitTarget)" disabled="{{exitTarget.isCompleted()}}">
+                <mat-icon>remove_circle_outline</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </table>
+        <button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()">
+          <mat-icon>add_circle_outline</mat-icon>
+        </button>
       </div>
-    </div>
-    <!--<div class="col-sm-10"><input type="text" id="exitSmart" class="form-control" disabled value="{{trade.exit.smart}}"></div>-->
-  </div>
-  <div class="form-group row">
-    <label for="exitThreshold" class="col-sm-2 col-form-label-sm">Threshold</label>
-    <div class="col-sm-10"><input type="text" id="exitThreshold" class="form-control form-control-sm" [(ngModel)]="trade.exit.threshold"></div>
-  </div>
-  <div class="form-group row">
-    <div class="col-sm-2">
-      <h5>Exit Targets</h5>
-    </div>
-    <div class="col-sm-2">
-      <button type="button" class="btn btn-sm btn-outline-success" (click)="addNewTarget()" tooltip="Add Target" >
-        <span class="oi oi-plus"></span>
-      </button>
-    </div>
-  </div>
-  <div class="form-group row row-no-btm-margin" *ngIf="trade.exit?.targets && trade.exit?.targets.length > 0">
-    <div class="col-form-label-sm col-md-2"><label for="targetPrice">Price</label></div>
-    <div class="col-form-label-sm col-md-2"><label for="targetVol">Volume</label></div>
-    <div class="col-form-label-sm col-md-1"><label for="inputSmart">Smart</label></div>
-    <div class="col-form-label-sm col-md-2"><label for="inputSL">Stoploss</label></div>
-    <div class="col-form-label-sm col-md-2"><label for="inputStatus">Status</label></div>
-    <div class="col-form-label-sm col-md-2"><label for="inputOrderId">OrderID</label></div>
-    <div class="col-form-label-sm col-md-1"><label for="inputOrderId">Del</label></div>
-  </div>
-  <div class="form-group row row-no-btm-margin" *ngFor="let exitTarget of trade.exit.targets">
-    <div class="form-group col-md-2">
-      <!--<label for="targetPrice">Price</label>-->
-      <input type="text" class="form-control form-control-sm" id="targetPrice" [(ngModel)]="exitTarget.price">
-    </div>
-    <div class="form-group col-md-2">
-      <!--<label for="targetVol">Volume</label>-->
-      <input type="text" class="form-control form-control-sm" id="targetVol" [(ngModel)]="exitTarget.vol">
-    </div>
-    <div class="form-group col-md-1">
-      <!--<label for="inputSmart">Smart</label>-->
-      <div class="form-check">
-        <input type="checkbox" id="inputSmart" class="form-check-input position-static" [(ngModel)]="exitTarget.smart">
-      </div>
-    </div>
-    <div class="form-group col-md-2">
-      <!--<label for="inputSL">Stoploss</label>-->
-      <input type="text" class="form-control form-control-sm" id="inputSL" [(ngModel)]="exitTarget.sl">
-    </div>
-    <div class="form-group col-md-2">
-      <!--<label for="inputStatus">Status</label>-->
-      <input type="text" class="form-control form-control-sm" id="inputStatus" [(ngModel)]="exitTarget.status">
-    </div>
-    <div class="form-group col-md-2">
-      <!--<label for="inputOrderId">OrderID</label>-->
-      <input type="text" class="form-control form-control-sm" id="inputOrderId" [(ngModel)]="exitTarget.id">
-    </div>
-    <div class="form-group col-md-1">
-      <!--<label for="inputOrderId">Del</label>-->
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteTarget(exitTarget)" tooltip="Remove Target" >
-        <span class="oi oi-trash"></span>
-      </button>
-    </div>
-  </div>
-</fieldset>
+    </mat-expansion-panel>
+

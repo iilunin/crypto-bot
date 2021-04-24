@@ -63,22 +63,29 @@ export class AutoCompleteComponent implements OnInit, OnDestroy {
   @Input() label?: string;
   @Input() model?: any;
   @Input() class?: string;
+  @Input() disabled?: boolean;
 
   @Output() optionSelected = new EventEmitter();
   toHighlight = "";
   filteredList: Observable<MatInput[]>;
   private nextPage$ = new Subject();
 
-  constructor() {}
+  constructor() {
+  }
 
   ngOnInit(): void {
     this.getFilteredList();
+    
+    if(this.disabled)
+      this.fieldCtrl.disable()
   }
 
   /**
    * Result = of(currInputVal)
    */
   getChangedValOfInput() {
+    if (!this.fieldCtrl)
+      return;
     const filter$ = this.fieldCtrl.valueChanges.pipe(
       startWith(""),
       debounceTime(400)
@@ -140,6 +147,9 @@ export class AutoCompleteComponent implements OnInit, OnDestroy {
   onSelect(event: any) {
     this.toHighlight = event.name;
     
+    if (!this.fieldCtrl)
+      return;
+
     if(!this.fieldCtrl.errors){
       this.optionSelected.emit(this.validatedInputCtrl.nativeElement.value);
     }

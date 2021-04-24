@@ -68,6 +68,8 @@ export class AssetTableComponent implements OnInit, OnDestroy {
         // setTimeout(this.refreshTrades.bind(this), 0);
       }
     });
+
+    // this.onTradeInfo(null, TradeDetailMode.Create);
   }
 
   ngOnDestroy() {
@@ -224,7 +226,6 @@ export class AssetTableComponent implements OnInit, OnDestroy {
           this.handleCloseTradeRsp(res, isClose === true);
         }
       );
-      console.log('Remove trade');
     }    
   }
 

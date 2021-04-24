@@ -16,6 +16,12 @@ const httpOptions = {
   })
 };
 
+export class BinancePriceResult {
+  symbol: string;
+  bestAsk: string;
+  bestBid: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BotApi {
   RETRIES = 2;
@@ -37,15 +43,33 @@ export class BotApi {
     );
   }
 
+  bookTicker(symbol: string): Observable<BinancePriceResult> {
+    return this.http.get<any>(`${this.API_URL}/orderbook/${symbol}`, httpOptions).pipe(
+      retry(this.RETRIES),
+      map(data => {
+        if (!data)
+          return null;
+          
+        const result = new BinancePriceResult();
+        result.symbol = data.symbol;
+        result.bestAsk = data.askPrice;
+        result.bestBid = data.bidPrice;
+        return result;
+      }),
+      catchError(this.handleError('getActiveTradeInfo', null))
+    );
+  }
+
+
   getActiveTradeInfo(id: string): Observable<TradeDetails> {
     return this.http.get<TradeDetails>(`${this.API_URL}/trade/${id}`, httpOptions).pipe(
       retry(this.RETRIES),
       tap(trade => this.log(`fetched trade ${id} info`)),
       map(data => {
-        const trade = Object.assign(new TradeDetails(), data);
-        if (data.entry) {
-          trade.entry = Object.assign(new Entry(), data.entry); // restore nested class Entry
-        }
+        const trade = new TradeDetails(false, data);
+        // if (data.entry) {
+        //   trade.entry = new Entry(data.entry); // restore nested class Entry
+        // }
         return trade;
       }),
       catchError(this.handleError('getActiveTradeInfo', null))
