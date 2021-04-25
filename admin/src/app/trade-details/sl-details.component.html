@@ -8,7 +8,7 @@
     </mat-panel-description>
   </mat-expansion-panel-header>
 
-  <button mat-icon-button class="resume-btn" matTooltip="Add Stoploss" (click)="addStopLoss()" *ngIf="!trade.entry">
+  <button mat-icon-button class="resume-btn" matTooltip="Add Stoploss" (click)="addStopLoss()" *ngIf="!trade.stoploss">
     <mat-icon>add_circle_outline</mat-icon>
   </button>
   <table class="full-width" cellspasing=0 *ngIf="trade.stoploss" >
