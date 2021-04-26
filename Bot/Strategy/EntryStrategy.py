@@ -213,9 +213,10 @@ class EntryStrategy(TradingStrategy):
     def cancel_current_limit_order(self):
         if self.current_target.is_active():
             try:
-                status = self.fx.get_order_status(self.symbol(), self.current_target.id)
+                # status = self.fx.get_order_status(self.symbol(), self.current_target.id)
+                status = self.fx.cancel_order(self.symbol(), self.current_target.id)
 
-                if self.fx.cancel_order(self.symbol(), self.current_target.id):
+                if status['status'] == 'CANCELED':
                     canceled_time = datetime.now()
                     self.current_target.set_canceled()
                     self.trigger_target_updated()

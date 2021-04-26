@@ -63,13 +63,10 @@ export class AssetTableComponent implements OnInit, OnDestroy {
     }
 
     this.tradeNotificationSubscription = this.tradeService.eventAnounces$.subscribe(res => {
-      if (res.type === 'created') {
+      if (res.type === 'created' || res.type === 'updated') {
         this.refreshTrades();
-        // setTimeout(this.refreshTrades.bind(this), 0);
       }
     });
-
-    // this.onTradeInfo(null, TradeDetailMode.Create);
   }
 
   ngOnDestroy() {

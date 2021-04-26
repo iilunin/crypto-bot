@@ -84,14 +84,35 @@ class FXConnector(Logger):
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def cancel_order(self, sym, id):
+        '''
+        :param sym:
+        :param id:
+        :return:
+        {
+            'symbol': 'ETCUSDT',
+            'origClientOrderId': 'asd',
+            'orderId': 1211742179,
+            'orderListId': -1,
+            'clientOrderId': 'xyz',
+            'price': '100.00000000',
+            'origQty': '5.00000000',
+            'executedQty': '0.00000000',
+            'cummulativeQuoteQty': '0.00000000',
+            'status': 'CANCELED',
+            'timeInForce': 'GTC',
+            'type': 'LIMIT',
+            'side': 'SELL'}
+        '''
         return self.client.cancel_order(symbol=sym, orderId=id)
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def cancel_open_orders(self, sym):
-        orders = self.get_open_orders(sym)
-        if orders:
-            for order_id in orders:
-                self.client.cancel_order(symbol=sym, orderId=order_id)
+        return self.client._delete('openOrders',True, data={'symbol': sym})
+        # self.client.cancel_open
+        # orders = self.get_open_orders(sym)
+        # if orders:
+        #     for order_id in orders:
+        #         self.client.cancel_order(symbol=sym, orderId=order_id)
 
     def get_server_time(self):
         return self.client.get_server_time()

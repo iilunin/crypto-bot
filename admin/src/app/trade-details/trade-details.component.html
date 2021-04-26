@@ -74,7 +74,7 @@
   </mat-accordion>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors && mode.isCreate()" >{{ mode.str() }}</button>
+    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors && mode.isCreate()" >{{ mode.isCreate()? "Create":"Save" }}</button>
     <button mat-button mat-dialog-close="cancel" color="primary">Cancel</button>
   </div>
 </form>

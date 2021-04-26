@@ -104,13 +104,12 @@ export class TradeDetailsComponent implements OnInit {
   confirm() {    
     this.api.addTrade(this.trade).subscribe(
       res => {
-        if (this.mode.isCreate()) {
-          
-          this.tradeService.anounce(new TradeEvent('TradeDeatails', 'created'));
-          
-          if(!this.myControl.errors && this.dialogRef)
-            this.dialogRef.close()
+        if (this.mode.isCreate() || this.mode.isEdit()) {
+          this.tradeService.anounce(new TradeEvent('TradeDeatails', this.mode.isCreate() ? 'created': 'updated'));
         }
+
+        if(!this.myControl.errors && this.dialogRef)
+            this.dialogRef.close()
       },
       err => {
         this.notificationService.NotifyAlert('Trade creation error');
