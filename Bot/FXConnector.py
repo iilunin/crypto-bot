@@ -107,7 +107,14 @@ class FXConnector(Logger):
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def cancel_open_orders(self, sym):
-        return self.client._delete('openOrders',True, data={'symbol': sym})
+        orders = self.get_open_orders(sym)
+        if orders:
+            for order_id in orders:
+                self.client.cancel_order(symbol=sym, orderId=order_id)
+
+    @retry(**DEFAULT_RETRY_SETTINGS)
+    def cancel_open_orders_direct_api(self, sym):
+        return self.client._delete('openOrders', True, data={'symbol': sym})
         # self.client.cancel_open
         # orders = self.get_open_orders(sym)
         # if orders:

@@ -1,4 +1,5 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
+import { MatExpansionPanel } from '@angular/material/expansion';
 import {Mode, Entry, EntryTarget, TradeDetails} from '../trade-details';
 
 @Component({
@@ -7,7 +8,9 @@ import {Mode, Entry, EntryTarget, TradeDetails} from '../trade-details';
   styleUrls: ['./trade-details.component.css']
 })
 
-export class EntryDetailsComponent implements OnInit {
+export class EntryDetailsComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatExpansionPanel) exp: MatExpansionPanel;
+  
   @Input()
   trade: TradeDetails;
 
@@ -19,8 +22,12 @@ export class EntryDetailsComponent implements OnInit {
   constructor() {
 
   }
-
+  
   ngOnInit(): void {
+  }
+
+  ngAfterViewInit(): void {
+    this.exp.expanded = this.trade.entry? true : false;
   }
 
   deleteTarget(exitTarget: EntryTarget) {

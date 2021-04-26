@@ -1,5 +1,6 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {Mode, SLType, StopLoss, Target, TradeDetailMode, TradeDetails} from '../trade-details';
+import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
+import { MatExpansionPanel } from '@angular/material/expansion';
+import {Mode, SLType, StopLoss, TradeDetails} from '../trade-details';
 
 
 @Component({
@@ -7,10 +8,11 @@ import {Mode, SLType, StopLoss, Target, TradeDetailMode, TradeDetails} from '../
   templateUrl: './sl-details.component.html',
   styleUrls: ['./trade-details.component.css']
 })
-export class SLDetailsComponent implements OnInit {
+export class SLDetailsComponent implements OnInit, AfterViewInit {
   private SLType = SLType;
   // private _trade: TradeDetails;
 
+  @ViewChild(MatExpansionPanel) exp: MatExpansionPanel;
   @Input()
   trade: TradeDetails;
 
@@ -22,6 +24,11 @@ export class SLDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    
+  }
+
+  ngAfterViewInit(): void {
+    this.exp.expanded = this.trade.stoploss? true:false;
   }
 
   addStopLoss() {
