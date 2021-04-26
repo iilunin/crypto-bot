@@ -27,6 +27,8 @@ export class EntryDetailsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    // console.log(this.exp)
+    // this.exp.expanded = true;
     this.exp.expanded = this.trade.entry? true : false;
   }
 

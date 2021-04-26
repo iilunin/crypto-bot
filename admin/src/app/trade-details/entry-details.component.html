@@ -1,4 +1,4 @@
-<mat-expansion-panel>
+<mat-expansion-panel #exp>
   <mat-expansion-panel-header>
     <mat-panel-title>
       Entry Target
@@ -33,7 +33,7 @@
     </td>
     <td>
     </td>
-    <td *ngIf="mode.isCreate()">
+    <td>
       <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget()" disabled="{{entryTarget.isCompleted()}}" >
         <mat-icon>remove_circle_outline</mat-icon>
       </button>
