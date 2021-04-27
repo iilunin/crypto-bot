@@ -1,0 +1,32 @@
+version: '3'
+services:
+  bot:
+    image: iilunin/crypto-bot:api-latest
+    ports:
+      - "3000"
+    environment:
+      - TZ=Canada/Vancouver
+    env_file: .env
+    volumes:
+      - ./Trades/Portfolio:/usr/src/trades
+      - ./Trades/Completed:/usr/src/complete_trades
+      - ./Conf:/usr/src/configs:ro
+    restart: always
+
+#  web-nossl:
+#    image: iilunin/crypto-bot:fe-nosll-latest
+#    ports:
+#      - 8080:80
+#    depends_on:
+#      - bot
+#    restart: always
+
+  web-ssl:
+    image: iilunin/crypto-bot:fe-sll-latest
+    ports:
+      - 3000:443
+    volumes:
+      - ./Nginx:/etc/nginx/certs
+    depends_on:
+      - bot
+    restart: always
