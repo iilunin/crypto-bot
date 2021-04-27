@@ -1,0 +1,20 @@
+FROM node:12
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+# set working directory
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+
+
+# install and cache app dependencies
+RUN npm install -g npm
+COPY ./admin/package.json /usr/src/app/package.json
+COPY ./admin/package-lock.json /usr/src/app/package-lock.json
+RUN npm install
+RUN npm install -g @angular/cli
+
+# add app
+COPY ./admin /usr/src/app
+
+RUN ng build --prod --output-path release

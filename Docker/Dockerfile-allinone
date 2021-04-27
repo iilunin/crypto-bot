@@ -1,0 +1,8 @@
+#FROM iilunin/crypto-bot:api-latest
+FROM api # building form local built Dockerfile-botapi
+
+# Copy form local built Dockerfile-fe
+COPY --from=bot-fe /usr/src/app/release /usr/src/app/API/templates
+
+EXPOSE 3000
+CMD ["python3", "main.py", "api"]

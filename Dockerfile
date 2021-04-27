@@ -63,7 +63,7 @@ VOLUME ["/usr/src/trades", "/usr/src/configs"]
 
 COPY . /usr/src/app
 #COPY --from=builder /usr/src/app/dist/admin /usr/src/app/API/templates
-COPY --from=builder /usr/src/app/app_docker /usr/src/app/API/templates
+COPY --from=bot-fe /usr/src/app/release /usr/src/app/API/templates
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

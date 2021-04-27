@@ -1,5 +1,7 @@
 .idea
 api.json
+**/*.crt
+**/*.key
 /Conf
 /venv
 /Trades/Portfolio
