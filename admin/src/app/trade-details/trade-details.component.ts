@@ -75,7 +75,7 @@ export class TradeDetailsComponent implements OnInit {
   }
 
   ngOnInit() {
-    setTimeout(this.init.bind(this), 0);
+    this.init()
   }
 
   private init() {

@@ -37,7 +37,9 @@ export class ExitInfo {
       
       init?.targets.forEach(x => this.targets.push(new Target(x)));
     }
-    this.threshold = 0.4.toLocaleString() + '%';
+    if(!init?.threshold){
+      this.threshold = 0.4.toLocaleString() + '%';
+    }
   }
   
 }

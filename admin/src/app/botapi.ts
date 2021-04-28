@@ -66,11 +66,7 @@ export class BotApi {
       retry(this.RETRIES),
       tap(trade => this.log(`fetched trade ${id} info`)),
       map(data => {
-        const trade = new TradeDetails(false, data);
-        // if (data.entry) {
-        //   trade.entry = new Entry(data.entry); // restore nested class Entry
-        // }
-        return trade;
+        return new TradeDetails(false, data);
       }),
       catchError(this.handleError('getActiveTradeInfo', null))
     );
