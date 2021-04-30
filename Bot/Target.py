@@ -164,8 +164,8 @@ class PriceHelper:
 
     @classmethod
     def create_price_helper(cls, price_str):
-
-        s = str(price_str).strip().lower()
+        #Issue 21 float parsing
+        s = str(price_str).strip().lower().replace(',', '.')
         if PriceHelper.is_float_price(s):
             return PriceHelper(True, float(s), None, None)
 

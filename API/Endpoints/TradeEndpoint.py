@@ -81,6 +81,7 @@ class TradeEndpoint(BotAPIResource):
                     self.th.updated_trade(trade)
                     self.th.fire_trade_updated(trade, True)
             except Exception as e:
+                self.th.logger.error(e)
                 return json.dumps(APIResult.ErrorResult(100, str(e))), 500
 
             return APIResult.OKResult(ids), 201
