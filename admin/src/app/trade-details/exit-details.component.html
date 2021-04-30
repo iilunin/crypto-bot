@@ -1,77 +1,77 @@
-
-  <mat-expansion-panel expanded>
+<mat-expansion-panel expanded>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Exit Targets
+    </mat-panel-title>
+    <mat-panel-description>
+      Configuration for exit targets
+    </mat-panel-description>
+  </mat-expansion-panel-header>
+  <mat-expansion-panel>
     <mat-expansion-panel-header>
       <mat-panel-title>
-        Exit Targets
+        Default Settings
       </mat-panel-title>
       <mat-panel-description>
-        Configuration for exit targets
       </mat-panel-description>
     </mat-expansion-panel-header>
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          Default Settings
-        </mat-panel-title>
-        <mat-panel-description>
-        </mat-panel-description>
-      </mat-expansion-panel-header>
+    <table class="full-width" cellspasing=0>
+      <tr><td>
+        <mat-checkbox [(ngModel)]="trade.exit.smart" color="primary">Smart (can be overrwritten by individual target)</mat-checkbox>
+      </td><td>
+        <mat-form-field class="full-width" appearance="standard">
+          <mat-label>Threshold</mat-label>
+          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.exit.threshold">
+        </mat-form-field>
+      </td></tr>
+    </table>
+  </mat-expansion-panel>
+    <div class="trade-section">
       <table class="full-width" cellspasing=0>
-        <tr><td>
-          <mat-checkbox [(ngModel)]="trade.exit.smart" color="primary">Smart (can be overrwritten by individual target)</mat-checkbox>
-        </td><td>
-          <mat-form-field class="full-width" appearance="standard">
-            <mat-label>Threshold</mat-label>
-            <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.exit.threshold">
-          </mat-form-field>
-        </td></tr>
+        <tr *ngFor="let exitTarget of trade.exit.targets">
+          <td>
+            <mat-form-field class="full-width exit-target-input" appearance="standard">
+              <mat-label>Target Price</mat-label>
+              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.price">
+            </mat-form-field>
+          </td>
+          <td>
+            <mat-form-field class="full-width exit-target-input" appearance="standard">
+              <mat-label>Volume</mat-label>
+              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.vol">
+              <mat-hint>{{exitTarget.calculated_volume}}</mat-hint>
+            </mat-form-field>
+          </td>
+          <td>
+            <mat-checkbox [(ngModel)]="exitTarget.smart" color="primary">Smart</mat-checkbox>
+          </td>
+          <td>
+            <mat-form-field class="full-width exit-target-input" appearance="standard">
+              <mat-label>Stop Loss</mat-label>
+              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.sl">
+            </mat-form-field>
+          </td>
+          <td>
+            <mat-form-field class="full-width exit-target-input" appearance="standard">
+              <mat-label>Status</mat-label>
+              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.status" disabled>
+            </mat-form-field>
+          </td>
+          <td>
+            <mat-form-field class="full-width exit-target-input" appearance="standard">
+            <mat-label>Order ID</mat-label>
+            <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.id" disabled>
+          </mat-form-field></td>
+          <td>
+            <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget(exitTarget)" disabled="{{exitTarget.isCompleted()}}">
+              <mat-icon>remove_circle_outline</mat-icon>
+            </button>
+          </td>
+        </tr>
       </table>
-    </mat-expansion-panel>
-      <div class="trade-section">
-        <table class="full-width" cellspasing=0>
-          <tr *ngFor="let exitTarget of trade.exit.targets">
-            <td>
-              <mat-form-field class="full-width exit-target-input" appearance="standard">
-                <mat-label>Target Price</mat-label>
-                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.price">
-              </mat-form-field>
-            </td>
-            <td>
-              <mat-form-field class="full-width exit-target-input" appearance="standard">
-                <mat-label>Volume</mat-label>
-                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.vol">
-              </mat-form-field>
-            </td>
-            <td>
-              <mat-checkbox [(ngModel)]="exitTarget.smart" color="primary">Smart</mat-checkbox>
-            </td>
-            <td>
-              <mat-form-field class="full-width exit-target-input" appearance="standard">
-                <mat-label>Stop Loss</mat-label>
-                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.sl">
-              </mat-form-field>
-            </td>
-            <td>
-              <mat-form-field class="full-width exit-target-input" appearance="standard">
-                <mat-label>Status</mat-label>
-                <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.status" disabled>
-              </mat-form-field>
-            </td>
-            <td>
-              <mat-form-field class="full-width exit-target-input" appearance="standard">
-              <mat-label>Order ID</mat-label>
-              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.id" disabled>
-            </mat-form-field></td>
-            <td>
-              <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget(exitTarget)" disabled="{{exitTarget.isCompleted()}}">
-                <mat-icon>remove_circle_outline</mat-icon>
-              </button>
-            </td>
-          </tr>
-        </table>
-        <button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()">
-          <mat-icon>add_circle_outline</mat-icon>
-        </button>
-      </div>
-    </mat-expansion-panel>
+      <button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()">
+        <mat-icon>add_circle_outline</mat-icon>
+      </button>
+    </div>
+</mat-expansion-panel>
 

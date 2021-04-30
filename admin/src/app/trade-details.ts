@@ -18,6 +18,7 @@ export class Target {
   date: string;
   price: string;
   vol: string;
+  calculated_volume: string;
   smart: boolean;
   sl: string;
   best_price: string;
@@ -38,7 +39,7 @@ export class ExitInfo {
       init?.targets.forEach(x => this.targets.push(new Target(x)));
     }
     if(!init?.threshold){
-      this.threshold = 0.4.toLocaleString() + '%';
+      this.threshold = 0.4.toString() + '%';
     }
   }
   
@@ -87,6 +88,7 @@ export class TradeDetails {
   }
 
   constructor(create_new: boolean = false, init?: Partial<TradeDetails>) {
+    console.log(init);
     Object.assign(this, init);
     if (init?.exit){
       this.exit = new ExitInfo(init.exit);

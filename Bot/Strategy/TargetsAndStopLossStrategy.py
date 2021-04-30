@@ -153,7 +153,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def emergent_close_position(self):
         try:
-            self.fx.cancel_open_orders(self.symbol())
+            self.cancel_all_open_orders()
 
             AccountBalances().update_balances(self.fx.get_all_balances_dict())
 

@@ -30,6 +30,12 @@ export class BotApi {
   constructor(private http: HttpClient) {
   }
 
+  getRecentLogFileContents(filename='latest'): Observable<String> {
+    return this.http.get<String>(`${this.API_URL}/logs/${filename}`).pipe(
+      retry(this.RETRIES),
+      catchError(this.handleError('getActiveTrades', '')));
+  }
+
   addTrade(trade: TradeDetails ): Observable<ApiResult> {
     const sanitizedTrade: any = Object.assign({}, trade, {stoploss: trade.stoploss});
     deleteProperty(sanitizedTrade, '_stoploss');
@@ -147,6 +153,7 @@ export class BotApi {
   private log(message: string) {
     console.log('BotApi: ' + message);
   }
+
 
   /**
    * Handle Http operation that failed.

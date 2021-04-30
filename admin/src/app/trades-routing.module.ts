@@ -2,12 +2,14 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AssetTableComponent } from './asset-table/asset-table.component';
 import { BalancesComponent } from './balances/balances.component';
+import { LogsComponent } from './logs/logs.component';
 import {TradeDetailsComponent} from './trade-details/trade-details.component';
 
 
 const appRoutes: Routes = [
   { path: '',   redirectTo: 'trades', pathMatch: 'full' },
   {path: 'balances',  component: BalancesComponent},
+  {path: 'logs',  component: LogsComponent},
   {path: 'trades',  component: AssetTableComponent, children: [
       { path: ':id', component: TradeDetailsComponent, outlet: 'trade' }
     ] }

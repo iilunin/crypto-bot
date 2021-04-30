@@ -1,0 +1,16 @@
+<!-- <div class="full-width">
+    <mat-list *ngFor="let log of logContents">
+        <mat-list-item class="log-item"><p>{{log}}</p></mat-list-item>
+    </mat-list>
+</div> -->
+<div class="full-width">
+    <button mat-icon-button matTooltip="Refresh Log" (click)="refreshLogs()">
+        <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-icon-button matTooltip="Copy Log" *ngIf="logContents">
+        <mat-icon [cdkCopyToClipboard]="this.logContents.join('\n')">file_copy</mat-icon>
+    </button>
+</div>
+<div class="full-width" *ngFor="let log of logContents">
+    <p>{{log}}</p>
+</div>

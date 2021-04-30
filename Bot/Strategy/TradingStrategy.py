@@ -113,8 +113,7 @@ class TradingStrategy(Logger):
 
         update_required = False
         if force_cancel_open_orders or (len(active_trade_targets) == 0 and has_open_orders):
-            self.logInfo('Cancelling all Open orders')
-            self.fx.cancel_open_orders(self.symbol())
+            self.cancel_all_open_orders()
         else:
             for active_trade_target in active_trade_targets:
 
@@ -144,6 +143,10 @@ class TradingStrategy(Logger):
 
             if update_required:
                 self.trigger_target_updated()
+
+    def cancel_all_open_orders(self):
+        self.logInfo('Cancelling all Open orders for "{}"'.format(self.symbol()))
+        self.fx.cancel_open_orders(self.symbol())
 
     def _update_trade_target_status_change(self, t: Target, status: str) -> bool:
         if status == FXConnector.ORDER_STATUS_FILLED:

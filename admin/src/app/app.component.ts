@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService } from './auth.service';
+import { BotApi } from './botapi';
 import { NotificationService, NotificatoinType } from './services/notification.service'
 
 @Component({
@@ -15,7 +18,10 @@ export class AppComponent {
   constructor(
     private notificationService: NotificationService, 
     private snackBar: MatSnackBar,
-    public auth: AuthService
+    public auth: AuthService,
+    private matIconRegistry: MatIconRegistry,
+    private domSanitizer: DomSanitizer,
+    private bot: BotApi
   ) {
     this.notificationService.notification$.subscribe(message => {
       
@@ -25,6 +31,10 @@ export class AppComponent {
           panelClass: [this.getPanelClass(message.type)]});
           // panelClass: ["blue-snackbar"]});
     });
+    
+    this.matIconRegistry.addSvgIcon(  
+      'my_git', domSanitizer.bypassSecurityTrustResourceUrl(`${this.bot.API_URL}/proxy/icon`)
+    );
   }
 
   private getPanelClass(type: NotificatoinType): string {

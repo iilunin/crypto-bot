@@ -1,7 +1,11 @@
 <div class="toolbar-container" *ngIf="auth.isLoggedIn()">
     <mat-toolbar color="primary" class="menu-toolbar">
       <button mat-icon-button (click)="snav.toggle()"><mat-icon>menu</mat-icon></button>
-      <h1 class="app-name">Crypto Bot</h1>
+      <span>Crypto Trading Bot</span>
+  <span class="spacer"></span>
+    <!-- <a href="https://github.com/iilunin/crypto-bot/" target="_blank" rel="noopener"> -->
+      <mat-icon aria-label="Example thumbs up SVG icon"  svgIcon="my_git" name="git" matTooltip="give the repo a star"></mat-icon>
+    <!-- </a> -->
     </mat-toolbar>
   
     <mat-sidenav-container class="side-nav-container" [style.marginTop.px]="56">
@@ -19,6 +23,12 @@
                     <div mat-line>Balances</div>
                 </mat-list-item>
             </a>
+            <a routerLink="/logs">
+              <mat-list-item>
+                  <mat-icon mat-list-icon>file_copy</mat-icon>
+                  <div mat-line>Logs</div>
+              </mat-list-item>
+          </a>
             <mat-divider></mat-divider>
             <a routerLink="/" (click)="auth.logout()">
                 <mat-list-item>

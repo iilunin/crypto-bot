@@ -93,6 +93,7 @@ class TradeHandler(Logger):
         if api_call:
             strategy.set_trade_removed()
 
+        strategy.cancel_all_open_orders()
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
         self.socket_message_rcvd = False
 
