@@ -206,5 +206,41 @@ class TradingStrategy(Logger):
 
         return 'b' if side.is_sell() else 'a'
 
+    def assign_calculated_volume(self, targets):
+        has_changes = False
+        currency_balance = self.get_balance_for_side()
+
+        bal = self.trade.get_cap(currency_balance.avail) + (
+            currency_balance.locked if any(t.is_active() for t in targets) else 0)
+
+        if bal <= 0:
+            self.logWarning('Available balance is 0')
+            return
+
+        for t in targets:
+            if t.is_completed():
+                continue
+
+            price = self.exchange_info.adjust_price(t.price)
+
+            adjusted_balance = bal
+
+            # in case of BUY like with BTCUSDT we have balance in USDT e.g. 700, but specifying the vol in BTC e.g. 0.1
+            if self.trade_side().is_buy():
+                adjusted_balance = round(bal / price, 8)
+
+            vol = self.exchange_info.adjust_quanity(t.vol.get_val(adjusted_balance))
+            if vol != t.calculated_volume:
+                t.calculated_volume = vol
+                has_changes = True
+
+            if self.trade_side().is_sell():
+                bal = round(bal - vol, 8)
+            else:
+                bal = round(bal - t.vol.get_val(bal), 8)
+
+        return has_changes
+
+
     def __str__(self):
         return self.logger.name

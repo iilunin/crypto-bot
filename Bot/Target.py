@@ -19,6 +19,9 @@ class Target(CustomSerializable):
         self.parent_smart = kvargs.get('parent_smart', None)
         self.best_price = float(kvargs.get('best_price', 0))
 
+        cv = kvargs.get('calculated_volume', None)
+        self.calculated_volume = float(cv) if cv else None
+
     def s2b(self, s):
         if isinstance(s, bool):
             return s
@@ -82,7 +85,8 @@ class Target(CustomSerializable):
 
     def __str__(self):
         return ('{}:{:.08f}@{}{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
-            self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.is_smart() else '')
+            self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.is_smart() else '') + \
+        '(abs vol: {:.08f})'.format(self.calculated_volume) if self.vol.is_rel() and self.calculated_volume else ''
 
 
     def serializable_dict(self):
@@ -112,6 +116,9 @@ class Target(CustomSerializable):
 
         if self.best_price > 0:
             d['best_price'] = self.format_float(self.best_price)
+
+        if self.calculated_volume:
+            d['calculated_volume'] = self.format_float(self.calculated_volume)
 
         return d
 

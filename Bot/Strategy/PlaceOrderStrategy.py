@@ -13,6 +13,8 @@ class PlaceOrderStrategy(TradingStrategy):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.strategy_exit = None
         self.init_smart_exit()
+        if self.assign_calculated_volume(self.trade_targets()):
+            self.trade_updated(self.trade, True)
 
     def get_trade_section(self):
         return self.trade.exit # can be interface for entry at some point too
@@ -55,10 +57,11 @@ class PlaceOrderStrategy(TradingStrategy):
     def update_trade(self, trade: Trade):
         self.trade = trade
 
-        if self.has_smart_target():
-            self.init_smart_exit()
-        else:
-            self.strategy_exit = None
+        self.strategy_exit = None
+        self.init_smart_exit()
+
+        if self.assign_calculated_volume(self.trade_targets()):
+            self.trade_updated()
 
     def trade_targets(self):
         return self.trade.exit.targets
@@ -98,6 +101,7 @@ class PlaceOrderStrategy(TradingStrategy):
                 adjusted_balance = round(bal / price, 8)
 
             vol = self.exchange_info.adjust_quanity(t.vol.get_val(adjusted_balance))
+            t.calculated_volume = vol
 
             if vol == 0:
                 self.logWarning('No volume left to process order @ price {:.0f}'.format(price))
