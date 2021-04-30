@@ -18,7 +18,7 @@ class SymbolInfo:
         if q == 0:
             return 0
 
-        res = float(Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
+        res = float(Decimal(q) if self.stepSize == 0.0 else Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
         return float(min(max(res, self.minQty), self.maxQty))
 
     def adjust_price(self, q, round_down=True):
