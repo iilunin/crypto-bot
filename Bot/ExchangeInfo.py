@@ -2,14 +2,27 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
 
 class SymbolInfo:
-    def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional, **kvargs):
-        self.minNotional = Decimal(self.strip_zeros(minNotional))
-        self.stepSize = Decimal(self.strip_zeros(stepSize))
-        self.maxQty = Decimal(self.strip_zeros(maxQty))
-        self.minQty = Decimal(self.strip_zeros(minQty))
-        self.tickSize = Decimal(self.strip_zeros(tickSize))
-        self.maxPrice = Decimal(self.strip_zeros(maxPrice))
-        self.minPrice = Decimal(self.strip_zeros(minPrice))
+    def __init__(self, symbol, filters):
+        self.symbol = symbol
+
+        self.minNotional = Decimal(self.strip_zeros(filters['MIN_NOTIONAL']['minNotional']))
+        self.stepSize = Decimal(self.strip_zeros(filters['LOT_SIZE']['stepSize']))
+        self.maxQty = Decimal(self.strip_zeros(filters['LOT_SIZE']['maxQty']))
+        self.minQty = Decimal(self.strip_zeros(filters['LOT_SIZE']['minQty']))
+
+        self.tickSize = Decimal(self.strip_zeros(filters['PRICE_FILTER']['tickSize']))
+        self.maxPrice = Decimal(self.strip_zeros(filters['PRICE_FILTER']['maxPrice']))
+        self.minPrice = Decimal(self.strip_zeros(filters['PRICE_FILTER']['minPrice']))
+
+
+    # def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional, **kvargs):
+    #     self.minNotional = Decimal(self.strip_zeros(minNotional))
+    #     self.stepSize = Decimal(self.strip_zeros(stepSize))
+    #     self.maxQty = Decimal(self.strip_zeros(maxQty))
+    #     self.minQty = Decimal(self.strip_zeros(minQty))
+    #     self.tickSize = Decimal(self.strip_zeros(tickSize))
+    #     self.maxPrice = Decimal(self.strip_zeros(maxPrice))
+    #     self.minPrice = Decimal(self.strip_zeros(minPrice))
 
     def strip_zeros(self, s):
         return s.rstrip('0')
@@ -64,12 +77,18 @@ class ExchangeInfo:
         if symbol_info is None:
             raise KeyError('Symbol "{}" not found in the Exchnage makrets info'.format(symbol))
 
+        # for f in symbol_info['filters']:
+        #     props.update(f)
+        #
+        # props.pop('filterType', None)
+
+
         for f in symbol_info['filters']:
-            props.update(f)
+            filter_type = f['filterType']
+            f.pop(filter_type, None)
+            props[filter_type] = f
 
-        props.pop('filterType', None)
-
-        return SymbolInfo(**props)
+        return SymbolInfo(symbol, props)
 
     def has_symbol(self, symbol):
         return symbol in self.symbols

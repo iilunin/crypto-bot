@@ -19,7 +19,7 @@ RUN \
   pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt
 
-VOLUME ["/usr/src/trades", "/usr/src/configs"]
+VOLUME ["/usr/src/trades", "/usr/src/complete_trades", "/usr/src/configs"]
 
 COPY ./API /usr/src/app/API
 COPY ./Bot /usr/src/app/Bot
