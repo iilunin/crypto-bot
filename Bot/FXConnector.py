@@ -2,9 +2,6 @@ from binance.exceptions import BinanceAPIException, BinanceOrderException
 from retrying import retry
 
 from binance.client import Client
-from binance.websockets import BinanceSocketManager
-from decimal import Decimal, ROUND_UP, ROUND_DOWN
-
 from Bot.Exchange.Binance.BinanceWebsocket import BinanceWebsocket
 from Utils.Logger import Logger
 
