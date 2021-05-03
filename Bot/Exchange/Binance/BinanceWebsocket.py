@@ -11,14 +11,14 @@ from binance.client import Client
 import asyncio
 import websockets
 import websockets.exceptions
+from websockets import ConnectionClosed, InvalidStatusCode, WebSocketClientProtocol
 
 import os
 import os.path
 
 from requests import ConnectionError
 from retrying import retry
-from websockets import ConnectionClosed, InvalidStatusCode, WebSocketClientProtocol
-from websockets.protocol import State
+from websockets.connection import State
 
 from Utils.Logger import Logger
 
