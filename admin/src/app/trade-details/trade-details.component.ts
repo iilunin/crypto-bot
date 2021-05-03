@@ -97,7 +97,12 @@ export class TradeDetailsComponent implements OnInit {
       );
     } else {
       this.exchangeInfo = new Map<string,string>();
-      this.api.getActiveTradeInfo(this.tradeId).subscribe(trade => this.trade = trade)
+      this.api.getActiveTradeInfo(this.tradeId).subscribe(trade => {
+        this.trade = trade;
+        this.api.bookTicker(trade.symbol).subscribe(
+          result => { this.priceInfo = result;}
+        )
+      })
     }
   }
 

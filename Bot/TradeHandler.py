@@ -145,7 +145,7 @@ class TradeHandler(Logger):
 
     def user_data_handler(self, msg):
         try:
-            if msg['e'] == 'outboundAccountInfo':
+            if msg['e'] == 'outboundAccountPosition':
                 self.balances.update_balances(
                     {bal['a']: {'f': float(bal['f']), 'l': float(bal['l'])} for bal in msg['B']})
             elif msg['e'] == 'executionReport':
