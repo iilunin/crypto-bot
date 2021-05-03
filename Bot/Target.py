@@ -4,6 +4,7 @@ from datetime import datetime
 from Bot.CustomSerializable import CustomSerializable
 from Bot.TradeEnums import OrderStatus
 from Bot.Value import Value
+from Utils import Utils
 
 
 class Target(CustomSerializable):
@@ -23,14 +24,7 @@ class Target(CustomSerializable):
         self.calculated_volume = float(cv) if cv else None
 
     def s2b(self, s):
-        if isinstance(s, bool):
-            return s
-        if s is None:
-            return None
-        if s.lower() in ['true', 'yes']:
-            return True
-        return False
-
+        return Utils.s2b(s)
 
     def is_completed(self):
         return self.status.is_completed()
@@ -84,10 +78,19 @@ class Target(CustomSerializable):
         return False if self.smart is None else self.smart
 
     def __str__(self):
-        return ('{}:{:.08f}@{}{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
-            self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.is_smart() else '') + \
-        '(abs vol: {:.08f})'.format(self.calculated_volume) if self.vol.is_rel() and self.calculated_volume else ''
+        desc = ('{}:{:.08f}@{}; Smart:{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
+            self.__class__.__name__, self.price, self.vol, self.is_smart())
+        if self.calculated_volume and self.vol.is_rel():
+            desc += '; Abs Vol:{:.08f}'.format(self.calculated_volume)
 
+        desc += ' ;Stoploss:{}'.format(self.sl)
+        desc += ' ;Status:{}'.format(self.status)
+        desc += ' ;ID:{}'.format(self.id)
+        return desc
+        # '(abs vol: {:.08f})'.format(self.calculated_volume) if self.vol.is_rel() and self.calculated_volume else ''
+
+    def __repr__(self):
+        return self.__str__()
 
     def serializable_dict(self):
         d = OrderedDict()

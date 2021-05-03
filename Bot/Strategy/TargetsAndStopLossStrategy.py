@@ -29,6 +29,12 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.strategy_exit = None
 
 
+    def describe(self, describe_trade=True):
+        description = '***{}***'.format(self.__str__())
+        if describe_trade:
+            description += '\nTrade: \n{0}'.format(self.trade.describe())
+
+        return description
 
     def create_sl_strategy(self, trade):
         self.strategy_sl = StopLossStrategy(trade, self.fx, self.trade_updated, True, self.exchange_info, self.balance)

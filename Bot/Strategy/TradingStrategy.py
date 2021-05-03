@@ -1,3 +1,5 @@
+from os import environ
+
 from binance.exceptions import BinanceAPIException
 
 from Bot.ExchangeInfo import ExchangeInfo
@@ -6,6 +8,7 @@ from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
 from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
+from Utils import Utils
 
 from Utils.Logger import Logger
 
@@ -22,7 +25,7 @@ class TradingStrategy(Logger):
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self._exchange_info = None
-        self.simulate = False
+        self.simulate = Utils.s2b(environ.get("SIMULTATE", False))
         self.trade_updated = trade_updated
         self.last_execution_price = 0
         self.paused = False
@@ -247,3 +250,7 @@ class TradingStrategy(Logger):
 
     def __str__(self):
         return self.logger.name
+
+
+    def describe(self):
+        return None

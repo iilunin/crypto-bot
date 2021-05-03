@@ -61,7 +61,7 @@ class PlaceOrderStrategy(TradingStrategy):
         self.init_smart_exit()
 
         if self.assign_calculated_volume(self.trade_targets()):
-            self.trade_updated()
+            self.trade_updated(self.trade, True)
 
     def trade_targets(self):
         return self.trade.exit.targets

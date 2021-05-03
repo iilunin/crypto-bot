@@ -4,6 +4,7 @@
 api.json
 /Conf/*
 /venv
+/logs
 /Trades/Portfolio
 /Trades/Portfolio/*
 /Trades/Completed

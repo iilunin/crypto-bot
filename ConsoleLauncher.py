@@ -193,7 +193,7 @@ class ConsoleLauncher(Logger):
                     trades = self.config_loader.load_trade_list(file)
                     for t in trades:
                         #if file needs to be adjusted to the new format
-                        new_file_name = os.path.join(self.trades_path, Utils.get_file_name(t))
+                        new_file_name = os.path.join(self.trades_path, Utils.get_file_name(t.symbol, t.id))
                         if new_file_name != file:
                             self.file_watch_list[new_file_name] = os.stat(new_file_name).st_mtime
                             self.file_watch_list.pop(file, None)
@@ -223,6 +223,7 @@ class ConsoleLauncher(Logger):
             self.file_watch_list[file] = os.stat(file).st_mtime
 
             self.logInfo('File "{}" updated by trade handler. Its mod time: {}'.format(file, self.file_watch_list[file]))
+            self.logInfo(trade.describe())
 
             if trade.is_completed() or trade.is_removed():
                 self.move_completed_trade(trade)
@@ -235,4 +236,4 @@ class ConsoleLauncher(Logger):
                   self.get_file_path(self.completed_trades_path, trade, datetime.now().strftime('%Y-%m-%d_%H-%M-')))
 
     def get_file_path(self, path, trade, time=''):
-        return os.path.join(path, '{time}{fn}'.format(fn=Utils.get_file_name(trade), time=time))
+        return os.path.join(path, '{time}{fn}'.format(fn=Utils.get_file_name(trade.symbol, trade.id), time=time))
