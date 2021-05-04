@@ -67,7 +67,8 @@ export class TradeDetailsComponent implements OnInit {
   static openDialog(dialog: MatDialog, mode: Mode,  tradeId: string) {
     let tdDialog = dialog.open(TradeDetailsComponent, {
       data: { mode: mode, id: tradeId },
-      width: '800px'
+      width: '800px',
+      height: '90%'
     });
     // tdDialog.afterClosed().subscribe(result => {
     //   console.log(`Dialog result: ${result}`);
