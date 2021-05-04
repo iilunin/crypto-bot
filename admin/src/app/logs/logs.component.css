@@ -1,14 +1,4 @@
-/* make-scrollable {
-    height: 800px;
-    overflow-y: scroll;
-} */
-
-.log-item {
-    height: 32px;
-    font-size: 16px;
-}
-
-div {
+.top-panel-ctrl {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -16,4 +6,8 @@ div {
     padding: 0 16px;
     position: relative;
     height: inherit;
+}
+
+table {
+    width: 100%;
 }

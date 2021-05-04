@@ -46,7 +46,7 @@ class APIServer:
         self.api.add_resource(ProxyEndpoint, APIServer.API_PREFIX + '/proxy/icon',
                               resource_class_kwargs={'trade_handler': self.th})
 
-        self.api.add_resource(LogsEndpoint, APIServer.API_PREFIX + '/logs/<file>',
+        self.api.add_resource(LogsEndpoint, APIServer.API_PREFIX + '/logs',
                               resource_class_kwargs={'trade_handler': self.th})
 
         self.api.add_resource(OrderBookEndpoint, APIServer.API_PREFIX + '/orderbook/<symbol>',
