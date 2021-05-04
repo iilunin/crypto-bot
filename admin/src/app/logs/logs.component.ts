@@ -1,4 +1,5 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { DatePipe, formatDate } from '@angular/common';
+import { AfterViewInit, Component, Inject, LOCALE_ID, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,17 +13,20 @@ import { LogEntry } from '../log-entry';
 })
 export class LogsComponent implements OnInit, AfterViewInit {
 
+  public readonly dateFormatStr = 'dd/MM/yyyy HH:mm:ss.SSS';
+  pipe: DatePipe;
   logs: LogEntry[];
-  dataSource: MatTableDataSource<LogEntry> = new MatTableDataSource<LogEntry>();
+  dataSource: MatTableDataSource<LogEntry>;
   limit: number = 1000;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
 
-  constructor(private api: BotApi) { }
+  constructor(private api: BotApi,
+              @Inject(LOCALE_ID) public locale: string) { }
   ngAfterViewInit(): void {
+    this.pipe = new DatePipe(this.locale); 
     this.refreshLogs(); 
-    console.log(this.paginator);
   }
 
   ngOnInit(): void {
@@ -44,9 +48,10 @@ export class LogsComponent implements OnInit, AfterViewInit {
   getClipboard(): string {
     let cb = ''
     
+    
     if (this.logs){
       this.logs.forEach(l=> {
-        cb += `${l.d.toLocaleString()} [${l.l}] [${l.o}]: ${l.t}\n`
+        cb += `${this.pipe.transform(l.d, this.dateFormatStr)} [${l.l}] [${l.o}]: ${l.t}\n`
       })
     }
 
