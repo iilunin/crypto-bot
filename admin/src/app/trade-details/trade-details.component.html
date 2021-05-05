@@ -2,11 +2,15 @@
   <h1 mat-dialog-title>
     <mat-toolbar role="toolbar" class="task-header">
         <span>{{mode.str()}} Trade</span>
-        <!-- <span class="fx-spacer"></span>
-        <button mat-icon-button mat-dialog-close="cancel" aria-label="Close" matTooltip="Close">
+        <span class="fx-spacer"></span>
+        <button mat-icon-button matTooltip="Refresh trade info" (click)="init()" *ngIf="!mode.isCreate()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <!-- <button mat-icon-button mat-dialog-close="cancel" aria-label="Close" matTooltip="Close">
             <mat-icon mat-list-icon>close</mat-icon>
         </button> -->
     </mat-toolbar>
+    
   </h1>
 
   

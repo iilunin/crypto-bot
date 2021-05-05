@@ -88,7 +88,6 @@ export class TradeDetails {
   }
 
   constructor(create_new: boolean = false, init?: Partial<TradeDetails>) {
-    console.log(init);
     Object.assign(this, init);
     if (init?.exit){
       this.exit = new ExitInfo(init.exit);

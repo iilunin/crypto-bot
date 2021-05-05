@@ -79,7 +79,7 @@ export class TradeDetailsComponent implements OnInit {
     this.init()
   }
 
-  private init() {
+  init() {
 
     if (this.mode.isCreate()) {
       this.trade = new TradeDetails(true);

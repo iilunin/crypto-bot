@@ -61,6 +61,7 @@
             <mat-form-field class="full-width exit-target-input" appearance="standard">
             <mat-label>Order ID</mat-label>
             <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.id" disabled>
+            <mat-hint *ngIf="exitTarget.id && exitTarget.best_price" matTooltip="Trigger Price">tp: {{exitTarget.best_price | number: '1.0-8'}}</mat-hint>
           </mat-form-field></td>
           <td>
             <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget(exitTarget)" disabled="{{exitTarget.isCompleted()}}">
