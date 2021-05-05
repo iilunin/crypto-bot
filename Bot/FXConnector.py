@@ -168,6 +168,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_stop_order(self, sym, side, stop_price, price, volume):
+        self.logInfo("Creating Stop Order:{}; {} Vol:{:.08f}, Trigger Price {:.08f}, Limit Price {:.08f}".format(side, sym, volume, stop_price, price))
         return self.client.create_order(
             symbol=sym,
             side=side,

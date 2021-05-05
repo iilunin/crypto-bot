@@ -7,7 +7,7 @@
       Configuration For Exit Targets
     </mat-panel-description>
   </mat-expansion-panel-header>
-  <mat-expansion-panel>
+  <!-- <mat-expansion-panel>
     <mat-expansion-panel-header>
       <mat-panel-title>
         Default Settings
@@ -25,7 +25,7 @@
         </mat-form-field>
       </td></tr>
     </table>
-  </mat-expansion-panel>
+  </mat-expansion-panel> -->
     <div class="trade-section">
       <table class="full-width" cellspasing=0>
         <tr *ngFor="let exitTarget of trade.exit.targets">
@@ -70,9 +70,14 @@
           </td>
         </tr>
       </table>
-      <button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()">
+      <button mat-icon-button class="resume-btn" matTooltip="Add Target" (click)="addNewTarget()"
+      [disabled]="!(!lastAddedTarget || (lastAddedTarget && lastAddedTarget.vol && lastAddedTarget.price))">
         <mat-icon>add_circle_outline</mat-icon>
       </button>
+      <mat-form-field appearance="standard" style="display: block; width: 30%;">
+        <mat-label>Smart Target Threshold</mat-label>
+        <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.exit.threshold">
+      </mat-form-field>
     </div>
 </mat-expansion-panel>
 

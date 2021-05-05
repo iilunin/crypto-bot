@@ -34,8 +34,8 @@ class SymbolInfo:
         res = float(Decimal(q) if self.stepSize == 0.0 else Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
         return float(min(max(res, self.minQty), self.maxQty))
 
-    def adjust_price(self, q, round_down=True):
-        res = round(Decimal(q), 8)
+    def adjust_price(self, p, round_down=True):
+        res = round(Decimal(p), 8)
 
         if self.tickSize:  # if tickSize Enabled
             res = res.quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
@@ -50,6 +50,9 @@ class SymbolInfo:
 
     def is_quanity_above_min(self, q):
         return q > self.minQty
+
+    def is_min_notional_ok(self, q, p):
+        return q * p >= self.minNotional
 
 
 class ExchangeInfo:
