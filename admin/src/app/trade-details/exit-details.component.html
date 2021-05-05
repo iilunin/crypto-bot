@@ -39,7 +39,7 @@
             <mat-form-field class="full-width exit-target-input" appearance="standard">
               <mat-label>Volume</mat-label>
               <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.vol">
-              <mat-hint>{{exitTarget.calculated_volume}}</mat-hint>
+              <mat-hint *ngIf="exitTarget.calculated_volume">{{exitTarget.calculated_volume | number: '1.0-8'}}</mat-hint>
             </mat-form-field>
           </td>
           <td>
@@ -48,19 +48,19 @@
           <td>
             <mat-form-field class="full-width exit-target-input" appearance="standard">
               <mat-label>Stop Loss</mat-label>
-              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.sl">
+              <input matInput type="text" id="sl" name="sl" [(ngModel)]="exitTarget.sl">
             </mat-form-field>
           </td>
           <td>
             <mat-form-field class="full-width exit-target-input" appearance="standard">
               <mat-label>Status</mat-label>
-              <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.status" disabled>
+              <input matInput type="text" id="status" name="status" [(ngModel)]="exitTarget.status" disabled>
             </mat-form-field>
           </td>
           <td>
             <mat-form-field class="full-width exit-target-input" appearance="standard">
             <mat-label>Order ID</mat-label>
-            <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.id" disabled>
+            <input matInput type="text" id="id" name="id" [(ngModel)]="exitTarget.id" disabled>
             <mat-hint *ngIf="exitTarget.id && exitTarget.best_price" matTooltip="Trigger Price">tp: {{exitTarget.best_price | number: '1.0-8'}}</mat-hint>
           </mat-form-field></td>
           <td>

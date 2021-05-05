@@ -32,6 +32,19 @@
       </mat-form-field>
     </td>
     <td>
+      <mat-form-field class="full-width exit-target-input" appearance="standard">
+        <mat-label>Status</mat-label>
+        <input matInput type="text" id="status" name="status" [(ngModel)]="entryTarget.status" disabled>
+      </mat-form-field>
+    </td>
+    <td>
+      <mat-form-field class="full-width exit-target-input" appearance="standard">
+      <mat-label>Order ID</mat-label>
+      <input matInput type="text" id="id" name="id" [(ngModel)]="entryTarget.id" disabled>
+      <mat-hint *ngIf="entryTarget.id && entryTarget.best_price" matTooltip="Trigger Price">tp: {{entryTarget.best_price | number: '1.0-8'}}</mat-hint>
+    </mat-form-field></td>
+    <td>
+    <td>
     </td>
     <td>
       <button mat-icon-button class="delete-btn" matTooltip="Remove Target" (click)="deleteTarget()" disabled="{{entryTarget.isCompleted()}}" >

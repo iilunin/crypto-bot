@@ -103,11 +103,12 @@ class TradingStrategy(Logger):
 
     def validate_target_orders(self, force_cancel_open_orders=False):
         NEW_STATUSES = [FXConnector.ORDER_STATUS_NEW, FXConnector.ORDER_STATUS_PARTIALLY_FILLED]
-        has_open_orders = False
-        exchange_orders = {}
+
+        open_exchange_orders = {}
+        recent_orders = {}
         try:
-            exchange_orders = self.fx.get_all_orders(self.symbol())
-            has_open_orders = any([eo['status'] in NEW_STATUSES for eo in exchange_orders.values()])
+            recent_orders = self.fx.get_all_orders(self.symbol())
+            open_exchange_orders = {k: v for k, v in recent_orders.items() if (v['status'] in NEW_STATUSES)}
 
         except BinanceAPIException as bae:
             self.logError(str(bae))
@@ -117,37 +118,23 @@ class TradingStrategy(Logger):
 
         update_required = False
 
-        if has_open_orders and len(exchange_orders) > 0:
-            for active_trade_target in active_trade_targets:
 
-                if active_trade_target.id not in exchange_orders:
-                    active_trade_target.set_canceled()
-                    update_required = True
-                else:
-                    s = exchange_orders[active_trade_target.id]['status']
-                    if s in NEW_STATUSES:
+        for active_trade_target in active_trade_targets:
+            if active_trade_target.id not in open_exchange_orders:
+                active_trade_target.set_canceled()
+                update_required = True
+            else:
+                self.fx.cancel_order(self.symbol(), active_trade_target.id)
 
-                        # check if price in file is the same as on the exchange
-                        # trade_prices = {self.exchange_info.adjust_price(active_trade_target.price)}
-                        # if active_trade_target.is_smart():
-                        #     trade_prices.add(self.exchange_info.adjust_price(active_trade_target.best_price))
+                active_trade_target.set_canceled()
 
-                        # exchange_prices = {float(exchange_orders[active_trade_target.id]['price']),
-                        #                    float(exchange_orders[active_trade_target.id]['stop_price'])}
+                if active_trade_target.is_smart():
+                    active_trade_target.best_price = 0
 
-                        # if not PriceHelper.is_float_price(active_trade_target.price) or len(
-                        #         trade_prices & exchange_prices) == 0:
-                        # self.logInfo('Target price changed: {}'.format(active_trade_target))
-                        self.fx.cancel_order(self.symbol(), active_trade_target.id)
+                update_required = True
 
-                        active_trade_target.set_canceled()
-
-                        if active_trade_target.is_smart():
-                            active_trade_target.best_price = 0
-
-                        update_required = True
-
-                    update_required |= self._update_trade_target_status_change(active_trade_target, s)
+            update_required |= self._update_trade_target_status_change(
+                active_trade_target, recent_orders.get(active_trade_target.id, {}).get('status', 'UNKNOWN'))
 
         if force_cancel_open_orders:
             self.cancel_all_open_orders()

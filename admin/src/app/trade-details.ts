@@ -138,6 +138,9 @@ export class EntryTarget {
     Object.assign(this, init);
   }
 
+  id: number;
+  date: string;
+  best_price: string;
   status: TradeStatus;
   price: string;
   vol: string;
