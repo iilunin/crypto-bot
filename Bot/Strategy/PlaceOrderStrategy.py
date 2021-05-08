@@ -46,7 +46,7 @@ class PlaceOrderStrategy(TradingStrategy):
             if self.validate_all_orders(targets):
                 return
 
-            alloc = self.prepare_volume_allocation(targets)
+            alloc = self.prepare_volume_allocation(targets, self.get_single_price(new_price))
 
             if alloc:
                 self.place_orders(alloc)
@@ -75,7 +75,7 @@ class PlaceOrderStrategy(TradingStrategy):
     def validate_all_completed(self, targets):
         return all(t.status.is_completed() for t in targets)
 
-    def prepare_volume_allocation(self, targets):
+    def prepare_volume_allocation(self, targets, current_price=0):
         currency_balance = self.get_balance_for_side()
 
         bal = self.trade.get_cap(currency_balance.avail) + (
@@ -101,10 +101,16 @@ class PlaceOrderStrategy(TradingStrategy):
                 adjusted_balance = round(bal / price, 8)
 
             vol = self.exchange_info.adjust_quanity(t.vol.get_val(adjusted_balance))
+
             t.calculated_volume = vol
 
+            if not self.exchange_info.is_within_multiplier_range(price, current_price):
+                self.logWarning('Target price {:.8f} is not within exchange multipliers. {}'
+                                .format(price, self.exchange_info.msg_mutliplier_range_error(current_price)))
+                continue
+
             if vol == 0:
-                self.logWarning('No volume left to process order @ price {:.0f}'.format(price))
+                self.logWarning('No volume left to process order @ price {:.8f}'.format(price))
                 continue
 
             if bal - vol < 0:
@@ -117,7 +123,7 @@ class PlaceOrderStrategy(TradingStrategy):
                 # if self.last_target_smart() and t == last_target:
                 #     continue
                 orders.append({
-                    'price': self.exchange_info.adjust_price(price),
+                    'price': price,
                     'volume': vol,
                     'side': self.trade_side().name,
                     'target': t})
