@@ -48,6 +48,7 @@ class Target(CustomSerializable):
     def set_canceled(self):
         self.status = OrderStatus.NEW
         self.id = None
+        self.calculated_volume = None
 
     def set_active(self, id=None):
         self.status = OrderStatus.ACTIVE
