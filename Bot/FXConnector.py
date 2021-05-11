@@ -150,6 +150,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_makret_order(self, sym, side, volume):
+        self.logInfo("Creating Market Order:{}; {} Vol:{:.08f}".format(side, sym, volume))
         return self.client.create_order(
             symbol=sym,
             side=side,
@@ -158,6 +159,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_limit_order(self, sym, side, price, volume):
+        self.logInfo("Creating Limit Order:{}; {} Vol:{:.08f}, Limit Price {:.08f}".format(side, sym, volume, price))
         return self.client.create_order(
             symbol=sym,
             side=side,

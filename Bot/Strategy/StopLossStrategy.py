@@ -160,9 +160,8 @@ class StopLossStrategy(TradingStrategy):
                     price=price,
                     volume=volume
                 )
-
             except BinanceAPIException as sl_exception:
-                if sl_exception.message.lower().find('order would trigger immediately') > -1:
+                if sl_exception.message.lower().find('would trigger immediately') > -1:
                     order = self.fx.create_makret_order(self.symbol(),
                                                         self.trade_side().name,
                                                         volume)
