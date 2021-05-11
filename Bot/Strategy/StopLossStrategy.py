@@ -86,6 +86,9 @@ class StopLossStrategy(TradingStrategy):
             if not has_completed_targets:
                 return
 
+            if not current_price:
+                return
+
             trialing_val = self.trade.sl_settings.val.get_val(current_price)
             expected_stop_loss = current_price + (-1 if self.trade.is_sell() else 1) * trialing_val
 
