@@ -45,3 +45,8 @@ Edit View: ![Edit View](./Docs/edit_view.png "Edit View")
 
 ## Management API (Coming soon)
 [API](./Docs/API.md)
+
+## Channels
+[Telegram Discussion Channel](https://t.me/CryptoTradingBotDiscussion)
+
+[Telegram Announcement Channel](https://t.me/OpenSourceCryptoTradingBot)

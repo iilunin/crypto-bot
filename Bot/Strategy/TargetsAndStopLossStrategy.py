@@ -70,8 +70,11 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         else:
             self.strategy_exit = None
 
-        if self.strategy_entry and trade.is_new():
-            self.strategy_entry.update_trade(trade)
+        if trade.has_entry():
+            if self.strategy_entry and trade.is_new():
+                self.strategy_entry.update_trade(trade)
+        else:
+            self.strategy_entry = None
 
     def execute(self, new_price):
         if self.is_completed():

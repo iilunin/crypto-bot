@@ -259,6 +259,9 @@ class EntryStrategy(TradingStrategy):
         return self.get_trade_section().side if self.get_trade_section().side else self.trade.side.reverse()
 
     def is_completed(self):
+        if not self.get_trade_section():
+            return True
+
         return self.get_trade_section().is_completed()
 
     def current_smart_target(self):
