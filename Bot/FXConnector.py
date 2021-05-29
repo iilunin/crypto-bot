@@ -1,10 +1,9 @@
+import time
+
 from binance.exceptions import BinanceAPIException, BinanceOrderException
 from retrying import retry
 
 from binance.client import Client
-from binance.websockets import BinanceSocketManager
-from decimal import Decimal, ROUND_UP, ROUND_DOWN
-
 from Bot.Exchange.Binance.BinanceWebsocket import BinanceWebsocket
 from Utils.Logger import Logger
 
@@ -48,10 +47,11 @@ class FXConnector(Logger):
     ORDER_RESP_TYPE_RESULT = 'RESULT'
     ORDER_RESP_TYPE_FULL = 'FULL'
 
-    def __init__(self, key=None, secret=None):
+    def __init__(self, key=None, secret=None, simulation=False):
         super().__init__()
         self.__key = key
         self.__secret = secret
+        self._simulation = simulation
         self._client = None #Client(key, secret)
         self.bs: BinanceWebsocket = None
 
@@ -62,9 +62,16 @@ class FXConnector(Logger):
     @property
     def client(self):
         if not self._client:
-            self._client = Client(self.__key, self.__secret)
+            self._client = Client(self.__key, self.__secret, testnet=self._simulation)
+            self.test_connectivity()
 
         return self._client
+
+
+    def test_connectivity(self):
+        res = self.get_server_time()
+        self.client.timestamp_offset = res['serverTime'] - int(time.time() * 1000)
+
 
     def listen_symbols(self, symbols, on_ticker_received, user_data_handler):
         self.bs = BinanceWebsocket(self.client)
@@ -153,6 +160,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_makret_order(self, sym, side, volume):
+        self.logInfo("Creating Market Order:{}; {} Vol:{:.08f}".format(side, sym, volume))
         return self.client.create_order(
             symbol=sym,
             side=side,
@@ -161,6 +169,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_limit_order(self, sym, side, price, volume):
+        self.logInfo("Creating Limit Order:{}; {} Vol:{:.08f}, Limit Price {:.08f}".format(side, sym, volume, price))
         return self.client.create_order(
             symbol=sym,
             side=side,
@@ -171,6 +180,7 @@ class FXConnector(Logger):
 
     # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
     def create_stop_order(self, sym, side, stop_price, price, volume):
+        self.logInfo("Creating Stop Order:{}; {} Vol:{:.08f}, Trigger Price {:.08f}, Limit Price {:.08f}".format(side, sym, volume, stop_price, price))
         return self.client.create_order(
             symbol=sym,
             side=side,
@@ -180,16 +190,16 @@ class FXConnector(Logger):
             stopPrice=FXConnector.format_number(stop_price),
             price=FXConnector.format_number(price))
 
-    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
-    def create_test_stop_order(self, sym, side, price, volume):
-        return self.client.create_test_order(
-            symbol=sym,
-            side=side,
-            type=FXConnector.ORDER_TYPE_STOP_LOSS_LIMIT,
-            timeInForce=FXConnector.TIME_IN_FORCE_GTC,
-            quantity=FXConnector.format_number(volume),
-            stopPrice=FXConnector.format_number(price),
-            price=FXConnector.format_number(price))
+    # # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
+    # def create_test_stop_order(self, sym, side, price, volume):
+    #     return self.client.create_test_order(
+    #         symbol=sym,
+    #         side=side,
+    #         type=FXConnector.ORDER_TYPE_STOP_LOSS_LIMIT,
+    #         timeInForce=FXConnector.TIME_IN_FORCE_GTC,
+    #         quantity=FXConnector.format_number(volume),
+    #         stopPrice=FXConnector.format_number(price),
+    #         price=FXConnector.format_number(price))
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def get_balance(self, asset):

@@ -4,7 +4,7 @@
       Stoploss
     </mat-panel-title>
     <mat-panel-description>
-      Configuration for the stoploss
+      Configuration For The Stoploss
     </mat-panel-description>
   </mat-expansion-panel-header>
 
@@ -16,17 +16,18 @@
       <td><mat-checkbox [(ngModel)]="trade.stoploss.isTrailing">Trailing</mat-checkbox></td>
       <td><mat-form-field class="full-width exit-target-input" appearance="standard">
         <mat-label>Threshold</mat-label>
-          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.threshold" [disabled]="trade.stoploss.isFixed()">
+          <input matInput type="text" id="th" name="th" [(ngModel)]="trade.stoploss.threshold" [disabled]="trade.stoploss.isFixed()">
         </mat-form-field>
       </td>
       <td><mat-form-field class="full-width exit-target-input" appearance="standard">
         <mat-label>Price</mat-label>
-          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.initial_target.price">
+          <input matInput type="text" id="tp" name="tp" [(ngModel)]="trade.stoploss.initial_target.price">
         </mat-form-field></td>
       <td>
         <mat-form-field class="full-width exit-target-input" appearance="standard">
         <mat-label>Volume</mat-label>
-          <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="trade.stoploss.initial_target.vol">
+          <input matInput type="text" id="vol" name="vol" [(ngModel)]="trade.stoploss.initial_target.vol">
+          <mat-hint *ngIf="trade.stoploss.initial_target.calculated_volume" matTooltip="Calculated Volume">{{trade.stoploss.initial_target.calculated_volume | number: '1.0-8'}}</mat-hint>
         </mat-form-field>
       </td>
       <td>
@@ -36,5 +37,5 @@
       </td>
     </tr>
   </table>
-  
+
 </mat-expansion-panel>

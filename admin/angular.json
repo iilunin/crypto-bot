@@ -53,6 +53,20 @@
                   "maximumWarning": "6kb"
                 }
               ]
+            },
+            "test": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.test.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
+                }
+              ]
             }
           }
         },
@@ -64,6 +78,9 @@
           "configurations": {
             "production": {
               "browserTarget": "admin:build:production"
+            },
+            "test": {
+              "browserTarget": "admin:build:test"
             }
           }
         },

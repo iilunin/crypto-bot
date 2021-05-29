@@ -129,3 +129,13 @@ class Trade(CustomSerializable):
     def __str__(self):
         return '{}({}): {}'.format(self.symbol, self.id, self.side)
 
+    def describe(self):
+        description = self.__str__()
+        if self.has_entry():
+            description += '\n'+self.entry.describe()
+        if self.has_exit():
+            description +='\n'+self.exit.describe()
+        if self.has_stoploss():
+            description += '\n'+self.sl_settings.describe()
+        return description
+

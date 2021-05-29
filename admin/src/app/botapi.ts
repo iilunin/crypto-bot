@@ -8,6 +8,8 @@ import {TradeDetails, Entry} from './trade-details';
 import deleteProperty = Reflect.deleteProperty;
 import {environment} from '../environments/environment';
 import { Balance } from './balance';
+import { LogEntry } from './log-entry';
+import * as moment from 'moment';
 
 
 const httpOptions = {
@@ -28,6 +30,24 @@ export class BotApi {
   API_URL = `${environment.BOT_API_URL}/api/v1`;
 
   constructor(private http: HttpClient) {
+  }
+
+  getRecentLogFileContents(limit:number=1000, filename='latest'): Observable<LogEntry[]> {
+    return this.http.get<LogEntry[]>(`${this.API_URL}/logs?file=${filename}&limit=${limit}`).pipe(
+      retry(this.RETRIES),
+      map(r => {
+
+        const entries: LogEntry[] = [];
+
+        r.forEach(entry => { 
+          entry.d = new Date(entry.d)
+          entries.push(new LogEntry(entry));
+        });
+        // console.log(entries);
+        return entries;
+
+      }),
+      catchError(this.handleError('getActiveTrades',[])));
   }
 
   addTrade(trade: TradeDetails ): Observable<ApiResult> {
@@ -147,6 +167,7 @@ export class BotApi {
   private log(message: string) {
     console.log('BotApi: ' + message);
   }
+
 
   /**
    * Handle Http operation that failed.

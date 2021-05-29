@@ -66,23 +66,29 @@ class StopLossStrategy(TradingStrategy):
 
     def adjust_stoploss_price(self, current_price=None):
         completed_targets = [o for o in self.trade.exit.get_completed_targets()]
-        has_clopleted_targets = len(completed_targets) > 0
+        has_completed_targets = len(completed_targets) > 0
 
-        if has_clopleted_targets and completed_targets[-1].has_custom_stop():
+        #if target has its own stop-loss set
+        if has_completed_targets and completed_targets[-1].has_custom_stop():
             # sort by order value
             self.current_stop_loss = completed_targets[-1].sl
+            self.logInfo('Assigning Stop Loss from the Target: {}'.format(completed_targets[-1]))
             return
 
-        if current_price is None:
-            self.current_stop_loss = self.trade.sl_settings.last_stoploss if self.trade.sl_settings.last_stoploss != 0 \
-                else self.initial_sl().price
-            return
+        if not self.trade.sl_settings.is_trailing():
+            # if that's not a trailing target
+            if current_price is None:
+                self.current_stop_loss = self.trade.sl_settings.last_stoploss if self.trade.sl_settings.last_stoploss != 0 \
+                    else self.initial_sl().price
+                return
+        else:
+            # if that's a trailing target, should be triggered only after at least one exit target completed
+            if not has_completed_targets:
+                return
 
-        if not has_clopleted_targets:
-            return
+            if not current_price:
+                return
 
-        # expected_stop_loss = 0
-        if self.trade.sl_settings.is_trailing():
             trialing_val = self.trade.sl_settings.val.get_val(current_price)
             expected_stop_loss = current_price + (-1 if self.trade.is_sell() else 1) * trialing_val
 
@@ -135,37 +141,39 @@ class StopLossStrategy(TradingStrategy):
             #     pass
 
         try:
-            if self.simulate:
-                order = self.fx.create_test_stop_order(self.symbol(), self.trade_side().name, self.current_stop_loss, 50)
-                order['orderId'] = 2333123
-            else:
-                self.cancel_all_orders()
-                AccountBalances().update_balances(self.fx.get_all_balances_dict())
+            # if self.simulate:
+            #     order = self.fx.create_test_stop_order(self.symbol(), self.trade_side().name, self.current_stop_loss, 50)
+            #     order['orderId'] = 2333123
+            # else:
+            self.cancel_all_orders()
+            AccountBalances().update_balances(self.fx.get_all_balances_dict())
 
-                price = self.exchange_info.adjust_price(self.get_sl_limit_price())
-                bal = self.trade.get_cap(self.get_balance_for_side().avail)
+            price = self.exchange_info.adjust_price(self.get_sl_limit_price())
+            bal = self.trade.get_cap(self.get_balance_for_side().avail)
 
-                bal = round(bal / price, 8) if self.trade_side().is_buy() else bal
+            bal = round(bal / price, 8) if self.trade_side().is_buy() else bal
 
-                volume = self.initial_sl().vol.get_val(bal)
-                # stop_trigger
-                try:
-                    order = self.fx.create_stop_order(
-                        sym=self.symbol(),
-                        side=self.trade_side().name,
-                        stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
-                        price=price,
-                        volume=self.exchange_info.adjust_quanity(volume)
-                    )
-                except BinanceAPIException as sl_exception:
-                    if sl_exception.message.lower().find('order would trigger immediately') > -1:
-                        order = self.fx.create_makret_order(self.symbol(),
-                                                            self.trade_side().name,
-                                                            self.exchange_info.adjust_quanity(volume))
-                    else:
-                        raise
+            volume = self.exchange_info.adjust_quanity(self.initial_sl().vol.get_val(bal))
+            # stop_trigger
+            try:
+                order = self.fx.create_stop_order(
+                    sym=self.symbol(),
+                    side=self.trade_side().name,
+                    stop_price=self.exchange_info.adjust_price(self.current_stop_loss),
+                    price=price,
+                    volume=volume
+                )
+            except BinanceAPIException as sl_exception:
+                if sl_exception.message.lower().find('would trigger immediately') > -1:
+                    order = self.fx.create_makret_order(self.symbol(),
+                                                        self.trade_side().name,
+                                                        volume)
+                else:
+                    raise
 
+            self.trade.sl_settings.initial_target.calculated_volume = volume
             self.trade.sl_settings.initial_target.set_active(order['orderId'])
+
             self.trigger_target_updated()
             self.logInfo('Setting stop loss order: {:.08f}:{:.08f}'.format(
                 self.exchange_info.adjust_price(self.current_stop_loss),

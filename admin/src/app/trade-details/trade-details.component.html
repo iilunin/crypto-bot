@@ -2,39 +2,43 @@
   <h1 mat-dialog-title>
     <mat-toolbar role="toolbar" class="task-header">
         <span>{{mode.str()}} Trade</span>
-        <!-- <span class="fx-spacer"></span>
-        <button mat-icon-button mat-dialog-close="cancel" aria-label="Close" matTooltip="Close">
+        <span class="fx-spacer"></span>
+        <button mat-icon-button matTooltip="Refresh trade info" (click)="init()" *ngIf="!mode.isCreate()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <!-- <button mat-icon-button mat-dialog-close="cancel" aria-label="Close" matTooltip="Close">
             <mat-icon mat-list-icon>close</mat-icon>
         </button> -->
     </mat-toolbar>
+
   </h1>
 
-  
-  <div mat-dialog-content *ngIf="trade" class="trade-section"> 
-    <mat-accordion class="exp-headers-align" multi class="accordeon">    
+
+  <div mat-dialog-content *ngIf="trade" class="trade-section">
+    <mat-accordion class="exp-headers-align" multi class="accordeon">
       <mat-expansion-panel expanded>
         <mat-expansion-panel-header>
           <mat-panel-title>
             Trading Pair
           </mat-panel-title>
           <mat-panel-description>
-            Information about trading pair
+            Basic Tade Information
           </mat-panel-description>
         </mat-expansion-panel-header>
         <div [disabled]="!mode.isCreate()">
           <p><span>ID: </span><span><strong>{{trade.id}}</strong></span></p>
           <table class="full-width" cellspacing="0"><tr>
             <td><app-auto-complete #symAutoComplete
-              [fieldCtrl]="myControl" 
+              [fieldCtrl]="myControl"
               [placeHolder]="'ETHUSDC'"
               [appearance]="'standard'"
               [smartList]="symbols"
               [label] = "'Trading Pair'"
-              (optionSelected)="onSymbolSelected($event)" 
+              (optionSelected)="onSymbolSelected($event)"
               [model]="trade.symbol"
               [class]="'full-width'"
               [disabled]="!mode.isCreate()"
-              
+
               >
               </app-auto-complete></td>
             <td><mat-form-field class="full-width" appearance="standard">
@@ -67,14 +71,15 @@
           </table>
         </div>
       </mat-expansion-panel>
-    
+
     <app-entry-details [trade]="trade" [mode]="mode"></app-entry-details>
     <app-exit-details [trade]="trade" [mode]="mode"></app-exit-details>
     <app-sl-details [trade]="trade" [mode]="mode"></app-sl-details>
   </mat-accordion>
   </div>
+  <mat-progress-bar #progress mode="query" *ngIf="showProgress"></mat-progress-bar>
   <div mat-dialog-actions align="end">
-    <button mat-button type="submit" color="primary" (click)="confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors && mode.isCreate()" >{{ mode.isCreate()? "Create":"Save" }}</button>
+    <button mat-button type="submit" color="primary" (click)="showProgress = true; confirm()" *ngIf="!mode.isView()" [disabled]="myControl.errors && mode.isCreate()" >{{ mode.isCreate()? "Create":"Save" }}</button>
     <button mat-button mat-dialog-close="cancel" color="primary">Cancel</button>
   </div>
 </form>

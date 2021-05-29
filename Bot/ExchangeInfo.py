@@ -14,6 +14,9 @@ class SymbolInfo:
         self.maxPrice = Decimal(self.strip_zeros(filters['PRICE_FILTER']['maxPrice']))
         self.minPrice = Decimal(self.strip_zeros(filters['PRICE_FILTER']['minPrice']))
 
+        self.multipUp = Decimal(self.strip_zeros(filters['PERCENT_PRICE']['multiplierUp']))
+        self.multipDown = Decimal(self.strip_zeros(filters['PERCENT_PRICE']['multiplierDown']))
+
 
     # def __init__(self, minPrice, maxPrice, tickSize, minQty, maxQty, stepSize, minNotional, **kvargs):
     #     self.minNotional = Decimal(self.strip_zeros(minNotional))
@@ -34,8 +37,8 @@ class SymbolInfo:
         res = float(Decimal(q) if self.stepSize == 0.0 else Decimal(q).quantize(self.stepSize, rounding=ROUND_DOWN if round_down else ROUND_UP))
         return float(min(max(res, self.minQty), self.maxQty))
 
-    def adjust_price(self, q, round_down=True):
-        res = round(Decimal(q), 8)
+    def adjust_price(self, p, round_down=True):
+        res = round(Decimal(p), 8)
 
         if self.tickSize:  # if tickSize Enabled
             res = res.quantize(self.tickSize, rounding=ROUND_DOWN if round_down else ROUND_UP)
@@ -50,6 +53,16 @@ class SymbolInfo:
 
     def is_quanity_above_min(self, q):
         return q > self.minQty
+
+    def is_min_notional_ok(self, q, p):
+        return q * p >= self.minNotional
+
+    def is_within_multiplier_range(self, p, current_price):
+        return current_price * float(self.multipDown) <= p <= current_price * float(self.multipUp)
+
+    def msg_mutliplier_range_error(self, current_price):
+        return 'Price can not be lower thant {:.8f} and higher than {:.8f}.'\
+            .format(current_price * float(self.multipDown), current_price * float(self.multipUp))
 
 
 class ExchangeInfo:

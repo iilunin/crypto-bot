@@ -1,0 +1,43 @@
+<div class="full-width top-panel-ctrl">
+    <mat-form-field appearance="standard">
+        <mat-label># of log entries</mat-label>
+        <input matInput type="number" min="1" step="1" id="targetPrice" name="targetPrice" [(ngModel)]="limit">
+    </mat-form-field>
+    <button mat-icon-button matTooltip="Refresh Log" (click)="refreshLogs()">
+        <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-icon-button matTooltip="Copy All Log Records" *ngIf="logs">
+        <mat-icon [cdkCopyToClipboard]="getClipboard()">file_copy</mat-icon>
+    </button>
+</div>
+
+<mat-progress-bar *ngIf="!logs" mode="query"></mat-progress-bar>
+<div> 
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z2">
+  
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="d"> Date </th>
+        <td mat-cell *matCellDef="let log"> {{log.d | date: dateFormatStr}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="level">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="l"> Level </th>
+        <td mat-cell *matCellDef="let log"> {{log.l}} </td>
+      </ng-container>  
+
+      <ng-container matColumnDef="origin">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="o"> Origin </th>
+        <td mat-cell *matCellDef="let log"> {{log.o}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="message">
+        <th mat-header-cell *matHeaderCellDef> Message </th>
+        <td mat-cell *matCellDef="let log"> {{log.t}} </td>
+      </ng-container>
+  
+      <tr mat-header-row *matHeaderRowDef="['date', 'level', 'origin', 'message']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['date', 'level', 'origin', 'message'];"></tr>
+    </table>
+    
+  </div>
+  <mat-paginator [pageSizeOptions]="[30, 50, 100]" showFirstLastButtons></mat-paginator>

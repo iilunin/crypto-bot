@@ -4,6 +4,7 @@ from datetime import datetime
 from Bot.CustomSerializable import CustomSerializable
 from Bot.TradeEnums import OrderStatus
 from Bot.Value import Value
+from Utils import Utils
 
 
 class Target(CustomSerializable):
@@ -19,15 +20,11 @@ class Target(CustomSerializable):
         self.parent_smart = kvargs.get('parent_smart', None)
         self.best_price = float(kvargs.get('best_price', 0))
 
-    def s2b(self, s):
-        if isinstance(s, bool):
-            return s
-        if s is None:
-            return None
-        if s.lower() in ['true', 'yes']:
-            return True
-        return False
+        cv = kvargs.get('calculated_volume', None)
+        self.calculated_volume = float(cv) if cv else None
 
+    def s2b(self, s):
+        return Utils.s2b(s)
 
     def is_completed(self):
         return self.status.is_completed()
@@ -51,6 +48,7 @@ class Target(CustomSerializable):
     def set_canceled(self):
         self.status = OrderStatus.NEW
         self.id = None
+        self.calculated_volume = None
 
     def set_active(self, id=None):
         self.status = OrderStatus.ACTIVE
@@ -81,9 +79,19 @@ class Target(CustomSerializable):
         return False if self.smart is None else self.smart
 
     def __str__(self):
-        return ('{}:{:.08f}@{}{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
-            self.__class__.__name__, self.price, self.vol, ' !!SMART!!' if self.is_smart() else '')
+        desc = ('{}:{:.08f}@{}; Smart:{}' if PriceHelper.is_float_price(self.price) else '{}:{}@{}{}').format(
+            self.__class__.__name__, self.price, self.vol, self.is_smart())
+        if self.calculated_volume and self.vol.is_rel():
+            desc += '; Abs Vol:{:.08f}'.format(self.calculated_volume)
 
+        desc += ' ;Stoploss:{}'.format(self.sl)
+        desc += ' ;Status:{}'.format(self.status)
+        desc += ' ;ID:{}'.format(self.id)
+        return desc
+        # '(abs vol: {:.08f})'.format(self.calculated_volume) if self.vol.is_rel() and self.calculated_volume else ''
+
+    def __repr__(self):
+        return self.__str__()
 
     def serializable_dict(self):
         d = OrderedDict()
@@ -112,6 +120,9 @@ class Target(CustomSerializable):
 
         if self.best_price > 0:
             d['best_price'] = self.format_float(self.best_price)
+
+        if self.calculated_volume:
+            d['calculated_volume'] = self.format_float(self.calculated_volume)
 
         return d
 
@@ -157,8 +168,8 @@ class PriceHelper:
 
     @classmethod
     def create_price_helper(cls, price_str):
-
-        s = str(price_str).strip().lower()
+        #Issue 21 float parsing
+        s = str(price_str).strip().lower().replace(',', '.')
         if PriceHelper.is_float_price(s):
             return PriceHelper(True, float(s), None, None)
 

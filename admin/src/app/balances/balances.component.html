@@ -1,4 +1,4 @@
-<div class="balance-table">
+<div>
     <table mat-table [dataSource]="balances" matSort class="mat-elevation-z2">
       
       <ng-container matColumnDef="sym">
@@ -23,17 +23,7 @@
   
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-  
-    <ng-template #modal_template>
-      <h2 mat-dialog-title>{{isCloseTradeAction ? 'Cancel' : 'Delete'}} {{'"' + selectedTrade.sym + '"'}} Trade?</h2>
-      <div mat-dialog-content>Please confirm if you want to {{isCloseTradeAction ? 'cancel' : 'delete' }} this trade</div>
-      <div mat-dialog-actions align="end">
-          <button mat-button mat-dialog-close="cancel" (click)="decline()" color="primary" cdkFocusInitial>No</button>
-          <button mat-button mat-dialog-close="ok"  (click)="confirm()" color="primary">Yes</button>
-      </div>
-    </ng-template>
-  
+    </table>  
   </div>
   
   

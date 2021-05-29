@@ -80,3 +80,12 @@ class EntryExitSettings(CustomSerializable):
 
     def is_exit(self):
         return not self.is_entry
+
+    def describe(self):
+        description = 'Entry:' if self.is_entry else 'Exit:'
+        description += '\nSide:{}, Smart:{},Threshold:{}\n'.format(self.side, self.smart, self.sl_threshold)
+        if self.targets:
+            for t in self.targets:
+                description += t.__str__() + '\n'
+
+        return description

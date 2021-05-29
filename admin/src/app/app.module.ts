@@ -65,6 +65,7 @@ import {OverlayModule} from '@angular/cdk/overlay';
 import { MainTabsComponent } from './main-tabs/main-tabs.component';
 import { BalancesComponent } from './balances/balances.component';
 import { AutoCompleteComponent } from './auto-complete/auto-complete.component';
+import { LogsComponent } from './logs/logs.component';
 // endmaterial
 // const schemas: any[] = [];
 // schemas.push(CUSTOM_ELEMENTS_SCHEMA);
@@ -81,7 +82,8 @@ import { AutoCompleteComponent } from './auto-complete/auto-complete.component';
     LogInComponent,
     MainTabsComponent,
     BalancesComponent,
-    AutoCompleteComponent
+    AutoCompleteComponent,
+    LogsComponent
   ],
   imports: [
     CommonModule,

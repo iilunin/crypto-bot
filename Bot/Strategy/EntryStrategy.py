@@ -167,11 +167,19 @@ class EntryStrategy(TradingStrategy):
 
             # if was sold externaly
             if not self.exchange_info.is_quanity_above_min(vol):
-                self.logInfo(
+                self.logError(
                     'Volume {} is less than min allowed by pair rules {}. Marking target as completed.'.format(vol,
                                                                                                                self.exchange_info.minQty))
                 self.current_target.set_completed()
                 self.trigger_target_updated()
+                return
+
+            if not self.exchange_info.is_min_notional_ok(vol, limit):
+                l = self.exchange_info.adjust_price(limit)
+                v = self.exchange_info.adjust_quanity(vol)
+                self.logError(
+                    'Min notional "price * volume" ({:.08f}*{:.08f}={:.08f}) is less than allowed by pair rules {:.08f}; Trigger Price {}'.format(l, v, l * v, self.exchange_info.minNotional, self.exchange_info.adjust_price(trigger_order_price))
+                )
                 return
 
             try:
@@ -196,7 +204,7 @@ class EntryStrategy(TradingStrategy):
 
 
             except BinanceAPIException as sl_exception:
-                if sl_exception.message.lower().find('order would trigger immediately') > -1:
+                if sl_exception.message.lower().find('would trigger immediately') > -1:
                     order = self.fx.create_makret_order(
                         self.symbol(),
                         self.trade_side().name,
@@ -251,6 +259,9 @@ class EntryStrategy(TradingStrategy):
         return self.get_trade_section().side if self.get_trade_section().side else self.trade.side.reverse()
 
     def is_completed(self):
+        if not self.get_trade_section():
+            return True
+
         return self.get_trade_section().is_completed()
 
     def current_smart_target(self):

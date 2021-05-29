@@ -25,3 +25,18 @@
 h1.app-name {
     margin-left: 16px;
 }
+
+mat-icon[name=git] {
+    width: 100px;
+    padding: 10 px;
+}
+
+span[name=gitcontainer]{
+    align-content: center;
+    text-align: center;
+    justify-content: center;
+}
+
+.spacer {
+    flex: 1 1 auto;
+ }

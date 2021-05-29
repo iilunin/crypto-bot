@@ -53,3 +53,12 @@ class StopLossSettings(CustomSerializable):
         d['initial_target'] = self.initial_target
 
         return d
+
+    def describe(self):
+        description = 'Stoploss:\n Type: {}, Threshold: {}, Limit Price: {}, Zone Entry: {}, Last Stoploss:{}; '.format(
+            self.type, self.val, self.limit_price_threshold, self.zone_entry, self.last_stoploss)
+
+        if self.initial_target:
+            description += self.initial_target.__str__()
+
+        return description

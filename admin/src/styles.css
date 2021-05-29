@@ -60,4 +60,28 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .trade-section {
     margin: 6px 0 12px;
 }
-  
+
+.mat-accordion .mat-expansion-panel:not(.mat-expanded),
+.mat-accordion .mat-expansion-panel:not(.mat-expansion-panel-spacing) {
+   margin-bottom: 4px;
+}
+
+.mat-accordion .mat-expansion-panel:is(.mat-expanded) {
+    margin: 6px 0;
+}
+
+mat-expansion-panel-header > .mat-content, .right-aligned-header > .mat-content {
+    justify-content: space-between;
+}
+
+.mat-content > mat-panel-title, .mat-content > mat-panel-description {
+  flex: 0 0 auto;
+}
+
+mat-panel-description {
+    text-align: right;
+}
+
+.accordeon {
+    margin: 1;
+}

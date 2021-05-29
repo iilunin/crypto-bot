@@ -5,13 +5,14 @@ import {BotApi} from '../botapi';
 import {BinanceService} from '../binance.service';
 import {Mode, TradeDetailMode} from '../trade-details';
 import {AuthService} from '../auth.service';
-import {Subscription} from 'rxjs';
+import {Observable, Subscription, timer} from 'rxjs';
 import {TradeService} from '../trade.service';
 import {MatSort} from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NotificationMessage, NotificationService, NotificatoinType } from '../services/notification.service';
 import { TradeDetailsComponent } from '../trade-details/trade-details.component';
+import { switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-asset-table',
@@ -23,15 +24,17 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   
   trades: TradeInfo[] = [];
   tradesDS: MatTableDataSource<TradeInfo> = null;
+  ws_resubscribe: boolean = true;
   displayedColumns: string[] = ['ctrl-view-edit', 'sym', 'btc-val', 'price', 'balance', 'ctrl-pause', 'ctrl-close','ctrl-remove'];
-  
+  refreshInterval: number = 60000;
   symTrade: { [symbol: string ]: TradeInfo} = {};
   tradesDisabled: Set<string> = new Set<string>();
   private selectedTrade: TradeInfo;
   private isCloseTradeAction?: boolean;
   private symbolObserver?: any;
-  private loginSubscrition: Subscription;
+  // private loginSubscrition: Subscription;
   private tradeNotificationSubscription: Subscription;
+  private timerSubscibtion: Subscription;
   @ViewChild(MatSort) sort: MatSort;
 
   constructor(
@@ -48,19 +51,7 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   // }
 
   ngOnInit() {
-    this.loginSubscrition = this.auth.loginEventAnounced$.subscribe(res => {
-        if (res === true) {
-          console.log("login")
-          this.refreshTrades();
-        }
-      }
-    );
-    // this.validateAllTradesPaused();
-    // this.refreshTrades();
-    // this.checkAuth();
-    if (this.auth.isLoggedIn()) {
-      this.refreshTrades();
-    }
+    this.timerSubscibtion = timer(0, this.refreshInterval).subscribe(tick => { this.refreshTrades(); })
 
     this.tradeNotificationSubscription = this.tradeService.eventAnounces$.subscribe(res => {
       if (res.type === 'created' || res.type === 'updated') {
@@ -70,31 +61,32 @@ export class AssetTableComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.loginSubscrition.unsubscribe();
+    // this.loginSubscrition.unsubscribe();
     this.tradeNotificationSubscription.unsubscribe();
+    this.timerSubscibtion.unsubscribe();
   }
 
-  // checkAuth() {
-  //   if (!this.auth.isLoggedIn()) {
-  //     this.auth.login('test', 'test').subscribe(
-  //       res =>  { if (res.jwt) {
-  //         this.refreshTrades();
-  //       }}
-  //     );
-  //   } else {
-  //     this.refreshTrades();
-  //   }
-  // }
-
-    refreshTrades() {
-    console.log("refresh trades")
-    this.api.getActiveTrades().subscribe(
+  refreshTrades(): Subscription {
+    return this.api.getActiveTrades().subscribe(
       trades => {
         trades.forEach(t => t.btcVal = t.price * (t.avail + t.locked));
         this.trades = trades;
         this.tradesDS = new MatTableDataSource(this.trades);
         this.tradesDS.sort = this.sort;
-        this.symTrade = {};
+        this.ws_resubscribe = false;
+
+        let newSymbols = this.trades.map(t => t.sym)
+        let oldSymbols = Object.keys(this.symTrade)
+        
+        if (newSymbols.length != oldSymbols.length ||
+          (newSymbols.sort().join() !== oldSymbols.sort().join())){
+          this.ws_resubscribe = true;
+        }
+        
+        if (this.ws_resubscribe){
+          this.symTrade = {};
+        }
+
         this.trades.forEach(t => this.symTrade[t.sym] = t);
         }
     , error => {
@@ -110,13 +102,17 @@ export class AssetTableComponent implements OnInit, OnDestroy {
         this.showAlert(error, NotificatoinType.Alert);
     }, () => {
       if (this.trades.length > 0) {
+        if (!this.ws_resubscribe){
+          return;
+        }
+        console.log(`Subscribing websockets`)
         if (this.symbolObserver) {
           this.symbolObserver.unsubscribe();
         }
-        // this.binance.getOrderBookTickers().subscribe(orderbook => console.log(orderbook));
+
         this.symbolObserver = this.binance.listenSymbols(
           this.trades.map(t => t.sym.toLowerCase())).subscribe(
-            this.onExchangeSymbolRcvd.bind(this),
+            res => this.onExchangeSymbolRcvd(res),
             err => console.log(err),
           () => console.log(`websocket completed`)
         );

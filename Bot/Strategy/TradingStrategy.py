@@ -1,3 +1,5 @@
+from os import environ
+
 from binance.exceptions import BinanceAPIException
 
 from Bot.ExchangeInfo import ExchangeInfo
@@ -6,6 +8,7 @@ from Bot.AccountBalances import Balance
 from Bot.FXConnector import FXConnector
 from Bot.Target import Target, PriceHelper
 from Bot.Trade import Trade
+from Utils import Utils
 
 from Utils.Logger import Logger
 
@@ -22,7 +25,7 @@ class TradingStrategy(Logger):
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self._exchange_info = None
-        self.simulate = False
+        self.simulate = Utils.is_simulation()
         self.trade_updated = trade_updated
         self.last_execution_price = 0
         self.paused = False
@@ -101,9 +104,11 @@ class TradingStrategy(Logger):
     def validate_target_orders(self, force_cancel_open_orders=False):
         NEW_STATUSES = [FXConnector.ORDER_STATUS_NEW, FXConnector.ORDER_STATUS_PARTIALLY_FILLED]
 
+        open_exchange_orders = {}
+        recent_orders = {}
         try:
-            exchange_orders = self.fx.get_all_orders(self.symbol())
-            has_open_orders = any([eo['status'] in NEW_STATUSES for eo in exchange_orders.values()])
+            recent_orders = self.fx.get_all_orders(self.symbol())
+            open_exchange_orders = {k: v for k, v in recent_orders.items() if (v['status'] in NEW_STATUSES)}
 
         except BinanceAPIException as bae:
             self.logError(str(bae))
@@ -112,38 +117,34 @@ class TradingStrategy(Logger):
         active_trade_targets = self.trade.get_all_active_placed_targets()
 
         update_required = False
-        if force_cancel_open_orders or (len(active_trade_targets) == 0 and has_open_orders):
-            self.logInfo('Cancelling all Open orders')
-            self.fx.cancel_open_orders(self.symbol())
-        else:
-            for active_trade_target in active_trade_targets:
 
-                if active_trade_target.id not in exchange_orders:
-                    active_trade_target.set_canceled()
-                    update_required = True
-                else:
-                    s = exchange_orders[active_trade_target.id]['status']
-                    if s in NEW_STATUSES:
 
-                        # check if price in file is the same as on the exchange
-                        trade_prices = {self.exchange_info.adjust_price(active_trade_target.price)}
-                        if active_trade_target.is_smart():
-                            trade_prices.add(self.exchange_info.adjust_price(active_trade_target.best_price))
+        for active_trade_target in active_trade_targets:
+            if active_trade_target.id not in open_exchange_orders:
+                active_trade_target.set_canceled()
+                update_required = True
+            else:
+                self.fx.cancel_order(self.symbol(), active_trade_target.id)
 
-                        exchange_prices = {float(exchange_orders[active_trade_target.id]['price']),
-                                           float(exchange_orders[active_trade_target.id]['stop_price'])}
+                active_trade_target.set_canceled()
 
-                        if not PriceHelper.is_float_price(active_trade_target.price) or len(
-                                trade_prices & exchange_prices) == 0:
-                            self.logInfo('Target price changed: {}'.format(active_trade_target))
-                            self.fx.cancel_order(self.symbol(), active_trade_target.id)
-                            active_trade_target.set_canceled()
-                            update_required = True
+                if active_trade_target.is_smart():
+                    active_trade_target.best_price = 0
 
-                    update_required |= self._update_trade_target_status_change(active_trade_target, s)
+                update_required = True
 
-            if update_required:
-                self.trigger_target_updated()
+            update_required |= self._update_trade_target_status_change(
+                active_trade_target, recent_orders.get(active_trade_target.id, {}).get('status', 'UNKNOWN'))
+
+        if force_cancel_open_orders:
+            self.cancel_all_open_orders()
+
+        if update_required:
+            self.trigger_target_updated()
+
+    def cancel_all_open_orders(self):
+        self.logInfo('Cancelling all Open orders for "{}"'.format(self.symbol()))
+        self.fx.cancel_open_orders(self.symbol())
 
     def _update_trade_target_status_change(self, t: Target, status: str) -> bool:
         if status == FXConnector.ORDER_STATUS_FILLED:
@@ -206,5 +207,45 @@ class TradingStrategy(Logger):
 
         return 'b' if side.is_sell() else 'a'
 
+    def assign_calculated_volume(self, targets):
+        has_changes = False
+        currency_balance = self.get_balance_for_side()
+
+        bal = self.trade.get_cap(currency_balance.avail) + (
+            currency_balance.locked if any(t.is_active() for t in targets) else 0)
+
+        if bal <= 0:
+            self.logWarning('Available balance is 0')
+            return
+
+        for t in targets:
+            if t.is_completed():
+                continue
+
+            price = self.exchange_info.adjust_price(t.price)
+
+            adjusted_balance = bal
+
+            # in case of BUY like with BTCUSDT we have balance in USDT e.g. 700, but specifying the vol in BTC e.g. 0.1
+            if self.trade_side().is_buy():
+                adjusted_balance = round(bal / price, 8)
+
+            vol = self.exchange_info.adjust_quanity(t.vol.get_val(adjusted_balance))
+            if vol != t.calculated_volume:
+                t.calculated_volume = vol
+                has_changes = True
+
+            if self.trade_side().is_sell():
+                bal = round(bal - vol, 8)
+            else:
+                bal = round(bal - t.vol.get_val(bal), 8)
+
+        return has_changes
+
+
     def __str__(self):
         return self.logger.name
+
+
+    def describe(self):
+        return None

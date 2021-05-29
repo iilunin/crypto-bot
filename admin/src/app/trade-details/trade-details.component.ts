@@ -30,7 +30,7 @@ export class TradeDetailsComponent implements OnInit {
 
   // trade$: Observable<TradeDetails>;
   trade: TradeDetails;
-  
+
   tradeId: string;
   mode: Mode;
   // trade: TradeDetails;
@@ -38,9 +38,10 @@ export class TradeDetailsComponent implements OnInit {
 
   exchangeInfo: Map<string, string>;
   symbols: string[] = [];
+  public showProgress: Boolean = false;
 
   myControl = new FormControl('', Validators.required);
-  
+
   // private config = {
   //   class: 'modal-lg',
   //   keyboard: false,
@@ -67,22 +68,23 @@ export class TradeDetailsComponent implements OnInit {
   static openDialog(dialog: MatDialog, mode: Mode,  tradeId: string) {
     let tdDialog = dialog.open(TradeDetailsComponent, {
       data: { mode: mode, id: tradeId },
-      width: '800px'
+      width: '800px',
+      height: '90%'
     });
     // tdDialog.afterClosed().subscribe(result => {
     //   console.log(`Dialog result: ${result}`);
-    // });  
+    // });
   }
 
   ngOnInit() {
     this.init()
   }
 
-  private init() {
+  init() {
 
     if (this.mode.isCreate()) {
       this.trade = new TradeDetails(true);
-      
+
       this.api.getExchangeInfo().subscribe(
         res => {
           this.exchangeInfo = new Map<string, string>();
@@ -97,11 +99,16 @@ export class TradeDetailsComponent implements OnInit {
       );
     } else {
       this.exchangeInfo = new Map<string,string>();
-      this.api.getActiveTradeInfo(this.tradeId).subscribe(trade => this.trade = trade)
+      this.api.getActiveTradeInfo(this.tradeId).subscribe(trade => {
+        this.trade = trade;
+        this.api.bookTicker(trade.symbol).subscribe(
+          result => { this.priceInfo = result;}
+        )
+      })
     }
   }
 
-  confirm() {    
+  confirm() {
     this.api.addTrade(this.trade).subscribe(
       res => {
         if (this.mode.isCreate() || this.mode.isEdit()) {
@@ -131,7 +138,7 @@ export class TradeDetailsComponent implements OnInit {
   //   this.priceInfo = price;
   // }
 
-  // as entry doesn't allow to choose side now, changing side on the 
+  // as entry doesn't allow to choose side now, changing side on the
   // parent level will set opposite side for the entry
   onSideChanged(event): void {
     if (this.trade.entry){
@@ -146,11 +153,11 @@ export class TradeDetailsComponent implements OnInit {
       if (this.mode.isCreate()) {
 
       let asset = this.exchangeInfo.get(symbol)
-      
+
       if (this.trade.symbol !== symbol) {
         this.trade.asset = asset;
         this.trade.symbol = symbol;
-        
+
         this.api.bookTicker(symbol).subscribe(
           result => { this.priceInfo = result;}
         )

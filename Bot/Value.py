@@ -14,7 +14,8 @@ class Value:
         else:
             self.type = Value.Type.ABS
 
-        self.v = float(obj.replace('%', ''))
+        #Issue 21 float parsing
+        self.v = float(obj.replace('%', '').replace(',', '.'))
 
     def is_abs(self):
         return self.type == Value.Type.ABS

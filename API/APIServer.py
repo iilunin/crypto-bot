@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta
+from distutils.log import Log
 
 from flask import Flask, app, render_template
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from flask_cors import CORS
 
+from API.Endpoints.LogsEndpoint import LogsEndpoint
 from API.Endpoints.APIexchangeInfoEndpoint import APIExchangeInfoEndpoint
 from API.Endpoints.BalanceEndpoint import BalanceEndpoint
 from API.Endpoints.JWTEndpoint import JWTEndpoint
 from API.Endpoints.OrderBookEndpoint import OrderBookEndpoint
+from API.Endpoints.ProxyEndpoint import ProxyEndpoint
 from API.Endpoints.TradeEndpoint import TradeEndpoint
 from API.Endpoints.TradeListEndpoint import TradeListEndpoint
 from Bot.TradeHandler import TradeHandler
@@ -39,6 +42,12 @@ class APIServer:
         CORS(self.app)
         # self.api.add_resource(BalanceEndpoint, APIServer.API_PREFIX + '/balance',
         #                       resource_class_kwargs={'trade_handler': self.th})
+
+        self.api.add_resource(ProxyEndpoint, APIServer.API_PREFIX + '/proxy/icon',
+                              resource_class_kwargs={'trade_handler': self.th})
+
+        self.api.add_resource(LogsEndpoint, APIServer.API_PREFIX + '/logs',
+                              resource_class_kwargs={'trade_handler': self.th})
 
         self.api.add_resource(OrderBookEndpoint, APIServer.API_PREFIX + '/orderbook/<symbol>',
                               resource_class_kwargs={'trade_handler': self.th})

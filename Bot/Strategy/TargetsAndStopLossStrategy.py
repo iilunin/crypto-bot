@@ -29,6 +29,12 @@ class TargetsAndStopLossStrategy(TradingStrategy):
             self.strategy_exit = None
 
 
+    def describe(self, describe_trade=True):
+        description = '***{}***'.format(self.__str__())
+        if describe_trade:
+            description += '\nTrade: \n{0}'.format(self.trade.describe())
+
+        return description
 
     def create_sl_strategy(self, trade):
         self.strategy_sl = StopLossStrategy(trade, self.fx, self.trade_updated, True, self.exchange_info, self.balance)
@@ -64,8 +70,11 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         else:
             self.strategy_exit = None
 
-        if self.strategy_entry and trade.is_new():
-            self.strategy_entry.update_trade(trade)
+        if trade.has_entry():
+            if self.strategy_entry and trade.is_new():
+                self.strategy_entry.update_trade(trade)
+        else:
+            self.strategy_entry = None
 
     def execute(self, new_price):
         if self.is_completed():
@@ -153,7 +162,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
 
     def emergent_close_position(self):
         try:
-            self.fx.cancel_open_orders(self.symbol())
+            self.cancel_all_open_orders()
 
             AccountBalances().update_balances(self.fx.get_all_balances_dict())
 

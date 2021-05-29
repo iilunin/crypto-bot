@@ -50,7 +50,7 @@ and then pulls back `0.2%` (~8,216.4) the order executes.
 
 ## Example 2 TRX-BTC Trailing
 This trade has trailing stop loss and trailing profits last order. The execution flow is the following:
-1. Default stop loss price is 00000650. If it hits before target one (00000850), then the order is completed.
+1. There is no default stop loss. Trailing stop loss (00000650) will be activated only after at least one exit target is executed. 
 2. If target one hits (00000850), then it marked as completed, and it triggers trailing stop loss. It immediately raises
 stop slos to 799 (6% of current price 850) and continue follows the price tightening stop loss.
 3. If target 2 hit, it cancels trailing stop loss, and sets it to the fixed value 00000900.

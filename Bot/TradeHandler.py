@@ -93,6 +93,7 @@ class TradeHandler(Logger):
         if api_call:
             strategy.set_trade_removed()
 
+        strategy.cancel_all_open_orders()
         self.fx.listen_symbols([s.symbol() for s in self.strategies], self.listen_handler, self.user_data_handler)
         self.socket_message_rcvd = False
 
@@ -144,7 +145,7 @@ class TradeHandler(Logger):
 
     def user_data_handler(self, msg):
         try:
-            if msg['e'] == 'outboundAccountInfo':
+            if msg['e'] == 'outboundAccountPosition':
                 self.balances.update_balances(
                     {bal['a']: {'f': float(bal['f']), 'l': float(bal['l'])} for bal in msg['B']})
             elif msg['e'] == 'executionReport':
@@ -261,6 +262,7 @@ class TradeHandler(Logger):
         for trade in trades:
             new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
                                                       self.balances.get_balance(trade.asset))
+            self.logInfo(new_strategy.describe())
 
             if self.handle_completed_strategy(new_strategy):
                 self.logInfo('Strategy is completed [{}]'.format(new_strategy.symbol()))
@@ -282,7 +284,8 @@ class TradeHandler(Logger):
             if trade.id in self.tradeid_strategy_dict:
                 # find by ID
                 # self.strategies_dict[trade.symbol].update_trade(trade)
-                self.tradeid_strategy_dict[trade.id].update_trade(trade)
+                existing_strategy = self.tradeid_strategy_dict[trade.id]
+                existing_strategy.update_trade(trade)
 
                 if self.handle_completed_strategy(self.tradeid_strategy_dict[trade.id]):
                     self.logInfo('Strategy is completed [{}]'.format(trade.symbol))
@@ -290,11 +293,14 @@ class TradeHandler(Logger):
 
                 self.balances.update_balances(self.fx.get_all_balances_dict())
                 self.logInfo('Updating trade [{}]'.format(trade.symbol))
+                # self.logInfo(existing_strategy.describe())
             else:
                 self.logInfo('Adding trade [{}]'.format(trade.symbol))
 
                 new_strategy = TargetsAndStopLossStrategy(trade, self.fx, self.order_updated_handler,
                                                       self.balances.get_balance(trade.asset))
+
+                self.logInfo(new_strategy.describe())
 
                 if self.handle_completed_strategy(new_strategy):
                     self.logInfo('Strategy is completed [{}]'.format(new_strategy.symbol()))

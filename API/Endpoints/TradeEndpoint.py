@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from flask import Response
 from flask_jwt_extended import jwt_required
@@ -81,6 +82,7 @@ class TradeEndpoint(BotAPIResource):
                     self.th.updated_trade(trade)
                     self.th.fire_trade_updated(trade, True)
             except Exception as e:
+                self.th.logger.error(traceback.format_exc())
                 return json.dumps(APIResult.ErrorResult(100, str(e))), 500
 
             return APIResult.OKResult(ids), 201
