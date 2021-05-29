@@ -69,7 +69,7 @@ class ConsoleLauncher(Logger):
         api_path = os.path.join(self.config_path, 'api.json')
         key, secret = self.get_exchange_creds(api_path)
 
-        self.fx = FXConnector(key, secret)
+        self.fx = FXConnector(key, secret, Utils.is_simulation())
 
         self.trade_handler = TradeHandler(
             trades,

@@ -1,3 +1,5 @@
+import time
+
 from binance.exceptions import BinanceAPIException, BinanceOrderException
 from retrying import retry
 
@@ -45,10 +47,11 @@ class FXConnector(Logger):
     ORDER_RESP_TYPE_RESULT = 'RESULT'
     ORDER_RESP_TYPE_FULL = 'FULL'
 
-    def __init__(self, key=None, secret=None):
+    def __init__(self, key=None, secret=None, simulation=False):
         super().__init__()
         self.__key = key
         self.__secret = secret
+        self._simulation = simulation
         self._client = None #Client(key, secret)
         self.bs: BinanceWebsocket = None
 
@@ -59,9 +62,16 @@ class FXConnector(Logger):
     @property
     def client(self):
         if not self._client:
-            self._client = Client(self.__key, self.__secret)
+            self._client = Client(self.__key, self.__secret, testnet=self._simulation)
+            self.test_connectivity()
 
         return self._client
+
+
+    def test_connectivity(self):
+        res = self.get_server_time()
+        self.client.timestamp_offset = res['serverTime'] - int(time.time() * 1000)
+
 
     def listen_symbols(self, symbols, on_ticker_received, user_data_handler):
         self.bs = BinanceWebsocket(self.client)
@@ -180,16 +190,16 @@ class FXConnector(Logger):
             stopPrice=FXConnector.format_number(stop_price),
             price=FXConnector.format_number(price))
 
-    # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
-    def create_test_stop_order(self, sym, side, price, volume):
-        return self.client.create_test_order(
-            symbol=sym,
-            side=side,
-            type=FXConnector.ORDER_TYPE_STOP_LOSS_LIMIT,
-            timeInForce=FXConnector.TIME_IN_FORCE_GTC,
-            quantity=FXConnector.format_number(volume),
-            stopPrice=FXConnector.format_number(price),
-            price=FXConnector.format_number(price))
+    # # @retry(stop_max_attempt_number=MAX_ATTEMPTS, wait_fixed=DELAY)
+    # def create_test_stop_order(self, sym, side, price, volume):
+    #     return self.client.create_test_order(
+    #         symbol=sym,
+    #         side=side,
+    #         type=FXConnector.ORDER_TYPE_STOP_LOSS_LIMIT,
+    #         timeInForce=FXConnector.TIME_IN_FORCE_GTC,
+    #         quantity=FXConnector.format_number(volume),
+    #         stopPrice=FXConnector.format_number(price),
+    #         price=FXConnector.format_number(price))
 
     @retry(**DEFAULT_RETRY_SETTINGS)
     def get_balance(self, asset):

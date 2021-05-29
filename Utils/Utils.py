@@ -18,3 +18,6 @@ def s2b(s):
     if s.lower() in ['true', 'yes', '1']:
         return True
     return False
+
+def is_simulation():
+    return s2b(os.environ.get("SIMULTATE", False))

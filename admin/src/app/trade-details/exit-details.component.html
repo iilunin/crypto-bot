@@ -39,7 +39,7 @@
             <mat-form-field class="full-width exit-target-input" appearance="standard">
               <mat-label>Volume</mat-label>
               <input matInput type="text" id="targetPrice" name="targetPrice" [(ngModel)]="exitTarget.vol">
-              <mat-hint *ngIf="exitTarget.calculated_volume">{{exitTarget.calculated_volume | number: '1.0-8'}}</mat-hint>
+              <mat-hint *ngIf="exitTarget.calculated_volume" matTooltip="Calculated Volume">{{exitTarget.calculated_volume | number: '1.0-8'}}</mat-hint>
             </mat-form-field>
           </td>
           <td>

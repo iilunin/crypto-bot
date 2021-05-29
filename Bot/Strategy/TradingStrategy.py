@@ -25,7 +25,7 @@ class TradingStrategy(Logger):
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self._exchange_info = None
-        self.simulate = Utils.s2b(environ.get("SIMULTATE", False))
+        self.simulate = Utils.is_simulation()
         self.trade_updated = trade_updated
         self.last_execution_price = 0
         self.paused = False

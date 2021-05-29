@@ -20,12 +20,14 @@ from requests import ConnectionError
 from retrying import retry
 from websockets.connection import State
 
+import Utils.Utils
 from Utils.Logger import Logger
 
 
 class BinanceWebsocket(Thread, Logger):
     REFRESH_KEY_TIMEOUT = 30 * 60
     WS_URL = 'wss://stream.binance.com:9443/'
+    WS_TEST_URL = 'wss://testnet.binance.vision/'
     __EVENT_LOOP = None
 
     def __init__(self, client: Client):
@@ -58,6 +60,10 @@ class BinanceWebsocket(Thread, Logger):
         self.time = None
 
         self.name = 'Binance WebSocket Thread'
+
+
+    def get_url(self):
+        return BinanceWebsocket.WS_TEST_URL if Utils.Utils.is_simulation() else BinanceWebsocket.WS_URL
 
 
     @retry(
@@ -116,10 +122,10 @@ class BinanceWebsocket(Thread, Logger):
             self.ticker_cb = callback
 
         if symbols:
-            url = os.path.join(BinanceWebsocket.WS_URL,
+            url = os.path.join(self.get_url(),
                                'stream?streams=' + '/'.join([s.lower() + '@ticker' for s in symbols]))
         else:
-            url = os.path.join(BinanceWebsocket.WS_URL, 'ws/!ticker@arr')
+            url = os.path.join(self.get_url(), 'ws/!ticker@arr')
 
         self.ticker_ws_future = asyncio.run_coroutine_threadsafe(self.websocket_handler(url, self.ticker_cb, True), self.loop)
 
@@ -167,7 +173,7 @@ class BinanceWebsocket(Thread, Logger):
             if create_user_ws:
                 self.stop_user_future()
                 self.user_ws_future = asyncio.ensure_future(
-                    self.websocket_handler(os.path.join(BinanceWebsocket.WS_URL, 'ws', key), self.user_info_cb))
+                    self.websocket_handler(os.path.join(self.get_url(), 'ws', key), self.user_info_cb))
 
                 self.user_ws_future.add_done_callback(
                     functools.partial(self.feature_finished, reconnect_fn=functools.partial(self.start_user_info, force_reconnect=True), name='user websocket'))
