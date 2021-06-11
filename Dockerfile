@@ -39,7 +39,7 @@ RUN ng build --prod --output-path app_docker
 ### production ###
 ##################
 FROM python:3.7-slim
-LABEL maintainer="quickDESIGN"
+LABEL maintainer="Igor Iliunin <ilunin.igor@gmail.com>"
 
 RUN mkdir -p /usr/src/app
 RUN mkdir /usr/src/logs
