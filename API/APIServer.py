@@ -16,6 +16,20 @@ from API.Endpoints.TradeEndpoint import TradeEndpoint
 from API.Endpoints.TradeListEndpoint import TradeListEndpoint
 from Bot.TradeHandler import TradeHandler
 
+## Fix for JWT SECRET + KEY
+import string
+import secrets
+char_set = string.ascii_letters + string.digits + '-'
+def gen_sec():
+    while True:
+        secret = ''.join(secrets.choice(char_set) for i in range(50))
+        if (any(c.islower() for c in secret)
+                and any(c.isupper() for c in secret)
+                and sum(c.isdigit() for c in secret) >= 7):
+            break
+        return secret
+##
+
 app = Flask(__name__, static_folder='templates', static_url_path='')
 
 @app.route('/')
@@ -30,9 +44,9 @@ class APIServer:
     def __init__(self, trade_handler: TradeHandler):
         self.th = trade_handler
         self.app = app
-
-        self.app.config['JWT_SECRET_KEY'] = 'mHZ!?9@DzdLrn@H!gy2FD46W--M*Fap!'  # TODO: Change this!
-        self.app.config['SECRET_KEY'] = 'VS?cWpbD^CGa-M@h6+@pV#qCQRU3c4dn'  #  TODO: Change this!
+        
+        self.app.config['JWT_SECRET_KEY'] = gen_sec()
+        self.app.config['SECRET_KEY'] = gen_sec()
         self.app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(weeks=48)
 
         self.jwt = JWTManager(app)
@@ -68,6 +82,6 @@ class APIServer:
                               resource_class_kwargs={'trade_handler': self.th})
 
     def run(self, port):
-        self.app.run(host='0.0.0.0', debug=True, port=port, use_reloader=False)
+        self.app.run(host='0.0.0.0', debug=False, port=port, use_reloader=False)
 
 
