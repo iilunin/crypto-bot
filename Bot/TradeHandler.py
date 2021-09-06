@@ -110,7 +110,7 @@ class TradeHandler(Logger):
 
         # self.balances.update_balances(self.fx.get_all_balances_dict())
 
-        if not ExchangeInfo().has_all_symbol(self.strategies_dict.keys()):
+        if ExchangeInfo().need_update():
             ExchangeInfo().update(self.fx.get_exchange_info())
 
         if listen_symbols:
@@ -194,7 +194,9 @@ class TradeHandler(Logger):
                     return
                 elif d['e'] == '24hrTicker':
                     self.trade_info_ticker_buf[d['s']] = {'b': float(d['b']), 'a': float(d['a'])}
-                    # delta = dt.now() - self.last_ts
+
+            if ExchangeInfo().need_update():
+                ExchangeInfo().update(self.fx.get_exchange_info())
 
             if (delta.seconds * 1000 + (delta).microseconds / 1000) > self.process_delay:
                 self.last_ts = dt.now()
