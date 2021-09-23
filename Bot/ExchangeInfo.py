@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
 
@@ -67,34 +68,30 @@ class SymbolInfo:
 
 class ExchangeInfo:
     __shared_state = {}
+    UPDATE_RATE_S = 30
 
     def __init__(self):
         self.__dict__ = self.__shared_state
         if not self.__dict__:
-            self.exchnage_info = {}
-            self.symbols = set()
+            self.symbols = {}
+            self.last_updated = None
+
+    def need_update(self):
+        if not self.last_updated:
+            return True
+
+        return (datetime.now() - self.last_updated).seconds >= ExchangeInfo.UPDATE_RATE_S
 
     def update(self, info):
-        self.exchnage_info.update(info)
-        self.symbols = set([s['symbol'] for s in self.exchnage_info['symbols']])
+        self.symbols = {s['symbol']: s for s in info['symbols']}
+        self.last_updated = datetime.now()
 
     def symbol_info(self, symbol):
-        symbol_info = None
-
-        for s in self.exchnage_info['symbols']:
-            if s['symbol'] == symbol:
-                symbol_info = s
-                break
+        symbol_info = self.symbols.get(symbol)
 
         props = {}
         if symbol_info is None:
             raise KeyError('Symbol "{}" not found in the Exchnage makrets info'.format(symbol))
-
-        # for f in symbol_info['filters']:
-        #     props.update(f)
-        #
-        # props.pop('filterType', None)
-
 
         for f in symbol_info['filters']:
             filter_type = f['filterType']
@@ -106,8 +103,5 @@ class ExchangeInfo:
     def has_symbol(self, symbol):
         return symbol in self.symbols
 
-    def has_all_symbol(self, symbols):
-        return set(symbols) <= self.symbols
-
     def get_all_symbols(self):
-        return [{'s': s['symbol'], 'b': s['baseAsset']} for s in self.exchnage_info['symbols']]
+        return [{'s': s, 'b': info['baseAsset']} for (s, info) in self.symbols.items()]

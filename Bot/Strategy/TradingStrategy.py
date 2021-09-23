@@ -1,4 +1,4 @@
-from os import environ
+from datetime import datetime
 
 from binance.exceptions import BinanceAPIException
 
@@ -14,6 +14,8 @@ from Utils.Logger import Logger
 
 
 class TradingStrategy(Logger):
+    EXCHANGE_INFO_REFRESH_S = 60
+
     def __init__(self,
                  trade: Trade,
                  fx: FXConnector,
@@ -25,6 +27,7 @@ class TradingStrategy(Logger):
         self.fx = fx
         self.balance: Balance = balance if balance else Balance()
         self._exchange_info = None
+        self._exchange_info_last_update = datetime.now()
         self.simulate = Utils.is_simulation()
         self.trade_updated = trade_updated
         self.last_execution_price = 0
@@ -41,8 +44,10 @@ class TradingStrategy(Logger):
 
     @property
     def exchange_info(self):
-        if not self._exchange_info:
+        if not self._exchange_info or \
+                (datetime.now() - self._exchange_info_last_update).seconds >= TradingStrategy.EXCHANGE_INFO_REFRESH_S:
             self._exchange_info = ExchangeInfo().symbol_info(self.symbol())
+            self._exchange_info_last_update = datetime.now()
 
         return self._exchange_info
 
