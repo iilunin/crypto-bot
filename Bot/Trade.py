@@ -22,7 +22,8 @@ class Trade(CustomSerializable):
 
         sl_settings = kvargs.get('stoploss', kvargs.get('sl_settings'))
 
-        self.sl_settings: StopLossSettings = StopLossSettings(**sl_settings) if sl_settings else None
+        # self.sl_settings: StopLossSettings = StopLossSettings(**sl_settings) if sl_settings else None
+        self.sl_settings: StopLossSettings = StopLossSettings(**sl_settings) if sl_settings else StopLossSettings({})
 
         if status:
             self.status = OrderStatus(status.lower())
@@ -63,8 +64,16 @@ class Trade(CustomSerializable):
     def has_stoploss(self):
         return self.sl_settings is not None and self.sl_settings.initial_target
 
-    def get_closed_targets(self) -> List[Target]:
-        return [t for t in self.targets if t.is_completed()]
+    def has_stoploss_in_last_completed_target(self):
+        completed_targets = self.get_completed_exit_targets()
+        has_completed_targets = len(completed_targets) > 0
+
+        return has_completed_targets and completed_targets[-1].has_custom_stop()
+
+    def get_completed_exit_targets(self) -> List[Target]:
+        if not self.exit:
+            return []
+        return self.exit.get_completed_targets()
 
     def get_initial_stop(self) -> Target:
         if self.sl_settings:

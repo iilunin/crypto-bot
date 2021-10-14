@@ -1,5 +1,3 @@
-import logging
-
 from binance.exceptions import BinanceAPIException
 
 from Bot.AccountBalances import AccountBalances
@@ -10,10 +8,14 @@ from Bot.Trade import Trade
 
 
 class StopLossStrategy(TradingStrategy):
-    def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, nested=False, exchange_info=None, balance=None):
+    def __init__(self, trade: Trade, fx: FXConnector,
+                 trade_updated=None, nested=False, exchange_info=None, balance=None):
         super().__init__(trade, fx, trade_updated, nested, exchange_info, balance)
         self.current_stop_loss = 0
         self.exit_threshold = 0
+        # self.is_completed_target_sl_type = False
+
+        # self.define_sl_type()
         self.adjust_stoploss_price()
 
         # if self.logger.isEnabledFor(logging.INFO):
@@ -22,6 +24,8 @@ class StopLossStrategy(TradingStrategy):
 
     def update_trade(self, trade: Trade):
         self.trade = trade
+
+        # self.define_sl_type()
         self.adjust_stoploss_price()
 
     def execute(self, new_price):
@@ -64,15 +68,29 @@ class StopLossStrategy(TradingStrategy):
             self.last_th = treshold
             self.last_sl = self.current_stop_loss
 
+    # def define_sl_type(self):
+    #     completed_targets = self.trade.get_completed_exit_targets()
+    #     self.is_completed_target_sl_type = len(completed_targets) > 0 and completed_targets[-1].has_custom_stop()
+
+    def get_target_for_stoploss(self):
+        # if self.is_completed_target_sl_type:
+        #     return self.trade.exit.get_next_incomplete_target()
+        # else:
+        #     return self.trade.sl_settings.initial_target
+        return self.trade.sl_settings.initial_target
+
     def adjust_stoploss_price(self, current_price=None):
-        completed_targets = [o for o in self.trade.exit.get_completed_targets()]
+        completed_targets = self.trade.get_completed_exit_targets()
+
         has_completed_targets = len(completed_targets) > 0
+        completed_target_custom_sl = completed_targets[-1].sl
 
         #if target has its own stop-loss set
-        if has_completed_targets and completed_targets[-1].has_custom_stop():
+        if has_completed_targets and completed_target_custom_sl:
             # sort by order value
-            self.current_stop_loss = completed_targets[-1].sl
-            self.logInfo('Assigning Stop Loss from the Target: {}'.format(completed_targets[-1]))
+            if self.current_stop_loss != completed_target_custom_sl:
+                self.current_stop_loss = completed_target_custom_sl
+                self.logInfo('Assigning Stop Loss from the Target: {}'.format(completed_targets[-1]))
             return
 
         if not self.trade.sl_settings.is_trailing():
@@ -134,11 +152,6 @@ class StopLossStrategy(TradingStrategy):
     def set_stoploss_order(self):
         if self.trade.sl_settings.initial_target.is_active():
             return
-            # self.logInfo('validating stoploss order')
-            # if True: # validate it
-            #     return
-            # else:
-            #     pass
 
         try:
             # if self.simulate:
@@ -186,8 +199,8 @@ class StopLossStrategy(TradingStrategy):
 
     def get_sl_limit_price(self):
         return self.current_stop_loss + (
-            -1 if self.trade.is_sell() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
-            self.current_stop_loss)
+         -1 if self.trade.is_sell() else 1) * self.trade.sl_settings.limit_price_threshold.get_val(
+         self.current_stop_loss)
 
     def cancel_all_orders(self):
         self.logInfo('canceling all orders...')
@@ -205,15 +218,17 @@ class StopLossStrategy(TradingStrategy):
                 pass
 
     def cancel_stoploss_orders(self):
-        if not self.trade.sl_settings.initial_target.id:
+        target: Target = self.trade.sl_settings.initial_target
+
+        if not target.id:
             return False
 
         try:
-            self.fx.cancel_order(self.symbol(), self.trade.sl_settings.initial_target.id)
+            self.fx.cancel_order(self.symbol(), target.id)
         except BinanceAPIException as bae:
             self.logError(str(bae))
 
-        self.trade.sl_settings.initial_target.set_canceled()
+        target.set_canceled()
         self.trigger_target_updated()
         self.logInfo('canceling stoploss orders')
         return True

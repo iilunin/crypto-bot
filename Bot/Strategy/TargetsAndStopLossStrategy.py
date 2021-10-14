@@ -15,7 +15,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
     def __init__(self, trade: Trade, fx: FXConnector, trade_updated=None, balance=None):
         super().__init__(trade=trade, fx=fx, trade_updated=trade_updated, balance=balance)
 
-        if trade.has_stoploss():
+        if trade.has_stoploss() or trade.has_stoploss_in_last_completed_target():
             self.create_sl_strategy(trade)
         else:
             self.strategy_sl = None
@@ -53,7 +53,7 @@ class TargetsAndStopLossStrategy(TradingStrategy):
         self.last_execution_price = 0
 
         # [s.update_trade(trade) for s in self.all_strategies()]
-        if trade.has_stoploss():
+        if trade.has_stoploss() or trade.has_stoploss_in_last_completed_target():
             if self.strategy_sl:
                 self.strategy_sl.update_trade(trade)
             else:

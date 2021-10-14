@@ -8,7 +8,7 @@ from Utils import Utils
 
 
 class Target(CustomSerializable):
-    def __init__(self, price, vol='100%', **kvargs):
+    def __init__(self, price=0, vol='100%', **kvargs):
         self.vol = Value(vol)
         self.price = PriceHelper.parse_price(price)
 
