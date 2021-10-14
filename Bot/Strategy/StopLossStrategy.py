@@ -83,7 +83,7 @@ class StopLossStrategy(TradingStrategy):
         completed_targets = self.trade.get_completed_exit_targets()
 
         has_completed_targets = len(completed_targets) > 0
-        completed_target_custom_sl = completed_targets[-1].sl
+        completed_target_custom_sl = completed_targets[-1].sl if has_completed_targets else 0
 
         #if target has its own stop-loss set
         if has_completed_targets and completed_target_custom_sl:
