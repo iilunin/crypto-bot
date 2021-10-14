@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:16
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # set working directory
 RUN mkdir /usr/src/app
