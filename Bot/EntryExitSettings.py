@@ -67,7 +67,10 @@ class EntryExitSettings(CustomSerializable):
         if self.smart is not None:
             d['smart'] = self.smart
 
-        if self.sl_threshold and (self.sl_threshold != EntryExitSettings.DEFAULT_THRESHOLD):
+        # if self.sl_threshold and (self.sl_threshold != EntryExitSettings.DEFAULT_THRESHOLD):
+        #     d['threshold'] = self.sl_threshold
+
+        if self.sl_threshold:
             d['threshold'] = self.sl_threshold
 
         if self.targets:
