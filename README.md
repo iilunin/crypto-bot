@@ -15,6 +15,13 @@ Binance REST API is based on [sammchardy/python-binance](https://github.com/samm
 I am not taking any responsibility for the outcomes you get when using it.  
 - Works on Mac and Amazon Linux. Other platforms were not verified.
 
+## Donations
+![](./Docs/uf.png )
+
+All donations will go to support people of Ukraine suffering from Russian invasion 
+- BTC - 357a3So9CbsNfBBgFYACGvxxS6tMaDoa1P
+- ETH and USDT (ERC-20) - 0x165CD37b4C644C2921454429E7F9358d18A45e14
+- $DOT: 1x8aa2N2Ar9SQweJv9vsuZn3WYDHu7gMQu1RePjZuBe33Hv.
 
 ## Features
 - Simple Web User Interface 
