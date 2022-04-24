@@ -28,7 +28,7 @@
     "@schematics/angular": "^11.2.18",
     "core-js": "^2.6.12",
     "iconv": "^3.0.1",
-    "moment": "^2.29.1",
+    "moment": "^2.29.2",
     "open-iconic": "^1.1.1",
     "rxjs": "^6.6.7",
     "tslib": "^2.3.1",
